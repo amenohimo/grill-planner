@@ -39,6 +39,7 @@ export type ScenarioAction =
   | { type: 'SET_TARGET_MODE'; payload: TargetMode }
   | { type: 'SET_TARGET_ORDER'; payload: readonly string[] }
   | { type: 'SET_SNATCHERS'; payload: string }
+  | { type: 'SET_FREE_NOTE'; payload: string }
 
   // UI
   | { type: 'SET_DISPLAY_MODE'; payload: DisplayMode }
@@ -69,6 +70,7 @@ export function createInitialScenario(hazardConfigData?: HazardConfigData): Scen
       specials: [],
       targetOrder: { mode: 'weapon', order: [] },
       snatchers: '',
+      freeNote: '',
     },
     displayMode: DEFAULT_DISPLAY_MODE,
     directionPresets: ['左', '正面', '右'],
@@ -160,6 +162,9 @@ export function scenarioReducer(
 
     case 'SET_SNATCHERS':
       return { ...state, memo: { ...state.memo, snatchers: action.payload } };
+
+    case 'SET_FREE_NOTE':
+      return { ...state, memo: { ...state.memo, freeNote: action.payload } };
 
     case 'SET_DISPLAY_MODE':
       return { ...state, displayMode: action.payload };

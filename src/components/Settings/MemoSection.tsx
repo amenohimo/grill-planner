@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ScenarioMemo, WeaponMaster, SpecialMaster } from '@/types';
 import { getWeaponIconPath, getSpecialIconPath, PLAYER_IDS } from '@/constants';
 
@@ -10,6 +10,7 @@ interface MemoSectionProps {
   onSetWeapon: (index: number, rowId: string) => void;
   onSetSpecial: (index: number, rowId: string) => void;
   onSetSnatchers: (value: string) => void;
+  onSetFreeNote: (value: string) => void;
 }
 
 export function MemoSection({
@@ -20,8 +21,24 @@ export function MemoSection({
   onSetWeapon,
   onSetSpecial,
   onSetSnatchers,
+  onSetFreeNote,
 }: MemoSectionProps) {
   const [open, setOpen] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleFreeNoteChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    onSetFreeNote(e.target.value);
+    const el = e.target;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }, [onSetFreeNote]);
+
+  useEffect(() => {
+    if (textareaRef.current && memo.freeNote) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [memo.freeNote]);
 
   return (
     <div className="border-t border-border">
@@ -126,6 +143,21 @@ export function MemoSection({
               onChange={(e) => onSetSnatchers(e.target.value)}
               placeholder="右ヒロイ"
               className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
+            />
+          </div>
+
+          {/* 自由メモ */}
+          <div>
+            <label className="mb-1 block text-xs text-text-muted">自由メモ</label>
+            <textarea
+              ref={textareaRef}
+              value={memo.freeNote}
+              onChange={handleFreeNoteChange}
+              placeholder="自由にメモを記入できます"
+              className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
+              style={{ minHeight: '3rem', resize: 'none', overflow: 'hidden' }}
+              rows={3}
+              maxLength={1000}
             />
           </div>
         </div>

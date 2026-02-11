@@ -94,6 +94,10 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     (value: string) => dispatch({ type: 'SET_SNATCHERS', payload: value }),
     [dispatch],
   )
+  const handleSetFreeNote = useCallback(
+    (value: string) => dispatch({ type: 'SET_FREE_NOTE', payload: value }),
+    [dispatch],
+  )
   const handleSetDirectionPreset = useCallback(
     (index: 0 | 1 | 2, name: string) => dispatch({ type: 'SET_DIRECTION_PRESET', payload: { index, name } }),
     [dispatch],
@@ -197,6 +201,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               onSetWeapon={handleSetWeapon}
               onSetSpecial={handleSetSpecial}
               onSetSnatchers={handleSetSnatchers}
+              onSetFreeNote={handleSetFreeNote}
             />
           </div>
 

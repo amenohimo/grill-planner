@@ -11,6 +11,7 @@ export interface ScenarioMemo {
     readonly order: readonly string[];
   };
   readonly snatchers: string;
+  readonly freeNote: string;
 }
 
 /** シナリオデータ（状態管理の中心） */
