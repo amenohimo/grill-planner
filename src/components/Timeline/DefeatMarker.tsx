@@ -74,6 +74,7 @@ export function DefeatMarker({
         transform: 'translate(-50%, -50%)',
         zIndex: isDragging ? 10 : 4,
         cursor,
+        animation: 'marker-in 150ms ease-out',
       }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
