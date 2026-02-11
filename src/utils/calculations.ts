@@ -139,7 +139,7 @@ export function generateDefaultDirections(
   const times = getDirectionSwitchTimes(directionInterval);
   return times.map((frameTime, index) => ({
     frameTime,
-    direction: `方面${index + 1}`,
+    direction: '正面',
   }));
 }
 
