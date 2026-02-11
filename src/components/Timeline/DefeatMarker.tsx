@@ -67,7 +67,7 @@ export function DefeatMarker({
 
   return (
     <div
-      className="absolute flex flex-col items-center"
+      className="absolute flex items-center"
       style={{
         top: pixelY,
         left: '50%',
@@ -82,16 +82,9 @@ export function DefeatMarker({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 時刻ラベル */}
-      <span
-        className="select-none whitespace-nowrap text-text-muted"
-        style={{ fontSize: 9, marginBottom: 1 }}
-      >
-        {seconds}s
-      </span>
-
       {/* マーカー（ダイヤモンド形） */}
       <div
+        className="shrink-0"
         style={{
           width: MARKER_SIZE,
           height: MARKER_SIZE,
@@ -103,6 +96,21 @@ export function DefeatMarker({
           transition: isDragging ? 'none' : 'background-color 0.15s',
         }}
       />
+
+      {/* 右側ラベル（時刻） */}
+      <span
+        className="select-none whitespace-nowrap"
+        style={{
+          marginLeft: 4,
+          fontSize: 9,
+          color: 'var(--color-text-muted)',
+          backgroundColor: 'rgba(255,255,255,0.85)',
+          padding: '1px 4px',
+          borderRadius: 2,
+        }}
+      >
+        {seconds}s
+      </span>
     </div>
   );
 }

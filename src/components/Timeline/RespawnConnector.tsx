@@ -33,7 +33,7 @@ export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorPr
 
       {/* スポナー決定マーク（小◇） */}
       <polygon
-        points={`${x},${decisionY - 4} ${x + 4},${decisionY} ${x},${decisionY + 4} ${x - 4},${decisionY}`}
+        points={`${x},${decisionY - 3} ${x + 3},${decisionY} ${x},${decisionY + 3} ${x - 3},${decisionY}`}
         fill="var(--color-spawner-decision)"
         stroke="var(--color-respawn-line)"
         strokeWidth={1}

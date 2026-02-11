@@ -13,7 +13,7 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
 
   return (
     <div
-      className="absolute flex flex-col items-center"
+      className="absolute flex items-center"
       style={{
         top: pixelY,
         left: '50%',
@@ -22,17 +22,9 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         animation: 'marker-in 150ms ease-out',
       }}
     >
-      {/* 時刻ラベル */}
-      <span
-        className="select-none whitespace-nowrap text-text-muted"
-        style={{ fontSize: 9, marginBottom: 1 }}
-      >
-        {seconds}s
-      </span>
-
       {/* マーカー円 */}
       <div
-        className="rounded-full"
+        className="shrink-0 rounded-full"
         style={{
           width: MARKER_SIZE,
           height: MARKER_SIZE,
@@ -41,12 +33,20 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         }}
       />
 
-      {/* 方面ラベル */}
+      {/* 右側ラベル（時刻+方面） */}
       <span
-        className="select-none whitespace-nowrap text-text-muted"
-        style={{ fontSize: 9, marginTop: 1 }}
+        className="select-none whitespace-nowrap"
+        style={{
+          marginLeft: 4,
+          fontSize: 9,
+          color: 'var(--color-text-muted)',
+          backgroundColor: 'rgba(255,255,255,0.85)',
+          padding: '1px 4px',
+          borderRadius: 2,
+          lineHeight: 1.3,
+        }}
       >
-        {spawn.direction}
+        {seconds}s {spawn.direction}
       </span>
     </div>
   );

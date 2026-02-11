@@ -12,9 +12,9 @@ export const TIMELINE_PADDING = 12; // 上下のパディング
 
 export const DIRECTION_LABEL_WIDTH = 32;
 export const TIME_AXIS_WIDTH = 28;
-export const LANE_WIDTH = 80;
+export const LANE_WIDTH = 100;
 export const LANE_SPACING = 4;
-export const MARKER_SIZE = 20;
+export const MARKER_SIZE = 14;
 export const ACTIVITY_BAR_WIDTH = 8;
 
 /** フレーム時刻 → ピクセルY座標（上=100s, 下=0s） */
