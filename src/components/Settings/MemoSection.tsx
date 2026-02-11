@@ -2,6 +2,44 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ScenarioMemo, WeaponMaster, SpecialMaster } from '@/types';
 import { getWeaponIconPath, getSpecialIconPath, PLAYER_IDS } from '@/constants';
 
+// ============================================================
+// シナリオコード正規化・バリデーション
+// ============================================================
+
+const VALID_CHARS = new Set('ABCDEFGHJKLMNPQRSTUVWXY0123456789'.split(''));
+
+function normalizeScenarioCode(raw: string): string {
+  // 1. 全角→半角
+  let s = raw.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (ch) =>
+    String.fromCharCode(ch.charCodeAt(0) - 0xFEE0),
+  );
+  // 2. 小文字→大文字
+  s = s.toUpperCase();
+  // 3. 有効文字とハイフン以外を除去
+  s = s.replace(/[^ABCDEFGHJKLMNPQRSTUVWXY0123456789-]/g, '');
+  // 4. ハイフンを全除去（再挿入するため）
+  s = s.replace(/-/g, '');
+  // 5. 最大17文字（S + 16桁）
+  s = s.slice(0, 17);
+  // 6. ハイフン自動挿入: Sxxxx-xxxx-xxxx-xxxx
+  if (s.length > 1) {
+    const head = s[0]!;
+    const rest = s.slice(1);
+    const parts = rest.match(/.{1,4}/g) ?? [];
+    s = head + parts.join('-');
+  }
+  return s;
+}
+
+function validateScenarioCode(normalized: string): boolean {
+  if (normalized === '') return true;
+  const bare = normalized.replace(/-/g, '');
+  if (bare.length < 17) return true; // 入力途中はOK
+  if (bare.length !== 17) return false;
+  if (bare[0] !== 'S') return false;
+  return [...bare].every((ch) => VALID_CHARS.has(ch));
+}
+
 interface MemoSectionProps {
   memo: ScenarioMemo;
   weapons: readonly WeaponMaster[];
@@ -24,7 +62,36 @@ export function MemoSection({
   onSetFreeNote,
 }: MemoSectionProps) {
   const [open, setOpen] = useState(false);
+  const [codeError, setCodeError] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const codeInputRef = useRef<HTMLInputElement>(null);
+
+  const handleCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const el = e.target;
+    const cursorBefore = el.selectionStart ?? 0;
+    const rawBefore = el.value;
+
+    const normalized = normalizeScenarioCode(el.value);
+    onSetScenarioCode(normalized);
+    setCodeError(!validateScenarioCode(normalized));
+
+    // カーソル位置補正
+    const barePosBefore = rawBefore.slice(0, cursorBefore).replace(/-/g, '').length;
+    let bareCount = 0;
+    let newCursor = 0;
+    for (let i = 0; i < normalized.length; i++) {
+      if (normalized[i] !== '-') bareCount++;
+      if (bareCount >= barePosBefore) {
+        newCursor = i + 1;
+        break;
+      }
+    }
+    if (bareCount < barePosBefore) newCursor = normalized.length;
+
+    requestAnimationFrame(() => {
+      el.setSelectionRange(newCursor, newCursor);
+    });
+  }, [onSetScenarioCode]);
 
   const handleFreeNoteChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onSetFreeNote(e.target.value);
@@ -56,11 +123,15 @@ export function MemoSection({
           <div>
             <label className="mb-1 block text-xs text-text-muted">シナリオコード</label>
             <input
+              ref={codeInputRef}
               type="text"
               value={memo.scenarioCode}
-              onChange={(e) => onSetScenarioCode(e.target.value)}
-              placeholder="例: RM-01-A"
-              className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
+              onChange={handleCodeChange}
+              placeholder="Sxxx-xxxx-xxxx-xxxx"
+              maxLength={20}
+              className={`w-52 rounded-sm border px-2 py-1 text-sm text-text ${
+                codeError ? 'border-danger' : 'border-border'
+              } bg-surface`}
             />
           </div>
 
