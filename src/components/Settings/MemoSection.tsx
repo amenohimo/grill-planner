@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import type { ScenarioMemo, WeaponMaster, SpecialMaster, DisplayMode, TargetMode } from '@/types';
+import type { ScenarioMemo, WeaponMaster, SpecialMaster, TargetMode } from '@/types';
 import { getWeaponIconPath, getSpecialIconPath, PLAYER_IDS } from '@/constants';
 
 interface MemoSectionProps {
   memo: ScenarioMemo;
   weapons: readonly WeaponMaster[];
   specials: readonly SpecialMaster[];
-  displayMode: DisplayMode;
   onSetScenarioCode: (code: string) => void;
   onSetWeapon: (index: number, rowId: string) => void;
   onSetSpecial: (index: number, rowId: string) => void;
@@ -18,7 +17,6 @@ export function MemoSection({
   memo,
   weapons,
   specials,
-  displayMode,
   onSetScenarioCode,
   onSetWeapon,
   onSetSpecial,
@@ -51,75 +49,71 @@ export function MemoSection({
             />
           </div>
 
-          {/* ブキ選択 */}
-          <div>
-            <label className="mb-1 block text-xs text-text-muted">ブキ</label>
-            <div className="flex flex-wrap gap-2">
-              {PLAYER_IDS.map((pid, i) => {
-                const selectedRowId = memo.weapons[i] ?? '';
-                const selectedWeapon = weapons.find((w) => w.rowId === selectedRowId);
-                return (
-                  <div key={pid} className="flex items-center gap-1">
-                    <span className="text-xs text-text-muted">{pid}</span>
-                    {displayMode !== 'text' && selectedWeapon && (
-                      <img
-                        src={getWeaponIconPath(selectedWeapon.id)}
-                        alt=""
-                        className="h-6 w-6"
-                      />
-                    )}
-                    <select
-                      value={selectedRowId}
-                      onChange={(e) => onSetWeapon(i, e.target.value)}
-                      className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
-                    >
-                      <option value="">--</option>
-                      {weapons.map((w) => (
-                        <option key={w.rowId} value={w.rowId}>
-                          {w.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* スペシャル選択 */}
-          <div>
-            <label className="mb-1 block text-xs text-text-muted">スペシャル</label>
-            <div className="flex flex-wrap gap-2">
-              {PLAYER_IDS.map((pid, i) => {
-                const selectedRowId = memo.specials[i] ?? '';
-                const selectedSpecial = specials.find((s) => s.rowId === selectedRowId);
-                return (
-                  <div key={pid} className="flex items-center gap-1">
-                    <span className="text-xs text-text-muted">{pid}</span>
-                    {displayMode !== 'text' && selectedSpecial && (
-                      <img
-                        src={getSpecialIconPath(selectedSpecial.id)}
-                        alt=""
-                        className="h-6 w-6"
-                      />
-                    )}
-                    <select
-                      value={selectedRowId}
-                      onChange={(e) => onSetSpecial(i, e.target.value)}
-                      className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
-                    >
-                      <option value="">--</option>
-                      {specials.map((s) => (
-                        <option key={s.rowId} value={s.rowId}>
-                          {s.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          {/* ブキ/スペシャル選択（表レイアウト） */}
+          <table className="border-collapse text-xs">
+            <thead>
+              <tr>
+                <th />
+                {PLAYER_IDS.map((pid) => (
+                  <th key={pid} className="px-1 pb-1 text-center font-medium text-text-muted">{pid}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td className="pr-2 text-text-muted">ブキ</td>
+                {PLAYER_IDS.map((_, i) => {
+                  const selectedRowId = memo.weapons[i] ?? '';
+                  const selectedWeapon = weapons.find((w) => w.rowId === selectedRowId);
+                  return (
+                    <td key={i} className="px-1 py-0.5">
+                      <div className="flex items-center gap-1">
+                        {selectedWeapon && (
+                          <img src={getWeaponIconPath(selectedWeapon.id)} alt="" className="h-6 w-6" />
+                        )}
+                        <select
+                          value={selectedRowId}
+                          onChange={(e) => onSetWeapon(i, e.target.value)}
+                          className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                        >
+                          <option value="">--</option>
+                          {weapons.map((w) => (
+                            <option key={w.rowId} value={w.rowId}>{w.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+              <tr>
+                <td className="pr-2 text-text-muted">SP</td>
+                {PLAYER_IDS.map((_, i) => {
+                  const selectedRowId = memo.specials[i] ?? '';
+                  const selectedSpecial = specials.find((s) => s.rowId === selectedRowId);
+                  return (
+                    <td key={i} className="px-1 py-0.5">
+                      <div className="flex items-center gap-1">
+                        {selectedSpecial && (
+                          <img src={getSpecialIconPath(selectedSpecial.id)} alt="" className="h-6 w-6" />
+                        )}
+                        <select
+                          value={selectedRowId}
+                          onChange={(e) => onSetSpecial(i, e.target.value)}
+                          className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                        >
+                          <option value="">--</option>
+                          {specials.map((s) => (
+                            <option key={s.rowId} value={s.rowId}>{s.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </td>
+                  );
+                })}
+              </tr>
+            </tbody>
+          </table>
 
           {/* ターゲットモード */}
           <div>

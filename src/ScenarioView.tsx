@@ -156,7 +156,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               memo={state.memo}
               weapons={weapons}
               specials={specials}
-              displayMode={state.displayMode}
               onSetScenarioCode={handleSetScenarioCode}
               onSetWeapon={handleSetWeapon}
               onSetSpecial={handleSetSpecial}
