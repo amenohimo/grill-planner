@@ -104,6 +104,45 @@ function isConsistentDefeat(
 }
 
 // ============================================================
+// 撃破削除時のカスケード判定
+// ============================================================
+
+/**
+ * 撃破点の削除後に不整合となる撃破点を取得（カスケード削除用）
+ * 削除 → 再計算 → 不整合チェック → さらに削除… を安定するまで繰り返す
+ */
+export function findCascadeRemovals(
+  removedId: string,
+  allDefeats: readonly DefeatPoint[],
+  hazardConfig: InterpolatedHazardConfig,
+  directions: readonly DirectionSetting[],
+): readonly string[] {
+  const removedIds: string[] = [removedId];
+  let remaining = allDefeats.filter((d) => d.id !== removedId);
+  let changed = true;
+
+  while (changed) {
+    changed = false;
+    const spawns = calculateSpawns(hazardConfig, directions, remaining);
+    const toRemove: string[] = [];
+
+    for (const defeat of remaining) {
+      if (!isConsistentDefeat(defeat, spawns)) {
+        toRemove.push(defeat.id);
+      }
+    }
+
+    if (toRemove.length > 0) {
+      remaining = remaining.filter((d) => !toRemove.includes(d.id));
+      removedIds.push(...toRemove);
+      changed = true;
+    }
+  }
+
+  return removedIds;
+}
+
+// ============================================================
 // 撃破移動時の影響判定（02_GAME_MECHANICS §9）
 // ============================================================
 
