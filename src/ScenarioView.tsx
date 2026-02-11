@@ -139,39 +139,45 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
         </div>
       )}
 
-      {/* 設定パネル */}
-      <div className="border-b border-border bg-surface px-4 py-3">
-        <div className="flex flex-wrap items-center gap-6">
-          <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
-          <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
-          <div className="text-xs text-text-muted">
-            方面: {state.directions.length} | 湧き: {spawns.length} | グリル: {totalGrillCount}
+      {/* メインエリア（左: 設定+タイムライン / 右: 統計サイドバー） */}
+      <div className="flex min-h-0 flex-1">
+        {/* 左ペイン */}
+        <div className="flex min-h-0 flex-1 flex-col">
+          {/* 設定パネル */}
+          <div className="border-b border-border bg-surface px-4 py-3">
+            <div className="flex flex-wrap items-center gap-6">
+              <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
+              <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
+              <div className="text-xs text-text-muted">
+                方面: {state.directions.length} | 湧き: {spawns.length} | グリル: {totalGrillCount}
+              </div>
+            </div>
+            <MemoSection
+              memo={state.memo}
+              weapons={weapons}
+              specials={specials}
+              displayMode={state.displayMode}
+              onSetScenarioCode={handleSetScenarioCode}
+              onSetWeapon={handleSetWeapon}
+              onSetSpecial={handleSetSpecial}
+              onSetTargetMode={handleSetTargetMode}
+              onSetSnatchers={handleSetSnatchers}
+            />
+          </div>
+
+          {/* タイムライン */}
+          <div className="min-h-0 flex-1 p-4">
+            <Timeline
+              spawns={spawns}
+              defeats={state.defeats}
+              directions={state.directions}
+              hazardConfig={hazardConfig}
+            />
           </div>
         </div>
-        <MemoSection
-          memo={state.memo}
-          weapons={weapons}
-          specials={specials}
-          displayMode={state.displayMode}
-          onSetScenarioCode={handleSetScenarioCode}
-          onSetWeapon={handleSetWeapon}
-          onSetSpecial={handleSetSpecial}
-          onSetTargetMode={handleSetTargetMode}
-          onSetSnatchers={handleSetSnatchers}
-        />
-      </div>
 
-      {/* メインエリア（タイムライン + 統計） */}
-      <div className="flex min-h-0 flex-1 gap-4 p-4">
-        <div className="min-h-0 flex-1">
-          <Timeline
-            spawns={spawns}
-            defeats={state.defeats}
-            directions={state.directions}
-            hazardConfig={hazardConfig}
-          />
-        </div>
-        <div className="w-70 shrink-0 overflow-y-auto rounded-sm border border-border bg-surface p-4">
+        {/* 右ペイン（統計サイドバー） */}
+        <div className="w-70 shrink-0 overflow-y-auto border-l border-border bg-surface p-4">
           <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} />
         </div>
       </div>
