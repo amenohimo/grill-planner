@@ -125,28 +125,28 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
   }, [dispatch, hazardConfigData, weapons, specials])
 
   return (
-    <div className="flex min-h-screen flex-col bg-bg">
-      {/* ヘッダー */}
+    <div className="flex h-screen flex-col bg-bg">
+      {/* ヘッダー — 固定 */}
       <Header onExport={handleExport} onImport={handleImport} />
 
       {/* I/O エラー表示 */}
       {ioError && (
-        <div className="bg-danger px-4 py-2 text-sm text-white">
+        <div className="shrink-0 bg-danger px-4 py-2 text-sm text-white">
           {ioError}
         </div>
       )}
 
       {/* I/O 警告表示 */}
       {ioWarnings.length > 0 && (
-        <div className="bg-primary px-4 py-2 text-sm text-white">
+        <div className="shrink-0 bg-primary px-4 py-2 text-sm text-white">
           {ioWarnings.map((w, i) => <div key={i}>{w}</div>)}
         </div>
       )}
 
       {/* メインエリア（左: 設定+タイムライン / 右: 統計サイドバー） */}
       <div className="flex min-h-0 flex-1">
-        {/* 左ペイン */}
-        <div className="flex min-h-0 flex-1 flex-col">
+        {/* 左ペイン — 独立スクロール */}
+        <div className="flex-1 overflow-y-auto">
           {/* 設定パネル */}
           <div className="border-b border-border bg-surface px-4 py-3">
             <div className="flex flex-wrap items-center gap-6">
@@ -201,7 +201,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
           </div>
 
           {/* タイムライン */}
-          <div className="min-h-0 flex-1 p-4">
+          <div className="p-4">
             <Timeline
               spawns={spawns}
               defeats={state.defeats}
@@ -212,7 +212,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
           </div>
         </div>
 
-        {/* 右ペイン（統計サイドバー） */}
+        {/* 右ペイン — 独立スクロール */}
         <div className="w-70 shrink-0 overflow-y-auto border-l border-border bg-surface p-4">
           <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} />
         </div>

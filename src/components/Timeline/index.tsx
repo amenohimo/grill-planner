@@ -77,7 +77,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
   );
 
   return (
-    <div className="h-full overflow-y-auto rounded-sm border border-border bg-surface">
+    <div className="rounded-sm border border-border bg-surface">
       <div
         className="flex"
         style={{
