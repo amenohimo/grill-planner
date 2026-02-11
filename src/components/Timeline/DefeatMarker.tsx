@@ -51,6 +51,10 @@ export function DefeatMarker({
     [defeat.id, onMouseDown],
   );
 
+  const handleClick = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
   const handleContextMenu = useCallback(
     (e: MouseEvent) => {
       e.preventDefault();
@@ -71,6 +75,7 @@ export function DefeatMarker({
         cursor,
       }}
       onMouseDown={handleMouseDown}
+      onClick={handleClick}
       onContextMenu={handleContextMenu}
     >
       {/* 時刻ラベル */}

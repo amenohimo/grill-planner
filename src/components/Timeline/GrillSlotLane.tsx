@@ -55,7 +55,7 @@ export function GrillSlotLane({
     [onMoveDefeat],
   );
 
-  const { dragState, startDragCandidate } = useTimelineDrag(
+  const { dragState, startDragCandidate, justFinishedDragRef } = useTimelineDrag(
     pixelYToFrame,
     validatePosition,
     handleDragEnd,
@@ -64,8 +64,8 @@ export function GrillSlotLane({
 
   const handleClick = useCallback(
     (e: MouseEvent<HTMLDivElement>) => {
-      // ドラッグ中はクリック抑止
-      if (dragState.isDragging) return;
+      // ドラッグ操作直後の click イベントを抑止（ref ベースで同期的に判定）
+      if (justFinishedDragRef.current) return;
       if (!onAddDefeat || !laneRef.current) return;
 
       const rect = laneRef.current.getBoundingClientRect();
@@ -78,7 +78,7 @@ export function GrillSlotLane({
         setTimeout(() => setInvalidClick(null), 500);
       }
     },
-    [slot, onAddDefeat, dragState.isDragging],
+    [slot, onAddDefeat, justFinishedDragRef],
   );
 
   const handleDefeatMouseDown = useCallback(

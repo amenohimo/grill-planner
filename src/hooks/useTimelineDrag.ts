@@ -14,6 +14,7 @@ export interface UseTimelineDragReturn {
   dragState: DragState;
   startDragCandidate: (defeatId: string, startY: number) => void;
   cancelDrag: () => void;
+  justFinishedDragRef: React.RefObject<boolean>;
 }
 
 const INITIAL_STATE: DragState = {
@@ -45,6 +46,7 @@ export function useTimelineDrag(
   onDragEndRef.current = onDragEnd;
 
   const candidateRef = useRef<{ defeatId: string; startY: number } | null>(null);
+  const justFinishedDragRef = useRef(false);
 
   const startDragCandidate = useCallback(
     (defeatId: string, startY: number) => {
@@ -91,6 +93,12 @@ export function useTimelineDrag(
         onDragEndRef.current(candidate.defeatId, state.dragFrameTime);
       }
 
+      // ドラッグ操作（候補含む）の直後の click イベントを抑止するフラグ
+      justFinishedDragRef.current = true;
+      requestAnimationFrame(() => {
+        justFinishedDragRef.current = false;
+      });
+
       candidateRef.current = null;
       setDragState(INITIAL_STATE);
     };
@@ -113,5 +121,5 @@ export function useTimelineDrag(
     };
   }, [laneRef]);
 
-  return { dragState, startDragCandidate, cancelDrag };
+  return { dragState, startDragCandidate, cancelDrag, justFinishedDragRef };
 }
