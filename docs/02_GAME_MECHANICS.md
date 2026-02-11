@@ -485,31 +485,30 @@ testSpawns:
 
 d2(5500F)は湧き(5486F)より過去に撃破しようとしているため不正。`lastSpawn(5486) >= defeat(5500)` が成立しない。
 
-### 8.5 撃破可能条件の最終定義
+### 8.5 撃破可能条件の最終定義（チェーン検証方式）
+
+旧 `isConsistentDefeat` の個別チェック方式では、1つの湧きが複数の撃破に対応してしまう問題がある。正しくは枠単位で「湧き→撃破→湧き→撃破→…」のチェーンが1対1で成立するかを検証する（`validateSlotChain`）。
 
 ```
-isConsistentDefeat(defeat, spawns):
-  slotSpawns = spawns.filter(s => s.slot === defeat.slot)
-                     .sort(descending by frameTime)
+validateSlotChain(sortedSpawns, sortedDefeats):
+  // 引数は降順ソート済み（大きい frameTime = ゲーム開始寄り が先頭）
+  spawnIdx = 0
 
-  // 撃破時刻以上（同時含む過去側）の湧きを取得
-  pastSpawns = slotSpawns.filter(s => s.frameTime >= defeat.frameTime)
-  if pastSpawns is empty: return false
+  for defeat in sortedDefeats:
+    // この撃破に対応する湧きを探す（defeat.frameTime 以上の湧き）
+    while spawnIdx < sortedSpawns.length && sortedSpawns[spawnIdx].frameTime < defeat.frameTime:
+      spawnIdx++
 
-  // 最も近い過去の湧き
-  lastSpawn = pastSpawns[pastSpawns.length − 1]  // 降順なので末尾が最小
+    if spawnIdx >= sortedSpawns.length:
+      return false  // 対応する湧きがない
 
-  // 撃破時刻未満（未来側）の湧きを取得
-  futureSpawns = slotSpawns.filter(s => s.frameTime < defeat.frameTime)
+    // この湧きはこの撃破で消費 → 次へ
+    spawnIdx++
 
-  if futureSpawns is empty:
-    return true  // 以降の湧きがなければ0秒まで撃破可能
-
-  nextSpawn = futureSpawns[0]  // 降順なので先頭が最大（最も近い未来）
-
-  // 撃破は次の湧きより過去でなければならない
-  return defeat.frameTime > nextSpawn.frameTime
+  return true
 ```
+
+重要なのは、**1つの湧きは1つの撃破にしか対応できない**ということ。湧き→撃破の1対1マッチングを降順（時間的に過去から）に行う。
 
 ---
 

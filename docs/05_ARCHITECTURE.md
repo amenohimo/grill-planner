@@ -484,78 +484,65 @@ export function sortDirectionSettings(directions: readonly DirectionSetting[]): 
 export function calculateSpawns(config: InterpolatedHazardConfig, directions: readonly DirectionSetting[], defeats: readonly DefeatPoint[]): SpawnPoint[];
 ```
 
-### 4.3 validation.ts — シミュレーション方式
+### 4.3 validation.ts — シミュレーション方式（チェーン検証）
 
-旧実装の P0 バグを解決する核心部分。
+旧実装の P0 バグを解決する核心部分。旧 `isConsistentDefeat` の個別チェックでは1つの湧きが複数の撃破に対応してしまう問題があったため、枠単位の1対1チェーン検証方式に置換。
 
 ```typescript
 /**
- * 撃破の追加・移動が妥当かを検証する。
- *
- * 手順:
- * 1. 仮の撃破リストを構築（追加 or 移動を反映）
- * 2. 仮リストで calculateSpawns を再計算
- * 3. 再計算後の spawns で全撃破点の整合性をチェック
+ * 全撃破点の整合性を枠単位のチェーン検証で判定する。
+ * 1つの湧きは1つの撃破にしか対応できないため、枠ごとに1対1マッチングを行う。
  */
-export function validateDefeatChange(
-  change: { type: 'add'; defeat: DefeatPoint } | { type: 'move'; id: string; newFrameTime: FrameTime },
-  currentDefeats: readonly DefeatPoint[],
+function validateAllDefeats(
+  defeats: readonly DefeatPoint[],
   hazardConfig: InterpolatedHazardConfig,
   directions: readonly DirectionSetting[]
 ): ValidationResult {
-  // 1. 仮の撃破リストを構築
-  let testDefeats: DefeatPoint[];
-  if (change.type === 'add') {
-    testDefeats = [...currentDefeats, change.defeat];
-  } else {
-    testDefeats = currentDefeats.map((d) =>
-      d.id === change.id ? { ...d, frameTime: change.newFrameTime } : d
-    );
-  }
+  const testSpawns = calculateSpawns(hazardConfig, directions, defeats);
 
-  // 2. 仮リストで spawns を再計算
-  const testSpawns = calculateSpawns(hazardConfig, directions, testDefeats);
+  for (const slot of ['A', 'B'] as const) {
+    const slotSpawns = testSpawns
+      .filter((s) => s.slot === slot)
+      .sort((a, b) => b.frameTime - a.frameTime); // 降順
+    const slotDefeats = defeats
+      .filter((d) => d.slot === slot)
+      .sort((a, b) => b.frameTime - a.frameTime); // 降順
 
-  // 3. 全撃破点の整合性チェック
-  for (const defeat of testDefeats) {
-    if (!isConsistentDefeat(defeat, testSpawns)) {
-      return { valid: false, reason: `撃破 ${defeat.id} が湧き点と不整合` };
+    if (!validateSlotChain(slotSpawns, slotDefeats)) {
+      return { valid: false, reason: `${slot}枠の湧き-撃破チェーンが不整合` };
     }
   }
 
   return { valid: true };
 }
 
-export interface ValidationResult {
-  readonly valid: boolean;
-  readonly reason?: string;
-}
-
 /**
- * 1つの撃破点が spawns と整合しているか検証する。
- *
- * 条件: lastSpawn.frameTime >= defeat.frameTime > nextSpawn.frameTime
+ * 枠内の湧き-撃破チェーンの整合性を検証する。
+ * @param sortedSpawns 降順ソート済み（大きい frameTime = ゲーム開始寄り が先頭）
+ * @param sortedDefeats 降順ソート済み（大きい frameTime = ゲーム開始寄り が先頭）
  */
-function isConsistentDefeat(
-  defeat: DefeatPoint,
-  spawns: readonly SpawnPoint[]
+function validateSlotChain(
+  sortedSpawns: readonly SpawnPoint[],
+  sortedDefeats: readonly DefeatPoint[]
 ): boolean {
-  const slotSpawns = spawns
-    .filter((s) => s.slot === defeat.slot)
-    .sort((a, b) => b.frameTime - a.frameTime); // 降順
+  let spawnIdx = 0;
 
-  // 撃破時刻以上の湧き（過去側）
-  const pastSpawns = slotSpawns.filter((s) => s.frameTime >= defeat.frameTime);
-  if (pastSpawns.length === 0) return false;
+  for (const defeat of sortedDefeats) {
+    while (
+      spawnIdx < sortedSpawns.length &&
+      sortedSpawns[spawnIdx]!.frameTime < defeat.frameTime
+    ) {
+      spawnIdx++;
+    }
 
-  // 撃破時刻未満の湧き（未来側）
-  const futureSpawns = slotSpawns.filter((s) => s.frameTime < defeat.frameTime);
-  if (futureSpawns.length === 0) return true;
+    if (spawnIdx >= sortedSpawns.length) {
+      return false; // 対応する湧きがない
+    }
 
-  // 最も近い未来の湧き（降順なので先頭が最大＝最も近い）
-  const nextSpawn = futureSpawns[0]!;
+    spawnIdx++; // この湧きはこの撃破で消費
+  }
 
-  return defeat.frameTime > nextSpawn.frameTime;
+  return true;
 }
 ```
 

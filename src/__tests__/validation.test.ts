@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { validateAddDefeat, validateMoveDefeat, findCascadeRemovals } from '@/utils/validation';
 import { generateDefaultDirections } from '@/utils/calculations';
-import type { DefeatPoint, InterpolatedHazardConfig, DirectionSetting } from '@/types';
+import type { DefeatPoint, InterpolatedHazardConfig } from '@/types';
 
 // ============================================================
 // テスト用の共通データ
@@ -14,7 +14,7 @@ const hazardConfig: InterpolatedHazardConfig = {
   bSlotOpenFrame: 3786,
 };
 
-const directions: readonly DirectionSetting[] = generateDefaultDirections(14.4);
+const directions = generateDefaultDirections(14.4);
 
 // ============================================================
 // 撃破追加バリデーション（02_GAME_MECHANICS §8）
@@ -41,13 +41,13 @@ describe('validateAddDefeat', () => {
     expect(result.valid).toBe(false);
   });
 
-  it('既存の撃破の後に有効な撃破を追加できる', () => {
+  it('撃破後の再湧き以降に次の撃破を追加できる', () => {
     const existing: DefeatPoint[] = [
       { id: 'd1', slot: 'A', frameTime: 5400 },
     ];
-    // d1の湧き = 5400 - 214 = 5186F, この後に撃破
+    // d1の湧き = 5400 - 214 = 5186F → 5100Fはその後なので有効
     const result = validateAddDefeat(
-      { id: 'd2', slot: 'A', frameTime: 5000 },
+      { id: 'd2', slot: 'A', frameTime: 5100 },
       existing,
       hazardConfig,
       directions,
@@ -55,19 +55,34 @@ describe('validateAddDefeat', () => {
     expect(result.valid).toBe(true);
   });
 
-  it('同一湧きの区間内に複数撃破はシミュレーション上は有効', () => {
+  it('湧きが消費済みの区間には撃破を追加できない', () => {
     const existing: DefeatPoint[] = [
       { id: 'd1', slot: 'A', frameTime: 5400 },
     ];
-    // シミュレーション方式: d1とd2が同時に存在する前提で再計算するため、
-    // 両方の撃破がそれぞれ有効な湧き区間に収まれば valid
+    // auto-a=6000F → d1=5400Fで撃破、次の湧き=5186F
+    // 5300Fは5186Fより過去（5300 > 5186）→ まだ再湧きしていない
     const result = validateAddDefeat(
       { id: 'd2', slot: 'A', frameTime: 5300 },
       existing,
       hazardConfig,
       directions,
     );
-    expect(result.valid).toBe(true);
+    expect(result.valid).toBe(false);
+  });
+
+  it('前の撃破で湧きが消費済みの区間には撃破を追加できない（3800F問題）', () => {
+    const existing: DefeatPoint[] = [
+      { id: 'd1', slot: 'A', frameTime: 4000 },
+    ];
+    // auto-a=6000F → d1=4000Fで撃破、次の湧き=4000-214=3786F
+    // 3800Fは3786Fより過去（3800 > 3786）→ まだ再湧きしていない
+    const result = validateAddDefeat(
+      { id: 'd2', slot: 'A', frameTime: 3800 },
+      existing,
+      hazardConfig,
+      directions,
+    );
+    expect(result.valid).toBe(false);
   });
 });
 

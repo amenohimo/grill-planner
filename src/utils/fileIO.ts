@@ -1,5 +1,6 @@
 import type { ScenarioData, SaveData, HazardConfigData, DefeatPoint } from '@/types';
-import { getHazardConfig, generateDefaultDirections, calculateSpawns } from './calculations';
+import { getHazardConfig, generateDefaultDirections } from './calculations';
+import { findAllInvalidDefeats } from './validation';
 
 const CURRENT_VERSION = 1;
 
@@ -151,24 +152,17 @@ function parseAndValidate(json: string, hazardConfigData: HazardConfigData): Imp
     ? parsed.directions
     : generateDefaultDirections(hazardConfig.directionInterval);
 
-  const spawns = calculateSpawns(hazardConfig, directions, parsed.defeats);
   const warnings: string[] = [];
 
-  // 各撃破点について、対応する湧きが存在するかチェック
-  const invalidDefeats = parsed.defeats.filter((defeat: DefeatPoint) => {
-    // B枠が存在しないキケン度でのB枠撃破
-    if (hazardConfig.bSlotOpenFrame < 0 && defeat.slot === 'B') return true;
-    // 対応する湧き点が存在しない
-    const slotSpawns = spawns.filter((s) => s.slot === defeat.slot);
-    return !slotSpawns.some((s) => s.frameTime >= defeat.frameTime);
-  });
+  // チェーン検証で不正な撃破点を検出（湧き消費の1対1マッチング）
+  const invalidDefeatIds = findAllInvalidDefeats(parsed.defeats, hazardConfig, directions);
 
-  if (invalidDefeats.length > 0) {
-    warnings.push(`不整合な撃破点 ${invalidDefeats.length} 件を除外しました`);
+  if (invalidDefeatIds.length > 0) {
+    warnings.push(`不整合な撃破点 ${invalidDefeatIds.length} 件を除外しました`);
   }
 
   // 不整合な撃破点を除外
-  const invalidIds = new Set(invalidDefeats.map((d: DefeatPoint) => d.id));
+  const invalidIds = new Set(invalidDefeatIds);
   const validDefeats = parsed.defeats.filter((d: DefeatPoint) => !invalidIds.has(d.id));
 
   return {
