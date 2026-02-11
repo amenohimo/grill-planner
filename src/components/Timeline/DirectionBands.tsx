@@ -1,5 +1,5 @@
 import type { DirectionSetting } from '@/types';
-import { frameToPixelY, TIMELINE_HEIGHT, DIR_BAND_COLORS } from './coordinates';
+import { frameToPixelY, TIMELINE_HEIGHT, getDirectionColorMap } from './coordinates';
 
 interface DirectionBandsProps {
   directions: readonly DirectionSetting[];
@@ -7,6 +7,7 @@ interface DirectionBandsProps {
 
 export function DirectionBands({ directions }: DirectionBandsProps) {
   const sortedDirs = [...directions].sort((a, b) => b.frameTime - a.frameTime);
+  const colorMap = getDirectionColorMap(directions);
 
   return (
     <>
@@ -15,7 +16,7 @@ export function DirectionBands({ directions }: DirectionBandsProps) {
         const nextDir = sortedDirs[index + 1];
         const bottom = nextDir ? frameToPixelY(nextDir.frameTime) : TIMELINE_HEIGHT;
         const height = bottom - top;
-        const color = DIR_BAND_COLORS[index % DIR_BAND_COLORS.length] ?? DIR_BAND_COLORS[0];
+        const color = colorMap.get(dir.direction) ?? 'var(--color-dir-1)';
 
         return (
           <div

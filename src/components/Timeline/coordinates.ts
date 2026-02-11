@@ -1,4 +1,4 @@
-import type { FrameTime } from '@/types';
+import type { FrameTime, DirectionSetting } from '@/types';
 import { GAME_DURATION_SECONDS } from '@/constants';
 import { framesToSeconds, secondsToFrames } from '@/utils/calculations';
 
@@ -41,3 +41,24 @@ export const DIR_BAND_COLORS = [
   'var(--color-dir-8)',
   'var(--color-dir-9)',
 ] as const;
+
+/** 方面名 → カラーのマッピング（同名方面は同色） */
+export function getDirectionColorMap(
+  directions: readonly DirectionSetting[],
+): Map<string, string> {
+  const sorted = [...directions].sort((a, b) => b.frameTime - a.frameTime);
+  const colorMap = new Map<string, string>();
+  let colorIdx = 0;
+
+  for (const dir of sorted) {
+    if (!colorMap.has(dir.direction)) {
+      colorMap.set(
+        dir.direction,
+        DIR_BAND_COLORS[colorIdx % DIR_BAND_COLORS.length] ?? DIR_BAND_COLORS[0],
+      );
+      colorIdx++;
+    }
+  }
+
+  return colorMap;
+}
