@@ -215,7 +215,7 @@ export function calculateSpawns(
     const spawnerDecisionTime = calculateSpawnerDecisionTime(defeat.frameTime);
     const spawnTime = calculateSpawnTime(defeat.frameTime);
     result.push({
-      id: defeat.id,
+      id: `spawn-${defeat.id}`,
       slot: defeat.slot,
       frameTime: spawnTime,
       direction: getDirectionAtTime(spawnerDecisionTime, sortedDirections),
