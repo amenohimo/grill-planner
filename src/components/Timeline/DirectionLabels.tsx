@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, type MouseEvent } from 'react';
 import type { DirectionSetting } from '@/types';
 import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, DIR_BAND_COLORS } from './coordinates';
 
@@ -53,6 +53,7 @@ interface DirectionLabelProps {
 
 function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateName }: DirectionLabelProps) {
   const [hovered, setHovered] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const selectPreset = useCallback(
     (presetName: string) => {
@@ -64,8 +65,15 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
     [name, originalIndex, onUpdateName],
   );
 
+  const handleMouseLeave = useCallback((e: MouseEvent) => {
+    const related = e.relatedTarget as Node | null;
+    if (containerRef.current?.contains(related)) return;
+    setHovered(false);
+  }, []);
+
   return (
     <div
+      ref={containerRef}
       className="absolute flex items-center justify-center overflow-visible"
       style={{
         top,
@@ -75,7 +83,7 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
         left: 0,
       }}
       onMouseEnter={() => onUpdateName && setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+      onMouseLeave={handleMouseLeave}
     >
       <span
         className="select-none truncate px-1 text-sm font-medium text-text"
@@ -84,14 +92,14 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
         {name}
       </span>
 
-      {/* ホバー時フロート */}
+      {/* ホバー時フロート — ラベルの中央に重ねて表示 */}
       {hovered && (
         <div
           className="absolute flex items-center gap-1 rounded border border-border bg-surface p-1 shadow-sm"
           style={{
-            left: DIRECTION_LABEL_WIDTH + 4,
+            left: '50%',
             top: '50%',
-            transform: 'translateY(-50%)',
+            transform: 'translate(-50%, -50%)',
             zIndex: 20,
             whiteSpace: 'nowrap',
           }}
