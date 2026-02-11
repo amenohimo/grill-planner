@@ -97,9 +97,9 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
         <div
           className="absolute flex items-center gap-1 rounded border border-border bg-surface p-1 shadow-sm"
           style={{
-            left: '50%',
+            left: 0,
             top: '50%',
-            transform: 'translate(-50%, -50%)',
+            transform: 'translateY(-50%)',
             zIndex: 20,
             whiteSpace: 'nowrap',
           }}
