@@ -12,5 +12,6 @@ export interface InterpolatedHazardConfig {
 export interface DirectionStats {
   readonly directionIndex: number;
   readonly direction: string;
-  readonly count: number;
+  readonly spawnCount: number;
+  readonly defeatCount: number;
 }

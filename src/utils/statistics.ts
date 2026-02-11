@@ -83,15 +83,46 @@ export function calculateDirectionStats(
 ): readonly DirectionStats[] {
   const sortedDirections = [...directions].sort((a, b) => b.frameTime - a.frameTime);
 
-  // 各区間のカウントを初期化
-  const counts = new Array<number>(sortedDirections.length).fill(0);
+  // 各区間の湧きカウントを初期化
+  const spawnCounts = new Array<number>(sortedDirections.length).fill(0);
 
   // 各湧き点を区間に分類してカウント
   for (const spawn of spawns) {
     const decisionFrame = getSpawnerDecisionFrame(spawn, defeats);
     const index = findDirectionIndex(decisionFrame, sortedDirections);
-    if (index >= 0 && index < counts.length) {
-      counts[index]!++;
+    if (index >= 0 && index < spawnCounts.length) {
+      spawnCounts[index]!++;
+    }
+  }
+
+  // 撃破数集計: 枠ごとに降順ソートした湧きと撃破を1対1マッチング
+  const defeatCounts = new Array<number>(sortedDirections.length).fill(0);
+
+  for (const slot of ['A', 'B'] as const) {
+    const slotSpawns = spawns
+      .filter((s) => s.slot === slot)
+      .sort((a, b) => b.frameTime - a.frameTime);
+    const slotDefeats = defeats
+      .filter((d) => d.slot === slot)
+      .sort((a, b) => b.frameTime - a.frameTime);
+
+    let spawnIdx = 0;
+    for (const defeat of slotDefeats) {
+      while (
+        spawnIdx < slotSpawns.length &&
+        slotSpawns[spawnIdx]!.frameTime < defeat.frameTime
+      ) {
+        spawnIdx++;
+      }
+      if (spawnIdx >= slotSpawns.length) break;
+
+      const matchedSpawn = slotSpawns[spawnIdx]!;
+      const decisionFrame = getSpawnerDecisionFrame(matchedSpawn, defeats);
+      const dirIndex = findDirectionIndex(decisionFrame, sortedDirections);
+      if (dirIndex >= 0 && dirIndex < defeatCounts.length) {
+        defeatCounts[dirIndex]!++;
+      }
+      spawnIdx++;
     }
   }
 
@@ -99,6 +130,7 @@ export function calculateDirectionStats(
   return sortedDirections.map((dir, index) => ({
     directionIndex: index,
     direction: dir.direction,
-    count: counts[index] ?? 0,
+    spawnCount: spawnCounts[index] ?? 0,
+    defeatCount: defeatCounts[index] ?? 0,
   }));
 }

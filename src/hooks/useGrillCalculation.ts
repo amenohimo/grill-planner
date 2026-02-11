@@ -18,7 +18,7 @@ export function useGrillCalculation(
     const hazardConfig = getHazardConfig(scenario.hazardLevel, hazardConfigData);
     const spawns = calculateSpawns(hazardConfig, scenario.directions, scenario.defeats);
     const stats = calculateDirectionStats(spawns, scenario.defeats, scenario.directions);
-    const totalGrillCount = stats.reduce((sum, s) => sum + s.count, 0);
+    const totalGrillCount = stats.reduce((sum, s) => sum + s.spawnCount, 0);
 
     return { hazardConfig, spawns, directionStats: stats, totalGrillCount };
   }, [scenario.hazardLevel, scenario.directions, scenario.defeats, hazardConfigData]);
