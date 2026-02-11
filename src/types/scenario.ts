@@ -4,8 +4,8 @@ import type { DefeatPoint, DirectionSetting } from './game';
 /** メモ情報（計算には無関係） */
 export interface ScenarioMemo {
   readonly scenarioCode: string;
-  readonly weapons: readonly number[];
-  readonly specials: readonly number[];
+  readonly weapons: readonly string[];
+  readonly specials: readonly string[];
   readonly targetOrder: {
     readonly mode: TargetMode;
     readonly order: readonly string[];

@@ -1,4 +1,4 @@
-import type { ScenarioData, SaveData, HazardConfigData, DefeatPoint } from '@/types';
+import type { ScenarioData, SaveData, HazardConfigData, DefeatPoint, WeaponMaster, SpecialMaster } from '@/types';
 import { getHazardConfig, generateDefaultDirections } from './calculations';
 import { findAllInvalidDefeats } from './validation';
 
@@ -48,7 +48,11 @@ export interface ImportResult {
   warnings?: string[];
 }
 
-export function importScenarioFromFile(hazardConfigData: HazardConfigData): Promise<ImportResult> {
+export function importScenarioFromFile(
+  hazardConfigData: HazardConfigData,
+  weapons: readonly WeaponMaster[],
+  specials: readonly SpecialMaster[],
+): Promise<ImportResult> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -68,7 +72,7 @@ export function importScenarioFromFile(hazardConfigData: HazardConfigData): Prom
           resolve({ success: false, error: 'ファイルの読み込みに失敗しました' });
           return;
         }
-        resolve(parseAndValidate(text, hazardConfigData));
+        resolve(parseAndValidate(text, hazardConfigData, weapons, specials));
       };
       reader.onerror = () => {
         resolve({ success: false, error: 'ファイルの読み込みに失敗しました' });
@@ -80,7 +84,12 @@ export function importScenarioFromFile(hazardConfigData: HazardConfigData): Prom
   });
 }
 
-function parseAndValidate(json: string, hazardConfigData: HazardConfigData): ImportResult {
+function parseAndValidate(
+  json: string,
+  hazardConfigData: HazardConfigData,
+  weapons: readonly WeaponMaster[],
+  specials: readonly SpecialMaster[],
+): ImportResult {
   let data: unknown;
   try {
     data = JSON.parse(json);
@@ -143,6 +152,29 @@ function parseAndValidate(json: string, hazardConfigData: HazardConfigData): Imp
       scenario.displayMode !== 'text' &&
       scenario.displayMode !== 'both') {
     return { success: false, error: 'displayMode が不正です' };
+  }
+
+  // memo.weapons / memo.specials: number[] → string[] (RowId) 後方互換変換
+  if (isObject(scenario.memo)) {
+    const memo = scenario.memo as Record<string, unknown>;
+    if (Array.isArray(memo.weapons)) {
+      memo.weapons = (memo.weapons as unknown[]).map((v) => {
+        if (typeof v === 'number') {
+          const found = weapons.find((w) => w.id === v);
+          return found?.rowId ?? '';
+        }
+        return typeof v === 'string' ? v : '';
+      });
+    }
+    if (Array.isArray(memo.specials)) {
+      memo.specials = (memo.specials as unknown[]).map((v) => {
+        if (typeof v === 'number') {
+          const found = specials.find((s) => s.id === v);
+          return found?.rowId ?? '';
+        }
+        return typeof v === 'string' ? v : '';
+      });
+    }
   }
 
   // スキーマチェック通過 → 撃破点の整合性チェック

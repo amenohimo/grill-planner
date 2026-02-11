@@ -8,8 +8,8 @@ interface MemoSectionProps {
   specials: readonly SpecialMaster[];
   displayMode: DisplayMode;
   onSetScenarioCode: (code: string) => void;
-  onSetWeapon: (index: number, weaponId: number) => void;
-  onSetSpecial: (index: number, specialId: number) => void;
+  onSetWeapon: (index: number, rowId: string) => void;
+  onSetSpecial: (index: number, rowId: string) => void;
   onSetTargetMode: (mode: TargetMode) => void;
   onSetSnatchers: (value: string) => void;
 }
@@ -56,25 +56,26 @@ export function MemoSection({
             <label className="mb-1 block text-xs text-text-muted">ブキ</label>
             <div className="flex flex-wrap gap-2">
               {PLAYER_IDS.map((pid, i) => {
-                const selectedId = memo.weapons[i] ?? 0;
+                const selectedRowId = memo.weapons[i] ?? '';
+                const selectedWeapon = weapons.find((w) => w.rowId === selectedRowId);
                 return (
                   <div key={pid} className="flex items-center gap-1">
                     <span className="text-xs text-text-muted">{pid}</span>
-                    {displayMode !== 'text' && selectedId > 0 && (
+                    {displayMode !== 'text' && selectedWeapon && (
                       <img
-                        src={getWeaponIconPath(selectedId)}
+                        src={getWeaponIconPath(selectedWeapon.id)}
                         alt=""
                         className="h-6 w-6"
                       />
                     )}
                     <select
-                      value={selectedId}
-                      onChange={(e) => onSetWeapon(i, Number(e.target.value))}
+                      value={selectedRowId}
+                      onChange={(e) => onSetWeapon(i, e.target.value)}
                       className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
                     >
-                      <option value={0}>--</option>
+                      <option value="">--</option>
                       {weapons.map((w) => (
-                        <option key={w.id} value={w.id}>
+                        <option key={w.rowId} value={w.rowId}>
                           {w.label}
                         </option>
                       ))}
@@ -90,25 +91,26 @@ export function MemoSection({
             <label className="mb-1 block text-xs text-text-muted">スペシャル</label>
             <div className="flex flex-wrap gap-2">
               {PLAYER_IDS.map((pid, i) => {
-                const selectedId = memo.specials[i] ?? 0;
+                const selectedRowId = memo.specials[i] ?? '';
+                const selectedSpecial = specials.find((s) => s.rowId === selectedRowId);
                 return (
                   <div key={pid} className="flex items-center gap-1">
                     <span className="text-xs text-text-muted">{pid}</span>
-                    {displayMode !== 'text' && selectedId > 0 && (
+                    {displayMode !== 'text' && selectedSpecial && (
                       <img
-                        src={getSpecialIconPath(selectedId)}
+                        src={getSpecialIconPath(selectedSpecial.id)}
                         alt=""
                         className="h-6 w-6"
                       />
                     )}
                     <select
-                      value={selectedId}
-                      onChange={(e) => onSetSpecial(i, Number(e.target.value))}
+                      value={selectedRowId}
+                      onChange={(e) => onSetSpecial(i, e.target.value)}
                       className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
                     >
-                      <option value={0}>--</option>
+                      <option value="">--</option>
                       {specials.map((s) => (
-                        <option key={s.id} value={s.id}>
+                        <option key={s.rowId} value={s.rowId}>
                           {s.label}
                         </option>
                       ))}

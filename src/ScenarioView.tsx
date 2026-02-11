@@ -79,11 +79,11 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     [dispatch],
   )
   const handleSetWeapon = useCallback(
-    (index: number, weaponId: number) => dispatch({ type: 'SET_WEAPON', payload: { index, weaponId } }),
+    (index: number, rowId: string) => dispatch({ type: 'SET_WEAPON', payload: { index, rowId } }),
     [dispatch],
   )
   const handleSetSpecial = useCallback(
-    (index: number, specialId: number) => dispatch({ type: 'SET_SPECIAL', payload: { index, specialId } }),
+    (index: number, rowId: string) => dispatch({ type: 'SET_SPECIAL', payload: { index, rowId } }),
     [dispatch],
   )
   const handleSetTargetMode = useCallback(
@@ -104,7 +104,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
   }, [state])
 
   const handleImport = useCallback(async () => {
-    const result = await importScenarioFromFile(hazardConfigData)
+    const result = await importScenarioFromFile(hazardConfigData, weapons, specials)
     if (result.success && result.scenario) {
       dispatch({ type: 'LOAD_SCENARIO', payload: result.scenario })
       setIoError(null)
@@ -118,7 +118,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
       setIoError(result.error ?? 'インポートに失敗しました')
       setTimeout(() => setIoError(null), 3000)
     }
-  }, [dispatch, hazardConfigData])
+  }, [dispatch, hazardConfigData, weapons, specials])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">

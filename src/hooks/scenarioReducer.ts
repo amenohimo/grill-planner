@@ -34,8 +34,8 @@ export type ScenarioAction =
 
   // メモ
   | { type: 'SET_SCENARIO_CODE'; payload: string }
-  | { type: 'SET_WEAPON'; payload: { index: number; weaponId: number } }
-  | { type: 'SET_SPECIAL'; payload: { index: number; specialId: number } }
+  | { type: 'SET_WEAPON'; payload: { index: number; rowId: string } }
+  | { type: 'SET_SPECIAL'; payload: { index: number; rowId: string } }
   | { type: 'SET_TARGET_MODE'; payload: TargetMode }
   | { type: 'SET_TARGET_ORDER'; payload: readonly string[] }
   | { type: 'SET_SNATCHERS'; payload: string }
@@ -128,13 +128,13 @@ export function scenarioReducer(
 
     case 'SET_WEAPON': {
       const weapons = [...state.memo.weapons];
-      weapons[action.payload.index] = action.payload.weaponId;
+      weapons[action.payload.index] = action.payload.rowId;
       return { ...state, memo: { ...state.memo, weapons } };
     }
 
     case 'SET_SPECIAL': {
       const specials = [...state.memo.specials];
-      specials[action.payload.index] = action.payload.specialId;
+      specials[action.payload.index] = action.payload.rowId;
       return { ...state, memo: { ...state.memo, specials } };
     }
 
