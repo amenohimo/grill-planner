@@ -149,7 +149,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
               <div className="text-xs text-text-muted">
-                方面: {state.directions.length} | 湧き: {spawns.length} | グリル: {totalGrillCount}
+                方面: {state.directions.length} | 湧き: {spawns.length} | 撃破: {totalGrillCount}
               </div>
             </div>
             <MemoSection
