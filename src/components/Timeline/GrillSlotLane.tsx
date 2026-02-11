@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type MouseEvent } from 'react';
 import type { SpawnPoint, DefeatPoint, GrillSlot, FrameTime } from '@/types';
 import { useTimelineDrag } from '@/hooks/useTimelineDrag';
-import { TIMELINE_WIDTH, LANE_HEIGHT, pixelXToFrame } from './coordinates';
+import { TIMELINE_HEIGHT, LANE_WIDTH, pixelYToFrame } from './coordinates';
 import { SpawnMarker } from './SpawnMarker';
 import { DefeatMarker } from './DefeatMarker';
 import { RespawnConnector } from './RespawnConnector';
@@ -56,7 +56,7 @@ export function GrillSlotLane({
   );
 
   const { dragState, startDragCandidate } = useTimelineDrag(
-    pixelXToFrame,
+    pixelYToFrame,
     validatePosition,
     handleDragEnd,
     laneRef,
@@ -69,8 +69,8 @@ export function GrillSlotLane({
       if (!onAddDefeat || !laneRef.current) return;
 
       const rect = laneRef.current.getBoundingClientRect();
-      const pixelX = e.clientX - rect.left;
-      const frameTime = pixelXToFrame(pixelX);
+      const pixelY = e.clientY - rect.top;
+      const frameTime = pixelYToFrame(pixelY);
 
       const success = onAddDefeat(slot, frameTime);
       if (!success) {
@@ -82,8 +82,8 @@ export function GrillSlotLane({
   );
 
   const handleDefeatMouseDown = useCallback(
-    (defeatId: string, startX: number) => {
-      startDragCandidate(defeatId, startX);
+    (defeatId: string, startY: number) => {
+      startDragCandidate(defeatId, startY);
     },
     [startDragCandidate],
   );
@@ -114,16 +114,16 @@ export function GrillSlotLane({
       ref={laneRef}
       className="relative cursor-crosshair overflow-visible"
       style={{
-        width: TIMELINE_WIDTH,
-        height: LANE_HEIGHT,
-        borderLeft: `3px solid ${slotColor}`,
+        width: LANE_WIDTH,
+        height: TIMELINE_HEIGHT,
+        borderTop: `3px solid ${slotColor}`,
       }}
       onClick={handleClick}
     >
       {/* 枠ラベル */}
       <span
         className="absolute select-none text-xs font-bold"
-        style={{ left: 4, top: 2, color: slotColor, zIndex: 5 }}
+        style={{ left: 4, top: 6, color: slotColor, zIndex: 5 }}
       >
         {slot}枠
       </span>

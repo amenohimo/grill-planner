@@ -1,14 +1,14 @@
 import { useCallback, type MouseEvent } from 'react';
 import type { DefeatPoint, FrameTime } from '@/types';
 import { framesToSeconds } from '@/utils/calculations';
-import { frameToPixelX, MARKER_SIZE } from './coordinates';
+import { frameToPixelY, MARKER_SIZE } from './coordinates';
 
 interface DefeatMarkerProps {
   defeat: DefeatPoint;
   isDragging?: boolean;
   dragFrameTime?: FrameTime | null;
   isValidPosition?: boolean;
-  onMouseDown?: (defeatId: string, startX: number) => void;
+  onMouseDown?: (defeatId: string, startY: number) => void;
   onContextMenu?: (defeatId: string) => void;
 }
 
@@ -21,7 +21,7 @@ export function DefeatMarker({
   onContextMenu,
 }: DefeatMarkerProps) {
   const displayFrame = isDragging && dragFrameTime != null ? dragFrameTime : defeat.frameTime;
-  const pixelX = frameToPixelX(displayFrame);
+  const pixelY = frameToPixelY(displayFrame);
   const borderColor = defeat.slot === 'A' ? 'var(--color-slot-a)' : 'var(--color-slot-b)';
   const seconds = framesToSeconds(displayFrame);
 
@@ -46,7 +46,7 @@ export function DefeatMarker({
     (e: MouseEvent) => {
       if (e.button !== 0) return; // 左クリックのみ
       e.stopPropagation(); // レーンのクリックハンドラを抑止
-      onMouseDown?.(defeat.id, e.clientX);
+      onMouseDown?.(defeat.id, e.clientY);
     },
     [defeat.id, onMouseDown],
   );
@@ -64,8 +64,8 @@ export function DefeatMarker({
     <div
       className="absolute flex flex-col items-center"
       style={{
-        left: pixelX,
-        top: '50%',
+        top: pixelY,
+        left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: isDragging ? 10 : 4,
         cursor,

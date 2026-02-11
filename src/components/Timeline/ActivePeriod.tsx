@@ -1,5 +1,5 @@
 import type { FrameTime } from '@/types';
-import { frameToPixelX, ACTIVITY_BAR_HEIGHT } from './coordinates';
+import { frameToPixelY, ACTIVITY_BAR_WIDTH } from './coordinates';
 
 interface ActivePeriodProps {
   spawnFrame: FrameTime;
@@ -8,11 +8,11 @@ interface ActivePeriodProps {
 }
 
 export function ActivePeriod({ spawnFrame, defeatFrame, slot }: ActivePeriodProps) {
-  const leftX = frameToPixelX(spawnFrame);
-  const rightX = defeatFrame !== null ? frameToPixelX(defeatFrame) : frameToPixelX(0);
-  const width = rightX - leftX;
+  const topY = frameToPixelY(spawnFrame);
+  const bottomY = defeatFrame !== null ? frameToPixelY(defeatFrame) : frameToPixelY(0);
+  const height = bottomY - topY;
 
-  if (width <= 0) return null;
+  if (height <= 0) return null;
 
   const bgColor = slot === 'A' ? 'var(--color-slot-a-light)' : 'var(--color-slot-b-light)';
 
@@ -20,10 +20,10 @@ export function ActivePeriod({ spawnFrame, defeatFrame, slot }: ActivePeriodProp
     <div
       className="absolute"
       style={{
-        left: leftX,
-        bottom: 4,
-        width,
-        height: ACTIVITY_BAR_HEIGHT,
+        top: topY,
+        right: 4,
+        height,
+        width: ACTIVITY_BAR_WIDTH,
         backgroundColor: bgColor,
         borderRadius: 2,
         zIndex: 1,

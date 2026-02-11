@@ -3,29 +3,29 @@ import { GAME_DURATION_SECONDS } from '@/constants';
 import { framesToSeconds, secondsToFrames } from '@/utils/calculations';
 
 // ============================================================
-// タイムライン座標系（06_UI_DESIGN §5 準拠）
+// タイムライン座標系（縦軸＝時間、上=100s、下=0s）
 // ============================================================
 
 export const PIXELS_PER_SECOND = 16;
-export const TIMELINE_WIDTH = GAME_DURATION_SECONDS * PIXELS_PER_SECOND; // 1600px
-export const TIMELINE_PADDING = 12; // 左右のパディング
+export const TIMELINE_HEIGHT = GAME_DURATION_SECONDS * PIXELS_PER_SECOND; // 1600px
+export const TIMELINE_PADDING = 12; // 上下のパディング
 
-export const DIRECTION_LABEL_HEIGHT = 32;
-export const TIME_AXIS_HEIGHT = 24;
-export const LANE_HEIGHT = 80;
+export const DIRECTION_LABEL_WIDTH = 32;
+export const TIME_AXIS_WIDTH = 28;
+export const LANE_WIDTH = 80;
 export const LANE_SPACING = 4;
 export const MARKER_SIZE = 20;
-export const ACTIVITY_BAR_HEIGHT = 8;
+export const ACTIVITY_BAR_WIDTH = 8;
 
-/** フレーム時刻 → ピクセルX座標 */
-export function frameToPixelX(frameTime: FrameTime): number {
+/** フレーム時刻 → ピクセルY座標（上=100s, 下=0s） */
+export function frameToPixelY(frameTime: FrameTime): number {
   const seconds = GAME_DURATION_SECONDS - framesToSeconds(frameTime);
   return seconds * PIXELS_PER_SECOND;
 }
 
-/** ピクセルX座標 → フレーム時刻 */
-export function pixelXToFrame(pixelX: number): FrameTime {
-  const seconds = GAME_DURATION_SECONDS - pixelX / PIXELS_PER_SECOND;
+/** ピクセルY座標 → フレーム時刻 */
+export function pixelYToFrame(pixelY: number): FrameTime {
+  const seconds = GAME_DURATION_SECONDS - pixelY / PIXELS_PER_SECOND;
   return secondsToFrames(seconds);
 }
 

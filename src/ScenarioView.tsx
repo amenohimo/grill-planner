@@ -148,8 +148,8 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
       </div>
 
       {/* メインエリア（タイムライン + 統計） */}
-      <div className="flex flex-1 gap-4 p-4" style={{ minWidth: 1280 }}>
-        <div className="flex-1 overflow-hidden">
+      <div className="flex min-h-0 flex-1 gap-4 p-4">
+        <div className="min-h-0 flex-1">
           <Timeline
             spawns={spawns}
             defeats={state.defeats}
@@ -157,7 +157,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
             hazardConfig={hazardConfig}
           />
         </div>
-        <div className="w-70 shrink-0 rounded-sm border border-border bg-surface p-4">
+        <div className="w-70 shrink-0 overflow-y-auto rounded-sm border border-border bg-surface p-4">
           <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} />
         </div>
       </div>

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, type MouseEvent } from 'react';
 import { GAME_DURATION_SECONDS } from '@/constants';
-import { PIXELS_PER_SECOND, TIMELINE_WIDTH, TIME_AXIS_HEIGHT } from './coordinates';
+import { PIXELS_PER_SECOND, TIMELINE_HEIGHT, TIME_AXIS_WIDTH } from './coordinates';
 
 // ============================================================
 // 時間軸の目盛り（静的データ、毎レンダーで再計算不要）
@@ -8,33 +8,33 @@ import { PIXELS_PER_SECOND, TIMELINE_WIDTH, TIME_AXIS_HEIGHT } from './coordinat
 
 interface Tick {
   second: number;
-  pixelX: number;
+  pixelY: number;
   type: 'major' | 'minor' | 'micro';
 }
 
 const ticks: Tick[] = [];
 for (let s = 0; s <= GAME_DURATION_SECONDS; s++) {
-  const pixelX = (GAME_DURATION_SECONDS - s) * PIXELS_PER_SECOND;
+  const pixelY = (GAME_DURATION_SECONDS - s) * PIXELS_PER_SECOND;
   let type: Tick['type'] = 'micro';
   if (s % 10 === 0) type = 'major';
   else if (s % 5 === 0) type = 'minor';
-  ticks.push({ second: s, pixelX, type });
+  ticks.push({ second: s, pixelY, type });
 }
 
 export function TimeAxis() {
   const axisRef = useRef<HTMLDivElement>(null);
-  const [hoverInfo, setHoverInfo] = useState<{ x: number; seconds: string } | null>(null);
+  const [hoverInfo, setHoverInfo] = useState<{ y: number; seconds: string } | null>(null);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!axisRef.current) return;
     const rect = axisRef.current.getBoundingClientRect();
-    const pixelX = e.clientX - rect.left;
-    const seconds = GAME_DURATION_SECONDS - pixelX / PIXELS_PER_SECOND;
+    const pixelY = e.clientY - rect.top;
+    const seconds = GAME_DURATION_SECONDS - pixelY / PIXELS_PER_SECOND;
     if (seconds < 0 || seconds > GAME_DURATION_SECONDS) {
       setHoverInfo(null);
       return;
     }
-    setHoverInfo({ x: pixelX, seconds: seconds.toFixed(1) });
+    setHoverInfo({ y: pixelY, seconds: seconds.toFixed(1) });
   }, []);
 
   const handleMouseLeave = useCallback(() => {
@@ -44,26 +44,26 @@ export function TimeAxis() {
   return (
     <div
       ref={axisRef}
-      className="relative border-b border-border"
-      style={{ width: TIMELINE_WIDTH, height: TIME_AXIS_HEIGHT }}
+      className="relative border-r border-border"
+      style={{ width: TIME_AXIS_WIDTH, height: TIMELINE_HEIGHT }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
       {ticks.map((tick) => (
         <div
           key={tick.second}
-          className="absolute top-0"
-          style={{ left: tick.pixelX, height: '100%' }}
+          className="absolute left-0"
+          style={{ top: tick.pixelY, width: '100%' }}
         >
           {tick.type === 'major' && (
             <>
               <div
-                className="absolute bottom-0 bg-text"
-                style={{ width: 1, height: 12 }}
+                className="absolute right-0 bg-text"
+                style={{ width: 12, height: 1 }}
               />
               <span
                 className="absolute select-none text-text-muted"
-                style={{ bottom: 13, left: -10, fontSize: 10, whiteSpace: 'nowrap' }}
+                style={{ right: 14, top: -6, fontSize: 10, whiteSpace: 'nowrap' }}
               >
                 {tick.second}s
               </span>
@@ -71,14 +71,14 @@ export function TimeAxis() {
           )}
           {tick.type === 'minor' && (
             <div
-              className="absolute bottom-0 bg-text-muted"
-              style={{ width: 1, height: 8 }}
+              className="absolute right-0 bg-text-muted"
+              style={{ width: 8, height: 1 }}
             />
           )}
           {tick.type === 'micro' && (
             <div
-              className="absolute bottom-0 bg-border"
-              style={{ width: 1, height: 4 }}
+              className="absolute right-0 bg-border"
+              style={{ width: 4, height: 1 }}
             />
           )}
         </div>
@@ -89,10 +89,11 @@ export function TimeAxis() {
         <div
           className="pointer-events-none absolute rounded-sm bg-text px-1.5 py-0.5 text-xs text-surface"
           style={{
-            left: hoverInfo.x,
-            top: -20,
-            transform: 'translateX(-50%)',
+            top: hoverInfo.y,
+            right: -4,
+            transform: 'translate(100%, -50%)',
             whiteSpace: 'nowrap',
+            zIndex: 20,
           }}
         >
           {hoverInfo.seconds}s

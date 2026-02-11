@@ -12,12 +12,12 @@ export interface DragState {
 
 export interface UseTimelineDragReturn {
   dragState: DragState;
-  startDragCandidate: (defeatId: string, startX: number) => void;
+  startDragCandidate: (defeatId: string, startY: number) => void;
   cancelDrag: () => void;
 }
 
 export function useTimelineDrag(
-  pixelXToFrame: (pixelX: number) => FrameTime,
+  pixelYToFrame: (pixelY: number) => FrameTime,
   validatePosition: (defeatId: string, frameTime: FrameTime) => boolean,
   onDragEnd: (defeatId: string, frameTime: FrameTime) => void,
   laneRef: React.RefObject<HTMLDivElement | null>,
@@ -29,11 +29,11 @@ export function useTimelineDrag(
     isValidPosition: true,
   });
 
-  const candidateRef = useRef<{ defeatId: string; startX: number } | null>(null);
+  const candidateRef = useRef<{ defeatId: string; startY: number } | null>(null);
 
   const startDragCandidate = useCallback(
-    (defeatId: string, startX: number) => {
-      candidateRef.current = { defeatId, startX };
+    (defeatId: string, startY: number) => {
+      candidateRef.current = { defeatId, startY };
     },
     [],
   );
@@ -53,15 +53,15 @@ export function useTimelineDrag(
       const candidate = candidateRef.current;
       if (!candidate) return;
 
-      const distance = Math.abs(e.clientX - candidate.startX);
+      const distance = Math.abs(e.clientY - candidate.startY);
 
       if (!dragState.isDragging && distance < DRAG_THRESHOLD) return;
 
       // ドラッグ開始 or 継続
       if (!laneRef.current) return;
       const rect = laneRef.current.getBoundingClientRect();
-      const pixelX = Math.max(0, e.clientX - rect.left);
-      const frameTime = pixelXToFrame(pixelX);
+      const pixelY = Math.max(0, e.clientY - rect.top);
+      const frameTime = pixelYToFrame(pixelY);
       const isValid = validatePosition(candidate.defeatId, frameTime);
 
       setDragState({
@@ -104,7 +104,7 @@ export function useTimelineDrag(
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dragState.isDragging, dragState.dragFrameTime, dragState.isValidPosition, pixelXToFrame, validatePosition, onDragEnd, cancelDrag, laneRef]);
+  }, [dragState.isDragging, dragState.dragFrameTime, dragState.isValidPosition, pixelYToFrame, validatePosition, onDragEnd, cancelDrag, laneRef]);
 
   return { dragState, startDragCandidate, cancelDrag };
 }

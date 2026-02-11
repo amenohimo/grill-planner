@@ -7,7 +7,7 @@ import { TimeAxis } from './TimeAxis';
 import { DirectionBands } from './DirectionBands';
 import { DirectionLabels } from './DirectionLabels';
 import { GrillSlotLane } from './GrillSlotLane';
-import { TIMELINE_WIDTH, TIMELINE_PADDING, LANE_HEIGHT, LANE_SPACING } from './coordinates';
+import { TIMELINE_PADDING, LANE_WIDTH, LANE_SPACING } from './coordinates';
 
 interface TimelineProps {
   spawns: readonly SpawnPoint[];
@@ -23,9 +23,9 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
   const { canAddDefeat, canMoveDefeat } = useValidation(defeats, hazardConfig, directions);
 
   const showBSlot = hazardConfig.bSlotOpenFrame >= 0;
-  const lanesHeight = showBSlot
-    ? LANE_HEIGHT * 2 + LANE_SPACING
-    : LANE_HEIGHT;
+  const lanesWidth = showBSlot
+    ? LANE_WIDTH * 2 + LANE_SPACING
+    : LANE_WIDTH;
 
   const handleAddDefeat = useCallback(
     (slot: GrillSlot, frameTime: number): boolean => {
@@ -77,54 +77,53 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
   );
 
   return (
-    <div className="overflow-x-auto rounded-sm border border-border bg-surface">
-      <div style={{ width: TIMELINE_WIDTH + TIMELINE_PADDING * 2 }}>
-        <div
-          style={{
-            marginLeft: TIMELINE_PADDING,
-            marginRight: TIMELINE_PADDING,
-          }}
-        >
-          {/* 方面ラベル */}
-          <DirectionLabels
-            directions={directions}
-            onUpdateName={handleUpdateDirectionName}
-          />
+    <div className="h-full overflow-y-auto rounded-sm border border-border bg-surface">
+      <div
+        className="flex"
+        style={{
+          paddingTop: TIMELINE_PADDING,
+          paddingBottom: TIMELINE_PADDING,
+        }}
+      >
+        {/* 方面ラベル */}
+        <DirectionLabels
+          directions={directions}
+          onUpdateName={handleUpdateDirectionName}
+        />
 
-          {/* 時間軸 */}
-          <TimeAxis />
+        {/* 時間軸 */}
+        <TimeAxis />
 
-          {/* レーン領域（方面バンド背景付き） */}
-          <div className="relative" style={{ height: lanesHeight }}>
-            {/* 方面バンド（背景） */}
-            <DirectionBands directions={directions} />
+        {/* レーン領域（方面バンド背景付き） */}
+        <div className="relative" style={{ width: lanesWidth }}>
+          {/* 方面バンド（背景） */}
+          <DirectionBands directions={directions} />
 
-            {/* レーン（前面） */}
-            <div className="relative" style={{ zIndex: 1 }}>
-              <GrillSlotLane
-                slot="A"
-                spawns={spawns}
-                defeats={defeats}
-                onAddDefeat={handleAddDefeat}
-                onMoveDefeat={handleMoveDefeat}
-                onRemoveDefeat={handleRemoveDefeat}
-                validateMoveDefeat={validateMoveDefeat}
-              />
-              {showBSlot && (
-                <>
-                  <div style={{ height: LANE_SPACING }} />
-                  <GrillSlotLane
-                    slot="B"
-                    spawns={spawns}
-                    defeats={defeats}
-                    onAddDefeat={handleAddDefeat}
-                    onMoveDefeat={handleMoveDefeat}
-                    onRemoveDefeat={handleRemoveDefeat}
-                    validateMoveDefeat={validateMoveDefeat}
-                  />
-                </>
-              )}
-            </div>
+          {/* レーン（前面） */}
+          <div className="relative flex" style={{ zIndex: 1 }}>
+            <GrillSlotLane
+              slot="A"
+              spawns={spawns}
+              defeats={defeats}
+              onAddDefeat={handleAddDefeat}
+              onMoveDefeat={handleMoveDefeat}
+              onRemoveDefeat={handleRemoveDefeat}
+              validateMoveDefeat={validateMoveDefeat}
+            />
+            {showBSlot && (
+              <>
+                <div style={{ width: LANE_SPACING }} />
+                <GrillSlotLane
+                  slot="B"
+                  spawns={spawns}
+                  defeats={defeats}
+                  onAddDefeat={handleAddDefeat}
+                  onMoveDefeat={handleMoveDefeat}
+                  onRemoveDefeat={handleRemoveDefeat}
+                  validateMoveDefeat={validateMoveDefeat}
+                />
+              </>
+            )}
           </div>
         </div>
       </div>

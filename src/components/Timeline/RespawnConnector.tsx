@@ -1,6 +1,6 @@
 import type { FrameTime } from '@/types';
 import { calculateSpawnerDecisionTime } from '@/utils/calculations';
-import { frameToPixelX, LANE_HEIGHT } from './coordinates';
+import { frameToPixelY, LANE_WIDTH } from './coordinates';
 
 interface RespawnConnectorProps {
   defeatFrame: FrameTime;
@@ -10,11 +10,11 @@ interface RespawnConnectorProps {
 export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorProps) {
   const spawnerDecisionFrame = calculateSpawnerDecisionTime(defeatFrame);
 
-  const defeatX = frameToPixelX(defeatFrame);
-  const decisionX = frameToPixelX(spawnerDecisionFrame);
-  const spawnX = frameToPixelX(spawnFrame);
+  const defeatY = frameToPixelY(defeatFrame);
+  const decisionY = frameToPixelY(spawnerDecisionFrame);
+  const spawnY = frameToPixelY(spawnFrame);
 
-  const y = LANE_HEIGHT / 2;
+  const x = LANE_WIDTH / 2;
 
   return (
     <svg
@@ -23,17 +23,17 @@ export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorPr
     >
       {/* 撃破 → スポナー決定（実線） */}
       <line
-        x1={defeatX}
-        y1={y}
-        x2={decisionX}
-        y2={y}
+        x1={x}
+        y1={defeatY}
+        x2={x}
+        y2={decisionY}
         stroke="var(--color-respawn-line)"
         strokeWidth={2}
       />
 
       {/* スポナー決定マーク（小◇） */}
       <polygon
-        points={`${decisionX},${y - 4} ${decisionX + 4},${y} ${decisionX},${y + 4} ${decisionX - 4},${y}`}
+        points={`${x},${decisionY - 4} ${x + 4},${decisionY} ${x},${decisionY + 4} ${x - 4},${decisionY}`}
         fill="var(--color-spawner-decision)"
         stroke="var(--color-respawn-line)"
         strokeWidth={1}
@@ -41,10 +41,10 @@ export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorPr
 
       {/* スポナー決定 → 湧き（破線） */}
       <line
-        x1={decisionX}
-        y1={y}
-        x2={spawnX}
-        y2={y}
+        x1={x}
+        y1={decisionY}
+        x2={x}
+        y2={spawnY}
         stroke="var(--color-respawn-line)"
         strokeWidth={2}
         strokeDasharray="4 3"

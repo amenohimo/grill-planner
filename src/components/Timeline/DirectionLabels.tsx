@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect, type KeyboardEvent } from 'react';
 import type { DirectionSetting } from '@/types';
-import { frameToPixelX, TIMELINE_WIDTH, DIRECTION_LABEL_HEIGHT, DIR_BAND_COLORS } from './coordinates';
+import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, DIR_BAND_COLORS } from './coordinates';
 
 interface DirectionLabelsProps {
   directions: readonly DirectionSetting[];
@@ -13,13 +13,13 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
   return (
     <div
       className="relative"
-      style={{ width: TIMELINE_WIDTH, height: DIRECTION_LABEL_HEIGHT }}
+      style={{ width: DIRECTION_LABEL_WIDTH, height: TIMELINE_HEIGHT }}
     >
       {sortedDirs.map((dir, index) => {
-        const left = frameToPixelX(dir.frameTime);
+        const top = frameToPixelY(dir.frameTime);
         const nextDir = sortedDirs[index + 1];
-        const right = nextDir ? frameToPixelX(nextDir.frameTime) : TIMELINE_WIDTH;
-        const width = right - left;
+        const bottom = nextDir ? frameToPixelY(nextDir.frameTime) : TIMELINE_HEIGHT;
+        const height = bottom - top;
         const color = DIR_BAND_COLORS[index % DIR_BAND_COLORS.length] ?? DIR_BAND_COLORS[0];
 
         // 元のインデックスを見つける（directions配列内の位置）
@@ -30,8 +30,8 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
         return (
           <DirectionLabel
             key={index}
-            left={left}
-            width={width}
+            top={top}
+            height={height}
             bgColor={color}
             name={dir.direction}
             originalIndex={originalIndex >= 0 ? originalIndex : index}
@@ -44,15 +44,15 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
 }
 
 interface DirectionLabelProps {
-  left: number;
-  width: number;
+  top: number;
+  height: number;
   bgColor: string;
   name: string;
   originalIndex: number;
   onUpdateName?: (index: number, name: string) => void;
 }
 
-function DirectionLabel({ left, width, bgColor, name, originalIndex, onUpdateName }: DirectionLabelProps) {
+function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateName }: DirectionLabelProps) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -98,11 +98,11 @@ function DirectionLabel({ left, width, bgColor, name, originalIndex, onUpdateNam
     <div
       className="absolute flex items-center justify-center overflow-hidden"
       style={{
-        left,
-        width,
-        height: DIRECTION_LABEL_HEIGHT,
+        top,
+        height,
+        width: DIRECTION_LABEL_WIDTH,
         backgroundColor: bgColor,
-        top: 0,
+        left: 0,
       }}
     >
       {editing ? (
@@ -114,12 +114,11 @@ function DirectionLabel({ left, width, bgColor, name, originalIndex, onUpdateNam
           onBlur={confirmEdit}
           onKeyDown={handleKeyDown}
           maxLength={20}
-          className="w-full bg-transparent px-1 text-center text-xs font-medium text-text outline-none"
-          style={{ maxWidth: width - 4 }}
+          className="w-full bg-transparent px-0.5 text-center text-xs font-medium text-text outline-none"
         />
       ) : (
         <span
-          className="cursor-pointer select-none truncate px-1 text-xs font-medium text-text hover:underline"
+          className="cursor-pointer select-none truncate px-0.5 text-xs font-medium text-text hover:underline"
           onClick={startEdit}
           title={name}
         >

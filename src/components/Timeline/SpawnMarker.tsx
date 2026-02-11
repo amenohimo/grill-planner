@@ -1,13 +1,13 @@
 import type { SpawnPoint } from '@/types';
 import { framesToSeconds } from '@/utils/calculations';
-import { frameToPixelX, MARKER_SIZE } from './coordinates';
+import { frameToPixelY, MARKER_SIZE } from './coordinates';
 
 interface SpawnMarkerProps {
   spawn: SpawnPoint;
 }
 
 export function SpawnMarker({ spawn }: SpawnMarkerProps) {
-  const pixelX = frameToPixelX(spawn.frameTime);
+  const pixelY = frameToPixelY(spawn.frameTime);
   const borderColor = spawn.slot === 'A' ? 'var(--color-slot-a)' : 'var(--color-slot-b)';
   const seconds = framesToSeconds(spawn.frameTime);
 
@@ -15,8 +15,8 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
     <div
       className="absolute flex flex-col items-center"
       style={{
-        left: pixelX,
-        top: '50%',
+        top: pixelY,
+        left: '50%',
         transform: 'translate(-50%, -50%)',
         zIndex: 2,
       }}
