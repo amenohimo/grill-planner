@@ -149,13 +149,13 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
               <div className="flex items-center gap-2">
-                <span className="text-xs text-text-muted">ターゲット:</span>
+                <span className="text-sm text-text-muted">ターゲット基準:</span>
                 <button
                   onClick={() => handleSetTargetMode('weapon')}
                   className={`rounded-sm px-2 py-0.5 text-xs ${
                     state.memo.targetOrder.mode === 'weapon'
                       ? 'bg-primary text-white'
-                      : 'border border-border bg-surface text-text'
+                      : 'border border-border bg-surface text-text hover:bg-bg'
                   }`}
                 >
                   ブキ
@@ -165,7 +165,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
                   className={`rounded-sm px-2 py-0.5 text-xs ${
                     state.memo.targetOrder.mode === 'player'
                       ? 'bg-primary text-white'
-                      : 'border border-border bg-surface text-text'
+                      : 'border border-border bg-surface text-text hover:bg-bg'
                   }`}
                 >
                   プレイヤー
