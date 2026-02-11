@@ -98,6 +98,23 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
           {/* 方面バンド（背景） */}
           <DirectionBands directions={directions} />
 
+          {/* 操作説明（レーン右側） */}
+          <div
+            className="pointer-events-none absolute select-none"
+            style={{
+              right: -110,
+              top: 8,
+              fontSize: 10,
+              color: 'var(--color-text-muted)',
+              lineHeight: 1.6,
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <div>クリック: 撃破追加</div>
+            <div>ドラッグ: 撃破移動</div>
+            <div>右クリック: 撃破削除</div>
+          </div>
+
           {/* レーン（前面） */}
           <div className="relative flex" style={{ zIndex: 1 }}>
             <GrillSlotLane
