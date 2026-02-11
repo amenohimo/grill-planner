@@ -119,12 +119,12 @@ export function MemoSection({
 
           {/* サッチャーメモ */}
           <div>
-            <label className="mb-1 block text-xs text-text-muted">タマヒロイメモ</label>
+            <label className="mb-1 block text-xs text-text-muted">タマヒロイ方向</label>
             <input
               type="text"
               value={memo.snatchers}
               onChange={(e) => onSetSnatchers(e.target.value)}
-              placeholder="自由メモ"
+              placeholder="右ヒロイ"
               className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
             />
           </div>
