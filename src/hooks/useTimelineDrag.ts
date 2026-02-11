@@ -16,18 +16,33 @@ export interface UseTimelineDragReturn {
   cancelDrag: () => void;
 }
 
+const INITIAL_STATE: DragState = {
+  isDragging: false,
+  dragDefeatId: null,
+  dragFrameTime: null,
+  isValidPosition: true,
+};
+
 export function useTimelineDrag(
   pixelYToFrame: (pixelY: number) => FrameTime,
   validatePosition: (defeatId: string, frameTime: FrameTime) => boolean,
   onDragEnd: (defeatId: string, frameTime: FrameTime) => void,
   laneRef: React.RefObject<HTMLDivElement | null>,
 ) {
-  const [dragState, setDragState] = useState<DragState>({
-    isDragging: false,
-    dragDefeatId: null,
-    dragFrameTime: null,
-    isValidPosition: true,
-  });
+  const [dragState, setDragState] = useState<DragState>(INITIAL_STATE);
+
+  // Ref でコールバックと状態を保持し、useEffect の依存配列から除外
+  const dragStateRef = useRef(dragState);
+  dragStateRef.current = dragState;
+
+  const pixelYToFrameRef = useRef(pixelYToFrame);
+  pixelYToFrameRef.current = pixelYToFrame;
+
+  const validatePositionRef = useRef(validatePosition);
+  validatePositionRef.current = validatePosition;
+
+  const onDragEndRef = useRef(onDragEnd);
+  onDragEndRef.current = onDragEnd;
 
   const candidateRef = useRef<{ defeatId: string; startY: number } | null>(null);
 
@@ -40,12 +55,7 @@ export function useTimelineDrag(
 
   const cancelDrag = useCallback(() => {
     candidateRef.current = null;
-    setDragState({
-      isDragging: false,
-      dragDefeatId: null,
-      dragFrameTime: null,
-      isValidPosition: true,
-    });
+    setDragState(INITIAL_STATE);
   }, []);
 
   useEffect(() => {
@@ -55,14 +65,14 @@ export function useTimelineDrag(
 
       const distance = Math.abs(e.clientY - candidate.startY);
 
-      if (!dragState.isDragging && distance < DRAG_THRESHOLD) return;
+      if (!dragStateRef.current.isDragging && distance < DRAG_THRESHOLD) return;
 
       // ドラッグ開始 or 継続
       if (!laneRef.current) return;
       const rect = laneRef.current.getBoundingClientRect();
       const pixelY = Math.max(0, e.clientY - rect.top);
-      const frameTime = pixelYToFrame(pixelY);
-      const isValid = validatePosition(candidate.defeatId, frameTime);
+      const frameTime = pixelYToFrameRef.current(pixelY);
+      const isValid = validatePositionRef.current(candidate.defeatId, frameTime);
 
       setDragState({
         isDragging: true,
@@ -76,22 +86,19 @@ export function useTimelineDrag(
       const candidate = candidateRef.current;
       if (!candidate) return;
 
-      if (dragState.isDragging && dragState.dragFrameTime !== null && dragState.isValidPosition) {
-        onDragEnd(candidate.defeatId, dragState.dragFrameTime);
+      const state = dragStateRef.current;
+      if (state.isDragging && state.dragFrameTime !== null && state.isValidPosition) {
+        onDragEndRef.current(candidate.defeatId, state.dragFrameTime);
       }
 
       candidateRef.current = null;
-      setDragState({
-        isDragging: false,
-        dragDefeatId: null,
-        dragFrameTime: null,
-        isValidPosition: true,
-      });
+      setDragState(INITIAL_STATE);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        cancelDrag();
+        candidateRef.current = null;
+        setDragState(INITIAL_STATE);
       }
     };
 
@@ -104,7 +111,7 @@ export function useTimelineDrag(
       window.removeEventListener('mouseup', handleMouseUp);
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dragState.isDragging, dragState.dragFrameTime, dragState.isValidPosition, pixelYToFrame, validatePosition, onDragEnd, cancelDrag, laneRef]);
+  }, [laneRef]);
 
   return { dragState, startDragCandidate, cancelDrag };
 }
