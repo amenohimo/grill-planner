@@ -97,21 +97,28 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
 
   // ファイル I/O
   const [ioError, setIoError] = useState<string | null>(null)
+  const [ioWarnings, setIoWarnings] = useState<string[]>([])
 
   const handleExport = useCallback(() => {
     exportScenario(state)
   }, [state])
 
   const handleImport = useCallback(async () => {
-    const result = await importScenarioFromFile()
+    const result = await importScenarioFromFile(hazardConfigData)
     if (result.success && result.scenario) {
       dispatch({ type: 'LOAD_SCENARIO', payload: result.scenario })
       setIoError(null)
+      if (result.warnings && result.warnings.length > 0) {
+        setIoWarnings(result.warnings)
+        setTimeout(() => setIoWarnings([]), 5000)
+      } else {
+        setIoWarnings([])
+      }
     } else {
       setIoError(result.error ?? 'インポートに失敗しました')
       setTimeout(() => setIoError(null), 3000)
     }
-  }, [dispatch])
+  }, [dispatch, hazardConfigData])
 
   return (
     <div className="flex min-h-screen flex-col bg-bg">
@@ -122,6 +129,13 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
       {ioError && (
         <div className="bg-danger px-4 py-2 text-sm text-white">
           {ioError}
+        </div>
+      )}
+
+      {/* I/O 警告表示 */}
+      {ioWarnings.length > 0 && (
+        <div className="bg-primary px-4 py-2 text-sm text-white">
+          {ioWarnings.map((w, i) => <div key={i}>{w}</div>)}
         </div>
       )}
 

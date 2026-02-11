@@ -1,4 +1,5 @@
-import type { ScenarioData, SaveData } from '@/types';
+import type { ScenarioData, SaveData, HazardConfigData, DefeatPoint } from '@/types';
+import { getHazardConfig, generateDefaultDirections, calculateSpawns } from './calculations';
 
 const CURRENT_VERSION = 1;
 
@@ -43,9 +44,10 @@ export interface ImportResult {
   success: boolean;
   scenario?: ScenarioData;
   error?: string;
+  warnings?: string[];
 }
 
-export function importScenarioFromFile(): Promise<ImportResult> {
+export function importScenarioFromFile(hazardConfigData: HazardConfigData): Promise<ImportResult> {
   return new Promise((resolve) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -65,7 +67,7 @@ export function importScenarioFromFile(): Promise<ImportResult> {
           resolve({ success: false, error: 'ファイルの読み込みに失敗しました' });
           return;
         }
-        resolve(parseAndValidate(text));
+        resolve(parseAndValidate(text, hazardConfigData));
       };
       reader.onerror = () => {
         resolve({ success: false, error: 'ファイルの読み込みに失敗しました' });
@@ -77,7 +79,7 @@ export function importScenarioFromFile(): Promise<ImportResult> {
   });
 }
 
-function parseAndValidate(json: string): ImportResult {
+function parseAndValidate(json: string, hazardConfigData: HazardConfigData): ImportResult {
   let data: unknown;
   try {
     data = JSON.parse(json);
@@ -142,9 +144,37 @@ function parseAndValidate(json: string): ImportResult {
     return { success: false, error: 'displayMode が不正です' };
   }
 
+  // スキーマチェック通過 → 撃破点の整合性チェック
+  const parsed = scenario as unknown as ScenarioData;
+  const hazardConfig = getHazardConfig(parsed.hazardLevel, hazardConfigData);
+  const directions = parsed.directions.length > 0
+    ? parsed.directions
+    : generateDefaultDirections(hazardConfig.directionInterval);
+
+  const spawns = calculateSpawns(hazardConfig, directions, parsed.defeats);
+  const warnings: string[] = [];
+
+  // 各撃破点について、対応する湧きが存在するかチェック
+  const invalidDefeats = parsed.defeats.filter((defeat: DefeatPoint) => {
+    // B枠が存在しないキケン度でのB枠撃破
+    if (hazardConfig.bSlotOpenFrame < 0 && defeat.slot === 'B') return true;
+    // 対応する湧き点が存在しない
+    const slotSpawns = spawns.filter((s) => s.slot === defeat.slot);
+    return !slotSpawns.some((s) => s.frameTime >= defeat.frameTime);
+  });
+
+  if (invalidDefeats.length > 0) {
+    warnings.push(`不整合な撃破点 ${invalidDefeats.length} 件を除外しました`);
+  }
+
+  // 不整合な撃破点を除外
+  const invalidIds = new Set(invalidDefeats.map((d: DefeatPoint) => d.id));
+  const validDefeats = parsed.defeats.filter((d: DefeatPoint) => !invalidIds.has(d.id));
+
   return {
     success: true,
-    scenario: scenario as unknown as ScenarioData,
+    scenario: { ...parsed, defeats: validDefeats },
+    warnings: warnings.length > 0 ? warnings : undefined,
   };
 }
 
