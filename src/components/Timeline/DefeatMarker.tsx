@@ -1,4 +1,4 @@
-import { useCallback, type MouseEvent } from 'react';
+import { useCallback, useState, type MouseEvent } from 'react';
 import type { DefeatPoint, FrameTime } from '@/types';
 import { framesToSeconds } from '@/utils/calculations';
 import { frameToPixelY, MARKER_SIZE } from './coordinates';
@@ -20,13 +20,14 @@ export function DefeatMarker({
   onMouseDown,
   onContextMenu,
 }: DefeatMarkerProps) {
+  const [isHovered, setIsHovered] = useState(false);
   const displayFrame = isDragging && dragFrameTime != null ? dragFrameTime : defeat.frameTime;
   const pixelY = frameToPixelY(displayFrame);
   const borderColor = defeat.slot === 'A' ? 'var(--color-slot-a)' : 'var(--color-slot-b)';
   const seconds = framesToSeconds(displayFrame);
 
   // 色の決定
-  let bgColor = 'var(--color-defeat)';
+  let bgColor = isHovered && !isDragging ? 'var(--color-defeat-hover)' : 'var(--color-defeat)';
   let cursor = 'grab';
   let shadow = '';
   let borderStyle = 'solid';
@@ -77,6 +78,8 @@ export function DefeatMarker({
       onMouseDown={handleMouseDown}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* 時刻ラベル */}
       <span
