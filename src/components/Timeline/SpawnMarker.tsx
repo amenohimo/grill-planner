@@ -18,7 +18,7 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         top: pixelY,
         left: '50%',
         transform: 'translate(-50%, -50%)',
-        zIndex: 2,
+        zIndex: 3,
       }}
     >
       {/* 時刻ラベル */}
