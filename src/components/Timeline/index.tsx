@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useRef } from 'react';
 import type { SpawnPoint, DefeatPoint, DirectionSetting, InterpolatedHazardConfig, GrillSlot, FrameTime } from '@/types';
 import { useScenario } from '@/hooks/ScenarioContext';
 import { useValidation } from '@/hooks/useValidation';
@@ -16,11 +16,10 @@ interface TimelineProps {
   hazardConfig: InterpolatedHazardConfig;
 }
 
-let defeatCounter = 0;
-
 export function Timeline({ spawns, defeats, directions, hazardConfig }: TimelineProps) {
   const { dispatch } = useScenario();
   const { canAddDefeat, canMoveDefeat } = useValidation(defeats, hazardConfig, directions);
+  const defeatCounterRef = useRef(0);
 
   const showBSlot = hazardConfig.bSlotOpenFrame >= 0;
   const lanesWidth = showBSlot
@@ -29,7 +28,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
 
   const handleAddDefeat = useCallback(
     (slot: GrillSlot, frameTime: number): boolean => {
-      const id = `defeat-${Date.now()}-${defeatCounter++}`;
+      const id = `defeat-${Date.now()}-${defeatCounterRef.current++}`;
       const newDefeat: DefeatPoint = { id, slot, frameTime };
 
       const result = canAddDefeat(newDefeat);
