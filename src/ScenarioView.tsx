@@ -148,6 +148,29 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
             <div className="flex flex-wrap items-center gap-6">
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-text-muted">ターゲット:</span>
+                <button
+                  onClick={() => handleSetTargetMode('weapon')}
+                  className={`rounded-sm px-2 py-0.5 text-xs ${
+                    state.memo.targetOrder.mode === 'weapon'
+                      ? 'bg-primary text-white'
+                      : 'border border-border bg-surface text-text'
+                  }`}
+                >
+                  ブキ
+                </button>
+                <button
+                  onClick={() => handleSetTargetMode('player')}
+                  className={`rounded-sm px-2 py-0.5 text-xs ${
+                    state.memo.targetOrder.mode === 'player'
+                      ? 'bg-primary text-white'
+                      : 'border border-border bg-surface text-text'
+                  }`}
+                >
+                  プレイヤー
+                </button>
+              </div>
               <div className="text-xs text-text-muted">
                 方面: {state.directions.length} | 湧き: {spawns.length} | 撃破: {totalGrillCount}
               </div>
@@ -159,7 +182,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               onSetScenarioCode={handleSetScenarioCode}
               onSetWeapon={handleSetWeapon}
               onSetSpecial={handleSetSpecial}
-              onSetTargetMode={handleSetTargetMode}
               onSetSnatchers={handleSetSnatchers}
             />
           </div>

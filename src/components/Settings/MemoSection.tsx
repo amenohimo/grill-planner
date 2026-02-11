@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import type { ScenarioMemo, WeaponMaster, SpecialMaster, TargetMode } from '@/types';
+import type { ScenarioMemo, WeaponMaster, SpecialMaster } from '@/types';
 import { getWeaponIconPath, getSpecialIconPath, PLAYER_IDS } from '@/constants';
 
 interface MemoSectionProps {
@@ -9,7 +9,6 @@ interface MemoSectionProps {
   onSetScenarioCode: (code: string) => void;
   onSetWeapon: (index: number, rowId: string) => void;
   onSetSpecial: (index: number, rowId: string) => void;
-  onSetTargetMode: (mode: TargetMode) => void;
   onSetSnatchers: (value: string) => void;
 }
 
@@ -20,7 +19,6 @@ export function MemoSection({
   onSetScenarioCode,
   onSetWeapon,
   onSetSpecial,
-  onSetTargetMode,
   onSetSnatchers,
 }: MemoSectionProps) {
   const [open, setOpen] = useState(false);
@@ -114,33 +112,6 @@ export function MemoSection({
               </tr>
             </tbody>
           </table>
-
-          {/* ターゲットモード */}
-          <div>
-            <label className="mb-1 block text-xs text-text-muted">ターゲット基準</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => onSetTargetMode('weapon')}
-                className={`rounded-sm px-2 py-0.5 text-xs ${
-                  memo.targetOrder.mode === 'weapon'
-                    ? 'bg-primary text-white'
-                    : 'border border-border bg-surface text-text'
-                }`}
-              >
-                ブキ順
-              </button>
-              <button
-                onClick={() => onSetTargetMode('player')}
-                className={`rounded-sm px-2 py-0.5 text-xs ${
-                  memo.targetOrder.mode === 'player'
-                    ? 'bg-primary text-white'
-                    : 'border border-border bg-surface text-text'
-                }`}
-              >
-                プレイヤー順
-              </button>
-            </div>
-          </div>
 
           {/* サッチャーメモ */}
           <div>
