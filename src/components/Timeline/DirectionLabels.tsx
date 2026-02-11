@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect, useMemo, type KeyboardEvent } from 'react';
+import { useState, useCallback } from 'react';
 import type { DirectionSetting } from '@/types';
 import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, DIR_BAND_COLORS } from './coordinates';
 
@@ -13,16 +13,6 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
   const sortedDirs = directions
     .map((dir, originalIndex) => ({ ...dir, originalIndex }))
     .sort((a, b) => b.frameTime - a.frameTime);
-
-  // 他の区間で使われている名前を収集（プリセット候補に使用）
-  const usedNames = useMemo(() => {
-    const names = new Set(directions.map((d) => d.direction));
-    // プリセットに含まれる名前は除外
-    for (const preset of PRESET_NAMES) {
-      names.delete(preset);
-    }
-    return [...names];
-  }, [directions]);
 
   return (
     <div
@@ -44,7 +34,6 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
             bgColor={color}
             name={dir.direction}
             originalIndex={dir.originalIndex}
-            usedNames={usedNames}
             onUpdateName={onUpdateName}
           />
         );
@@ -59,73 +48,21 @@ interface DirectionLabelProps {
   bgColor: string;
   name: string;
   originalIndex: number;
-  usedNames: readonly string[];
   onUpdateName?: (index: number, name: string) => void;
 }
 
-function DirectionLabel({ top, height, bgColor, name, originalIndex, usedNames, onUpdateName }: DirectionLabelProps) {
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(name);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const popoverRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (editing && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [editing]);
-
-  // ポップオーバー外のクリックで閉じる
-  useEffect(() => {
-    if (!editing) return;
-    const handleClickOutside = (e: MouseEvent) => {
-      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
-        confirmEdit();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  });
-
-  const startEdit = useCallback(() => {
-    if (!onUpdateName) return;
-    setEditValue(name);
-    setEditing(true);
-  }, [name, onUpdateName]);
-
-  const confirmEdit = useCallback(() => {
-    setEditing(false);
-    const trimmed = editValue.trim();
-    if (trimmed && trimmed !== name) {
-      onUpdateName?.(originalIndex, trimmed);
-    }
-  }, [editValue, name, originalIndex, onUpdateName]);
+function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateName }: DirectionLabelProps) {
+  const [hovered, setHovered] = useState(false);
 
   const selectPreset = useCallback(
     (presetName: string) => {
-      setEditing(false);
       if (presetName !== name) {
         onUpdateName?.(originalIndex, presetName);
       }
+      setHovered(false);
     },
     [name, originalIndex, onUpdateName],
   );
-
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        confirmEdit();
-      } else if (e.key === 'Escape') {
-        setEditing(false);
-        setEditValue(name);
-      }
-    },
-    [confirmEdit, name],
-  );
-
-  // 自分の名前以外の使用済み名前（追加プリセット候補）
-  const extraPresets = usedNames.filter((n) => n !== name);
 
   return (
     <div
@@ -137,19 +74,19 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, usedNames, 
         backgroundColor: bgColor,
         left: 0,
       }}
+      onMouseEnter={() => onUpdateName && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
     >
       <span
-        className="cursor-pointer select-none truncate px-1 text-xs font-medium text-text hover:underline"
-        onClick={startEdit}
+        className="select-none truncate px-1 text-xs font-medium text-text"
         title={name}
       >
         {name}
       </span>
 
-      {/* 編集ポップオーバー */}
-      {editing && (
+      {/* ホバー時フロート */}
+      {hovered && (
         <div
-          ref={popoverRef}
           className="absolute flex items-center gap-1 rounded border border-border bg-surface p-1 shadow-sm"
           style={{
             left: DIRECTION_LABEL_WIDTH + 4,
@@ -159,7 +96,6 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, usedNames, 
             whiteSpace: 'nowrap',
           }}
         >
-          {/* プリセットボタン */}
           {PRESET_NAMES.map((preset) => (
             <button
               key={preset}
@@ -174,30 +110,6 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, usedNames, 
               {preset}
             </button>
           ))}
-
-          {/* 他区間で使用中の名前（追加プリセット） */}
-          {extraPresets.map((extra) => (
-            <button
-              key={extra}
-              type="button"
-              className="rounded px-1.5 py-0.5 text-xs text-text-muted hover:bg-primary hover:text-white"
-              onClick={() => selectPreset(extra)}
-            >
-              {extra}
-            </button>
-          ))}
-
-          {/* 自由入力 */}
-          <input
-            ref={inputRef}
-            type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            maxLength={20}
-            className="w-16 rounded border border-border bg-surface px-1 py-0.5 text-xs text-text outline-none"
-            placeholder="入力"
-          />
         </div>
       )}
     </div>
