@@ -148,7 +148,7 @@ export function MemoSection({
 
           {/* サッチャーメモ */}
           <div>
-            <label className="mb-1 block text-xs text-text-muted">ハコビヤメモ</label>
+            <label className="mb-1 block text-xs text-text-muted">タマヒロイメモ</label>
             <input
               type="text"
               value={memo.snatchers}
