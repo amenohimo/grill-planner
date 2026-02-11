@@ -10,7 +10,7 @@ export const PIXELS_PER_SECOND = 16;
 export const TIMELINE_HEIGHT = GAME_DURATION_SECONDS * PIXELS_PER_SECOND; // 1600px
 export const TIMELINE_PADDING = 12; // 上下のパディング
 
-export const DIRECTION_LABEL_WIDTH = 32;
+export const DIRECTION_LABEL_WIDTH = 56;
 export const TIME_AXIS_WIDTH = 28;
 export const LANE_WIDTH = 100;
 export const LANE_SPACING = 4;
