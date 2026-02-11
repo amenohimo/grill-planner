@@ -1,4 +1,4 @@
-import type { FrameTime, GrillSlot, DirectionName } from './base';
+import type { FrameTime, GrillSlot, DirectionId } from './base';
 
 /** 撃破点 — ユーザーが配置する */
 export interface DefeatPoint {
@@ -12,7 +12,7 @@ export interface SpawnPoint {
   readonly id: string;
   readonly slot: GrillSlot;
   readonly frameTime: FrameTime;
-  readonly direction: DirectionName;
+  readonly direction: DirectionId;
   readonly isAuto: boolean;
   readonly defeatId?: string;
 }
@@ -20,5 +20,5 @@ export interface SpawnPoint {
 /** 方面設定 — 1つの方面切替区間 */
 export interface DirectionSetting {
   readonly frameTime: FrameTime;
-  readonly direction: DirectionName;
+  readonly direction: DirectionId;
 }

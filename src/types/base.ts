@@ -10,6 +10,9 @@ export type GrillSlot = 'A' | 'B';
 /** 方面名。ユーザー入力による任意文字列。 */
 export type DirectionName = string;
 
+/** 方面の内部ID（プリセット配列のインデックス） */
+export type DirectionId = 0 | 1 | 2;
+
 /** ターゲットモード */
 export type TargetMode = 'weapon' | 'player';
 

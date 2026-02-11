@@ -4,7 +4,7 @@ import type {
   DefeatPoint,
   SpawnPoint,
   DirectionSetting,
-  DirectionName,
+  DirectionId,
   HazardConfigData,
   InterpolatedHazardConfig,
 } from '@/types';
@@ -137,9 +137,9 @@ export function generateDefaultDirections(
   directionInterval: number,
 ): readonly DirectionSetting[] {
   const times = getDirectionSwitchTimes(directionInterval);
-  return times.map((frameTime, index) => ({
+  return times.map((frameTime) => ({
     frameTime,
-    direction: '正面',
+    direction: 1 as DirectionId,
   }));
 }
 
@@ -160,7 +160,7 @@ export function generateDefaultDirections(
 export function getDirectionAtTime(
   spawnerDecisionFrame: FrameTime,
   sortedDirections: readonly DirectionSetting[],
-): DirectionName {
+): DirectionId {
   for (let i = sortedDirections.length - 1; i >= 0; i--) {
     const setting = sortedDirections[i];
     if (setting && setting.frameTime >= spawnerDecisionFrame) {
@@ -168,7 +168,7 @@ export function getDirectionAtTime(
     }
   }
   // フォールバック: ゲーム開始前のスポナー決定（6030F等）は最初の区間
-  return sortedDirections[0]?.direction ?? '';
+  return sortedDirections[0]?.direction ?? 1;
 }
 
 // ============================================================
@@ -186,7 +186,7 @@ export function calculateSpawns(
 
   // A枠 自動湧き (6000F)
   // スポナー決定時刻 = 6000 + 30 = 6030F（ゲーム開始前）→ 最初の区間
-  const firstDirection = sortedDirections[0]?.direction ?? '';
+  const firstDirection: DirectionId = sortedDirections[0]?.direction ?? 1;
   result.push({
     id: 'auto-a',
     slot: 'A',

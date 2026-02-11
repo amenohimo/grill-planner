@@ -1,21 +1,24 @@
-import type { DirectionStats } from '@/types';
+import type { DirectionId, DirectionStats } from '@/types';
 
 interface DirectionStatsTableProps {
   stats: readonly DirectionStats[];
   totalGrillCount: number;
+  presetNames: readonly [string, string, string];
 }
 
-export function DirectionStatsTable({ stats, totalGrillCount }: DirectionStatsTableProps) {
-  // 同名方面の集約
-  const nameAgg = new Map<string, { spawnCount: number; defeatCount: number }>();
+export function DirectionStatsTable({ stats, totalGrillCount, presetNames }: DirectionStatsTableProps) {
+  const resolveName = (id: DirectionId) => presetNames[id] ?? `方面${id + 1}`;
+
+  // 同名方面の集約（同じDirectionIdごとに集約）
+  const idAgg = new Map<DirectionId, { spawnCount: number; defeatCount: number }>();
   for (const s of stats) {
-    const existing = nameAgg.get(s.direction) ?? { spawnCount: 0, defeatCount: 0 };
-    nameAgg.set(s.direction, {
+    const existing = idAgg.get(s.direction) ?? { spawnCount: 0, defeatCount: 0 };
+    idAgg.set(s.direction, {
       spawnCount: existing.spawnCount + s.spawnCount,
       defeatCount: existing.defeatCount + s.defeatCount,
     });
   }
-  const hasDuplicateNames = nameAgg.size < stats.length;
+  const hasDuplicateIds = idAgg.size < stats.length;
 
   const totalDefeatCount = stats.reduce((sum, s) => sum + s.defeatCount, 0);
 
@@ -35,7 +38,7 @@ export function DirectionStatsTable({ stats, totalGrillCount }: DirectionStatsTa
           {stats.map((s, i) => (
             <tr key={i} className="border-b border-border">
               <td className="py-1 pr-2 text-xs text-text-muted">{i + 1}</td>
-              <td className="py-1 pr-2 text-text">{s.direction}</td>
+              <td className="py-1 pr-2 text-text">{resolveName(s.direction)}</td>
               <td className="py-1 text-right font-medium text-text">{s.spawnCount}</td>
               <td className="py-1 text-right font-medium text-text">{s.defeatCount}</td>
             </tr>
@@ -49,8 +52,8 @@ export function DirectionStatsTable({ stats, totalGrillCount }: DirectionStatsTa
         </tbody>
       </table>
 
-      {/* 同名方面の集約表示 */}
-      {hasDuplicateNames && (
+      {/* 同ID方面の集約表示 */}
+      {hasDuplicateIds && (
         <div className="mt-3 border-t border-border pt-2">
           <h4 className="mb-1 text-xs font-medium text-text-muted">方面名別合計</h4>
           <table className="w-full text-sm">
@@ -62,9 +65,9 @@ export function DirectionStatsTable({ stats, totalGrillCount }: DirectionStatsTa
               </tr>
             </thead>
             <tbody>
-              {[...nameAgg.entries()].map(([name, counts]) => (
-                <tr key={name}>
-                  <td className="py-1 pr-2 text-text">{name}</td>
+              {[...idAgg.entries()].map(([id, counts]) => (
+                <tr key={id}>
+                  <td className="py-1 pr-2 text-text">{resolveName(id)}</td>
                   <td className="py-1 text-right font-medium text-text">{counts.spawnCount}</td>
                   <td className="py-1 text-right font-medium text-text">{counts.defeatCount}</td>
                 </tr>

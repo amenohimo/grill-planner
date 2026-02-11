@@ -2,7 +2,7 @@ import type {
   ScenarioData,
   DefeatPoint,
   DirectionSetting,
-  DirectionName,
+  DirectionId,
   TargetMode,
   DisplayMode,
   FrameTime,
@@ -24,7 +24,7 @@ export type ScenarioAction =
 
   // 方面
   | { type: 'SET_DIRECTIONS'; payload: readonly DirectionSetting[] }
-  | { type: 'UPDATE_DIRECTION_NAME'; payload: { index: number; name: DirectionName } }
+  | { type: 'UPDATE_DIRECTION'; payload: { index: number; directionId: DirectionId } }
 
   // 撃破点
   | { type: 'ADD_DEFEAT'; payload: DefeatPoint }
@@ -90,12 +90,12 @@ export function scenarioReducer(
     case 'SET_DIRECTIONS':
       return { ...state, directions: action.payload };
 
-    case 'UPDATE_DIRECTION_NAME':
+    case 'UPDATE_DIRECTION':
       return {
         ...state,
         directions: state.directions.map((d, i) =>
           i === action.payload.index
-            ? { ...d, direction: action.payload.name }
+            ? { ...d, direction: action.payload.directionId }
             : d,
         ),
       };

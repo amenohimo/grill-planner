@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react';
-import type { SpawnPoint, DefeatPoint, DirectionSetting, InterpolatedHazardConfig, GrillSlot, FrameTime } from '@/types';
+import type { SpawnPoint, DefeatPoint, DirectionSetting, InterpolatedHazardConfig, GrillSlot, FrameTime, DirectionId } from '@/types';
 import { useScenario } from '@/hooks/ScenarioContext';
 import { useValidation } from '@/hooks/useValidation';
 import { getAffectedDefeats, findCascadeRemovals } from '@/utils/validation';
@@ -61,9 +61,9 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
     [defeats, hazardConfig, directions, dispatch],
   );
 
-  const handleUpdateDirectionName = useCallback(
-    (index: number, name: string) => {
-      dispatch({ type: 'UPDATE_DIRECTION_NAME', payload: { index, name } });
+  const handleUpdateDirection = useCallback(
+    (index: number, directionId: DirectionId) => {
+      dispatch({ type: 'UPDATE_DIRECTION', payload: { index, directionId } });
     },
     [dispatch],
   );
@@ -89,7 +89,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
         <DirectionLabels
           directions={directions}
           presetNames={directionPresets}
-          onUpdateName={handleUpdateDirectionName}
+          onUpdateDirection={handleUpdateDirection}
         />
 
         {/* 時間軸 */}

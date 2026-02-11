@@ -214,7 +214,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
 
         {/* 右ペイン — 独立スクロール */}
         <div className="w-70 shrink-0 overflow-y-auto border-l border-border bg-surface p-4">
-          <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} />
+          <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} presetNames={state.directionPresets} />
         </div>
       </div>
     </div>

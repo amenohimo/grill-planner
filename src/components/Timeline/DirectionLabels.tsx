@@ -1,14 +1,14 @@
 import { useState, useCallback, useRef, type MouseEvent } from 'react';
-import type { DirectionSetting } from '@/types';
+import type { DirectionId, DirectionSetting } from '@/types';
 import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, getDirectionColorMap } from './coordinates';
 
 interface DirectionLabelsProps {
   directions: readonly DirectionSetting[];
   presetNames: readonly [string, string, string];
-  onUpdateName?: (index: number, name: string) => void;
+  onUpdateDirection?: (index: number, directionId: DirectionId) => void;
 }
 
-export function DirectionLabels({ directions, presetNames, onUpdateName }: DirectionLabelsProps) {
+export function DirectionLabels({ directions, presetNames, onUpdateDirection }: DirectionLabelsProps) {
   const sortedDirs = directions
     .map((dir, originalIndex) => ({ ...dir, originalIndex }))
     .sort((a, b) => b.frameTime - a.frameTime);
@@ -25,6 +25,7 @@ export function DirectionLabels({ directions, presetNames, onUpdateName }: Direc
         const bottom = nextDir ? frameToPixelY(nextDir.frameTime) : TIMELINE_HEIGHT;
         const height = bottom - top;
         const color = colorMap.get(dir.direction) ?? 'var(--color-dir-1)';
+        const displayName = presetNames[dir.direction] ?? `方面${dir.direction + 1}`;
 
         return (
           <DirectionLabel
@@ -32,10 +33,11 @@ export function DirectionLabels({ directions, presetNames, onUpdateName }: Direc
             top={top}
             height={height}
             bgColor={color}
-            name={dir.direction}
+            directionId={dir.direction}
+            displayName={displayName}
             originalIndex={dir.originalIndex}
             presetNames={presetNames}
-            onUpdateName={onUpdateName}
+            onUpdateDirection={onUpdateDirection}
           />
         );
       })}
@@ -47,24 +49,25 @@ interface DirectionLabelProps {
   top: number;
   height: number;
   bgColor: string;
-  name: string;
+  directionId: DirectionId;
+  displayName: string;
   originalIndex: number;
   presetNames: readonly [string, string, string];
-  onUpdateName?: (index: number, name: string) => void;
+  onUpdateDirection?: (index: number, directionId: DirectionId) => void;
 }
 
-function DirectionLabel({ top, height, bgColor, name, originalIndex, presetNames, onUpdateName }: DirectionLabelProps) {
+function DirectionLabel({ top, height, bgColor, directionId, displayName, originalIndex, presetNames, onUpdateDirection }: DirectionLabelProps) {
   const [hovered, setHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const selectPreset = useCallback(
-    (presetName: string) => {
-      if (presetName !== name) {
-        onUpdateName?.(originalIndex, presetName);
+    (presetId: DirectionId) => {
+      if (presetId !== directionId) {
+        onUpdateDirection?.(originalIndex, presetId);
       }
       setHovered(false);
     },
-    [name, originalIndex, onUpdateName],
+    [directionId, originalIndex, onUpdateDirection],
   );
 
   const handleMouseLeave = useCallback((e: MouseEvent) => {
@@ -84,14 +87,14 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, presetNames
         backgroundColor: bgColor,
         left: 0,
       }}
-      onMouseEnter={() => onUpdateName && setHovered(true)}
+      onMouseEnter={() => onUpdateDirection && setHovered(true)}
       onMouseLeave={handleMouseLeave}
     >
       <span
         className="select-none truncate px-1 text-sm font-medium text-text"
-        title={name}
+        title={displayName}
       >
-        {name}
+        {displayName}
       </span>
 
       {/* ホバー時フロート */}
@@ -106,16 +109,16 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, presetNames
             whiteSpace: 'nowrap',
           }}
         >
-          {presetNames.map((preset) => (
+          {presetNames.map((preset, presetId) => (
             <button
-              key={preset}
+              key={presetId}
               type="button"
               className="rounded px-1.5 py-0.5 text-xs hover:bg-primary hover:text-white"
               style={{
-                backgroundColor: preset === name ? 'var(--color-primary)' : undefined,
-                color: preset === name ? 'white' : undefined,
+                backgroundColor: presetId === directionId ? 'var(--color-primary)' : undefined,
+                color: presetId === directionId ? 'white' : undefined,
               }}
-              onClick={() => selectPreset(preset)}
+              onClick={() => selectPreset(presetId as DirectionId)}
             >
               {preset}
             </button>

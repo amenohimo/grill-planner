@@ -8,7 +8,7 @@ import {
   calculateSpawns,
   generateDefaultDirections,
 } from '@/utils/calculations';
-import type { InterpolatedHazardConfig, DirectionSetting, DefeatPoint } from '@/types';
+import type { InterpolatedHazardConfig, DirectionSetting, DefeatPoint, DirectionId } from '@/types';
 
 // ============================================================
 // 時間変換テスト（02_GAME_MECHANICS §1.2）
@@ -70,26 +70,26 @@ describe('calculateSpawnTime', () => {
 
 describe('getDirectionAtTime', () => {
   const directions: DirectionSetting[] = [
-    { frameTime: 6000, direction: '左' },
-    { frameTime: 5520, direction: '中央' },
-    { frameTime: 5040, direction: '右' },
-    { frameTime: 4560, direction: '左' },
+    { frameTime: 6000, direction: 0 as DirectionId },
+    { frameTime: 5520, direction: 1 as DirectionId },
+    { frameTime: 5040, direction: 2 as DirectionId },
+    { frameTime: 4560, direction: 0 as DirectionId },
   ];
 
-  it('§5.4例: 4916F → 5040の区間（右）', () => {
-    expect(getDirectionAtTime(4916, directions)).toBe('右');
+  it('§5.4例: 4916F → 5040の区間（direction=2）', () => {
+    expect(getDirectionAtTime(4916, directions)).toBe(2);
   });
 
-  it('区間境界: 5520F → 中央の区間', () => {
-    expect(getDirectionAtTime(5520, directions)).toBe('中央');
+  it('区間境界: 5520F → direction=1の区間', () => {
+    expect(getDirectionAtTime(5520, directions)).toBe(1);
   });
 
-  it('ゲーム開始前: 6030F → 最初の区間（左）', () => {
-    expect(getDirectionAtTime(6030, directions)).toBe('左');
+  it('ゲーム開始前: 6030F → 最初の区間（direction=0）', () => {
+    expect(getDirectionAtTime(6030, directions)).toBe(0);
   });
 
-  it('最後の区間内: 4560F → 左', () => {
-    expect(getDirectionAtTime(4560, directions)).toBe('左');
+  it('最後の区間内: 4560F → direction=0', () => {
+    expect(getDirectionAtTime(4560, directions)).toBe(0);
   });
 });
 

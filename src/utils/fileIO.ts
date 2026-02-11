@@ -1,4 +1,4 @@
-import type { ScenarioData, SaveData, HazardConfigData, DefeatPoint, WeaponMaster, SpecialMaster } from '@/types';
+import type { ScenarioData, SaveData, HazardConfigData, DefeatPoint, DirectionId, WeaponMaster, SpecialMaster } from '@/types';
 import { getHazardConfig, generateDefaultDirections } from './calculations';
 import { findAllInvalidDefeats } from './validation';
 
@@ -122,10 +122,34 @@ function parseAndValidate(
     return { success: false, error: 'directions が不正です' };
   }
   for (const dir of scenario.directions) {
-    if (!isObject(dir) || typeof (dir as Record<string, unknown>).frameTime !== 'number' || typeof (dir as Record<string, unknown>).direction !== 'string') {
+    if (!isObject(dir) || typeof (dir as Record<string, unknown>).frameTime !== 'number') {
+      return { success: false, error: 'directions の要素が不正です' };
+    }
+    const dirVal = (dir as Record<string, unknown>).direction;
+    if (typeof dirVal !== 'number' && typeof dirVal !== 'string') {
       return { success: false, error: 'directions の要素が不正です' };
     }
   }
+
+  // direction: 旧形式（文字列）→ 内部ID（数値）に変換
+  const presets: readonly [string, string, string] =
+    (isObject(scenario.memo) && Array.isArray((scenario as Record<string, unknown>).directionPresets))
+      ? (scenario as Record<string, unknown>).directionPresets as [string, string, string]
+      : ['左', '正面', '右'];
+
+  scenario.directions = (scenario.directions as Array<Record<string, unknown>>).map((dir) => {
+    const dirVal = dir.direction;
+    if (typeof dirVal === 'number' && [0, 1, 2].includes(dirVal)) {
+      return dir; // already DirectionId
+    }
+    if (typeof dirVal === 'string') {
+      const idx = presets.indexOf(dirVal);
+      dir.direction = (idx >= 0 && idx <= 2 ? idx : 1) as DirectionId;
+    } else {
+      dir.direction = 1 as DirectionId;
+    }
+    return dir;
+  });
 
   // defeats
   if (!Array.isArray(scenario.defeats)) {
