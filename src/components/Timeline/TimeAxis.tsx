@@ -1,3 +1,4 @@
+import { useState, useCallback, useRef, type MouseEvent } from 'react';
 import { GAME_DURATION_SECONDS } from '@/constants';
 import { PIXELS_PER_SECOND, TIMELINE_WIDTH, TIME_AXIS_HEIGHT } from './coordinates';
 
@@ -21,10 +22,32 @@ for (let s = 0; s <= GAME_DURATION_SECONDS; s++) {
 }
 
 export function TimeAxis() {
+  const axisRef = useRef<HTMLDivElement>(null);
+  const [hoverInfo, setHoverInfo] = useState<{ x: number; seconds: string } | null>(null);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!axisRef.current) return;
+    const rect = axisRef.current.getBoundingClientRect();
+    const pixelX = e.clientX - rect.left;
+    const seconds = GAME_DURATION_SECONDS - pixelX / PIXELS_PER_SECOND;
+    if (seconds < 0 || seconds > GAME_DURATION_SECONDS) {
+      setHoverInfo(null);
+      return;
+    }
+    setHoverInfo({ x: pixelX, seconds: seconds.toFixed(1) });
+  }, []);
+
+  const handleMouseLeave = useCallback(() => {
+    setHoverInfo(null);
+  }, []);
+
   return (
     <div
+      ref={axisRef}
       className="relative border-b border-border"
       style={{ width: TIMELINE_WIDTH, height: TIME_AXIS_HEIGHT }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
       {ticks.map((tick) => (
         <div
@@ -60,6 +83,21 @@ export function TimeAxis() {
           )}
         </div>
       ))}
+
+      {/* ホバー時刻表示 */}
+      {hoverInfo && (
+        <div
+          className="pointer-events-none absolute rounded-sm bg-text px-1.5 py-0.5 text-xs text-surface"
+          style={{
+            left: hoverInfo.x,
+            top: -20,
+            transform: 'translateX(-50%)',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {hoverInfo.seconds}s
+        </div>
+      )}
     </div>
   );
 }
