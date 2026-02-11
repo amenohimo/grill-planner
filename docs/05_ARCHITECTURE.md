@@ -796,40 +796,40 @@ interface UseTimelineDragReturn {
 
 ### 8.1 フレーム ↔ ピクセル変換
 
-タイムラインの水平方向でフレームをピクセルに変換する。
+タイムラインの垂直方向（縦軸＝時間、上=100s、下=0s）でフレームをピクセルに変換する。
 
 ```typescript
 const PIXELS_PER_SECOND = 16; // 旧実装(8)の2倍。操作性改善のため
 
-function frameToPixelX(frameTime: FrameTime, pixelsPerSecond: number): number {
+function frameToPixelY(frameTime: FrameTime, pixelsPerSecond: number): number {
   const seconds = GAME_DURATION_SECONDS - framesToSeconds(frameTime);
   return seconds * pixelsPerSecond;
 }
 
-function pixelXToFrame(pixelX: number, pixelsPerSecond: number): FrameTime {
-  const seconds = GAME_DURATION_SECONDS - (pixelX / pixelsPerSecond);
+function pixelYToFrame(pixelY: number, pixelsPerSecond: number): FrameTime {
+  const seconds = GAME_DURATION_SECONDS - (pixelY / pixelsPerSecond);
   return secondsToFrames(seconds);
 }
 ```
 
-100秒 × 16px/秒 = 1600px のタイムライン幅。横スクロール可能なコンテナ内に配置する。
+100秒 × 16px/秒 = 1600px のタイムライン高さ。縦スクロール可能なコンテナ内に配置する。
 
 注: `PIXELS_PER_SECOND` の最終値は 06_UI_DESIGN.md で確定する。ここでは方針のみ定義。
 
 ### 8.2 レーン配置
 
-垂直方向のレーン配置:
+水平方向のレーン配置（各列が縦に1600pxの高さを持つ）:
 
 ```
-┌──────────────────────────────────────────────┐
-│ 方面ラベル行                                    │
-├──────────────────────────────────────────────┤
-│ 時間軸（目盛り）                                │
-├──────────────────────────────────────────────┤
-│ A枠レーン                                      │
-├──────────────────────────────────────────────┤
-│ B枠レーン                                      │
-└──────────────────────────────────────────────┘
+┌──────┬──────┬──────┬──────┐
+│方面  │時間軸│A枠   │B枠   │
+│ラベル│目盛り│レーン │レーン │
+│（列）│（列）│（列）│（列）│
+│      │      │      │      │
+│ 上   │ 100s │      │      │
+│  ↓   │  ↓   │  ↓   │  ↓   │
+│ 下   │  0s  │      │      │
+└──────┴──────┴──────┴──────┘
 ```
 
-背景に方面区間の色帯（DirectionBands）を全レーンにまたがって描画する。
+背景に方面区間の色帯（DirectionBands）を全レーンにまたがる横帯として描画する。
