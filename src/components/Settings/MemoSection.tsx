@@ -74,7 +74,7 @@ export function MemoSection({
                         <select
                           value={selectedRowId}
                           onChange={(e) => onSetWeapon(i, e.target.value)}
-                          className="w-44 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                          className="w-40 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
                         >
                           <option value="">--</option>
                           {weapons.map((w) => (
@@ -102,7 +102,7 @@ export function MemoSection({
                         <select
                           value={selectedRowId}
                           onChange={(e) => onSetSpecial(i, e.target.value)}
-                          className="w-44 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                          className="w-40 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
                         >
                           <option value="">--</option>
                           {specials.map((s) => (
