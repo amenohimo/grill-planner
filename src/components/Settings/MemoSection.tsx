@@ -121,7 +121,7 @@ export function MemoSection({
               value={memo.snatchers}
               onChange={(e) => onSetSnatchers(e.target.value)}
               placeholder="自由メモ"
-              className="w-full rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
+              className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
             />
           </div>
         </div>
