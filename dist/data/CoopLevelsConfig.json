@@ -1,0 +1,58 @@
+[
+  {
+    "Difficulty": 20,
+    "EventDozer": {
+      "DozerIncrSecond": 80,
+      "DozerSpeedCoef": 1.3
+    },
+    "WaveChangeNum": 3
+  },
+  {
+    "Difficulty": 40,
+    "EventDozer": {
+      "DozerIncrSecond": 70,
+      "DozerSpeedCoef": 1.5
+    },
+    "WaveChangeNum": 3
+  },
+  {
+    "Difficulty": 60,
+    "EventDozer": {
+      "DozerIncrSecond": 60,
+      "DozerSpeedCoef": 1.7
+    },
+    "WaveChangeNum": 4
+  },
+  {
+    "Difficulty": 80,
+    "EventDozer": {
+      "DozerIncrSecond": 40,
+      "DozerSpeedCoef": 1.9
+    },
+    "WaveChangeNum": 4
+  },
+  {
+    "Difficulty": 100,
+    "EventDozer": {
+      "DozerIncrSecond": 30,
+      "DozerSpeedCoef": 2.1
+    },
+    "WaveChangeNum": 5
+  },
+  {
+    "Difficulty": 200,
+    "EventDozer": {
+      "DozerIncrSecond": 10,
+      "DozerSpeedCoef": 2.3
+    },
+    "WaveChangeNum": 7
+  },
+  {
+    "Difficulty": 333,
+    "EventDozer": {
+      "DozerIncrSecond": 10,
+      "DozerSpeedCoef": 2.6
+    },
+    "WaveChangeNum": 9
+  }
+]
