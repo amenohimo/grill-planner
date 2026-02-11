@@ -8,7 +8,9 @@ interface DirectionLabelsProps {
 }
 
 export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsProps) {
-  const sortedDirs = [...directions].sort((a, b) => b.frameTime - a.frameTime);
+  const sortedDirs = directions
+    .map((dir, originalIndex) => ({ ...dir, originalIndex }))
+    .sort((a, b) => b.frameTime - a.frameTime);
 
   return (
     <div
@@ -22,11 +24,6 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
         const height = bottom - top;
         const color = DIR_BAND_COLORS[index % DIR_BAND_COLORS.length] ?? DIR_BAND_COLORS[0];
 
-        // 元のインデックスを見つける（directions配列内の位置）
-        const originalIndex = directions.findIndex(
-          (d) => d.frameTime === dir.frameTime && d.direction === dir.direction,
-        );
-
         return (
           <DirectionLabel
             key={index}
@@ -34,7 +31,7 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
             height={height}
             bgColor={color}
             name={dir.direction}
-            originalIndex={originalIndex >= 0 ? originalIndex : index}
+            originalIndex={dir.originalIndex}
             onUpdateName={onUpdateName}
           />
         );
