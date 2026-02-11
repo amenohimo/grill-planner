@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState, type MouseEvent } from 'react';
 import type { SpawnPoint, DefeatPoint, GrillSlot, FrameTime } from '@/types';
+import { secondsToFrames } from '@/utils/calculations';
 import { useTimelineDrag } from '@/hooks/useTimelineDrag';
 import { TIMELINE_HEIGHT, LANE_WIDTH, pixelYToFrame, frameToPixelY } from './coordinates';
 import { SpawnMarker } from './SpawnMarker';
@@ -97,6 +98,19 @@ export function GrillSlotLane({
     [onRemoveDefeat],
   );
 
+  const handleDefeatTimeEdit = useCallback(
+    (defeatId: string, newSeconds: number) => {
+      const frameTime = secondsToFrames(newSeconds);
+      const valid = validateMoveDefeat?.(defeatId, frameTime) ?? true;
+      if (valid) {
+        onMoveDefeat?.(defeatId, frameTime);
+        return true;
+      }
+      return false;
+    },
+    [validateMoveDefeat, onMoveDefeat],
+  );
+
   // 湧き-撃破ペアリング
   const spawnDefeatPairs = useMemo(() => {
     return slotSpawns.map((spawn, index) => ({
@@ -168,6 +182,7 @@ export function GrillSlotLane({
           isValidPosition={dragState.dragDefeatId === defeat.id ? dragState.isValidPosition : true}
           onMouseDown={handleDefeatMouseDown}
           onContextMenu={handleDefeatContextMenu}
+          onTimeEdit={handleDefeatTimeEdit}
         />
       ))}
 
