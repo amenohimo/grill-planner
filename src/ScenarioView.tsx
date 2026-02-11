@@ -94,6 +94,10 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     (value: string) => dispatch({ type: 'SET_SNATCHERS', payload: value }),
     [dispatch],
   )
+  const handleSetDirectionPreset = useCallback(
+    (index: 0 | 1 | 2, name: string) => dispatch({ type: 'SET_DIRECTION_PRESET', payload: { index, name } }),
+    [dispatch],
+  )
 
   // ファイル I/O
   const [ioError, setIoError] = useState<string | null>(null)
@@ -171,6 +175,19 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
                   プレイヤー
                 </button>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-text-muted">方面名:</span>
+                {state.directionPresets.map((preset, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    value={preset}
+                    onChange={(e) => handleSetDirectionPreset(i as 0 | 1 | 2, e.target.value)}
+                    className="w-16 rounded-sm border border-border bg-surface px-1 py-0.5 text-center text-xs text-text"
+                    maxLength={10}
+                  />
+                ))}
+              </div>
             </div>
             <MemoSection
               memo={state.memo}
@@ -190,6 +207,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               defeats={state.defeats}
               directions={state.directions}
               hazardConfig={hazardConfig}
+              directionPresets={state.directionPresets}
             />
           </div>
         </div>

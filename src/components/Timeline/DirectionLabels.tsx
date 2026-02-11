@@ -2,14 +2,13 @@ import { useState, useCallback, useRef, type MouseEvent } from 'react';
 import type { DirectionSetting } from '@/types';
 import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, getDirectionColorMap } from './coordinates';
 
-const PRESET_NAMES = ['左', '正面', '右'] as const;
-
 interface DirectionLabelsProps {
   directions: readonly DirectionSetting[];
+  presetNames: readonly [string, string, string];
   onUpdateName?: (index: number, name: string) => void;
 }
 
-export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsProps) {
+export function DirectionLabels({ directions, presetNames, onUpdateName }: DirectionLabelsProps) {
   const sortedDirs = directions
     .map((dir, originalIndex) => ({ ...dir, originalIndex }))
     .sort((a, b) => b.frameTime - a.frameTime);
@@ -35,6 +34,7 @@ export function DirectionLabels({ directions, onUpdateName }: DirectionLabelsPro
             bgColor={color}
             name={dir.direction}
             originalIndex={dir.originalIndex}
+            presetNames={presetNames}
             onUpdateName={onUpdateName}
           />
         );
@@ -49,10 +49,11 @@ interface DirectionLabelProps {
   bgColor: string;
   name: string;
   originalIndex: number;
+  presetNames: readonly [string, string, string];
   onUpdateName?: (index: number, name: string) => void;
 }
 
-function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateName }: DirectionLabelProps) {
+function DirectionLabel({ top, height, bgColor, name, originalIndex, presetNames, onUpdateName }: DirectionLabelProps) {
   const [hovered, setHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -93,7 +94,7 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
         {name}
       </span>
 
-      {/* ホバー時フロート — ラベルの中央に重ねて表示 */}
+      {/* ホバー時フロート */}
       {hovered && (
         <div
           className="absolute flex items-center gap-1 rounded border border-border bg-surface p-1 shadow-sm"
@@ -105,7 +106,7 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
             whiteSpace: 'nowrap',
           }}
         >
-          {PRESET_NAMES.map((preset) => (
+          {presetNames.map((preset) => (
             <button
               key={preset}
               type="button"

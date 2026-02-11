@@ -42,6 +42,7 @@ export type ScenarioAction =
 
   // UI
   | { type: 'SET_DISPLAY_MODE'; payload: DisplayMode }
+  | { type: 'SET_DIRECTION_PRESET'; payload: { index: 0 | 1 | 2; name: string } }
 
   // 全体
   | { type: 'LOAD_SCENARIO'; payload: ScenarioData }
@@ -70,6 +71,7 @@ export function createInitialScenario(hazardConfigData?: HazardConfigData): Scen
       snatchers: '',
     },
     displayMode: DEFAULT_DISPLAY_MODE,
+    directionPresets: ['左', '正面', '右'],
   };
 }
 
@@ -162,8 +164,17 @@ export function scenarioReducer(
     case 'SET_DISPLAY_MODE':
       return { ...state, displayMode: action.payload };
 
+    case 'SET_DIRECTION_PRESET': {
+      const presets = [...state.directionPresets] as [string, string, string];
+      presets[action.payload.index] = action.payload.name;
+      return { ...state, directionPresets: presets };
+    }
+
     case 'LOAD_SCENARIO':
-      return action.payload;
+      return {
+        ...action.payload,
+        directionPresets: action.payload.directionPresets ?? ['左', '正面', '右'],
+      };
 
     case 'RESET_SCENARIO':
       return createInitialScenario();

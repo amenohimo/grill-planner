@@ -14,9 +14,10 @@ interface TimelineProps {
   defeats: readonly DefeatPoint[];
   directions: readonly DirectionSetting[];
   hazardConfig: InterpolatedHazardConfig;
+  directionPresets: readonly [string, string, string];
 }
 
-export function Timeline({ spawns, defeats, directions, hazardConfig }: TimelineProps) {
+export function Timeline({ spawns, defeats, directions, hazardConfig, directionPresets }: TimelineProps) {
   const { dispatch } = useScenario();
   const { canAddDefeat, canMoveDefeat } = useValidation(defeats, hazardConfig, directions);
   const defeatCounterRef = useRef(0);
@@ -87,6 +88,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
         {/* 方面ラベル */}
         <DirectionLabels
           directions={directions}
+          presetNames={directionPresets}
           onUpdateName={handleUpdateDirectionName}
         />
 

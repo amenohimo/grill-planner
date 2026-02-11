@@ -20,4 +20,5 @@ export interface ScenarioData {
   readonly defeats: readonly DefeatPoint[];
   readonly memo: ScenarioMemo;
   readonly displayMode: DisplayMode;
+  readonly directionPresets: readonly [string, string, string];
 }
