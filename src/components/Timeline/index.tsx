@@ -116,6 +116,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
                   slot="B"
                   spawns={spawns}
                   defeats={defeats}
+                  inactiveAboveFrame={hazardConfig.bSlotOpenFrame}
                   onAddDefeat={handleAddDefeat}
                   onMoveDefeat={handleMoveDefeat}
                   onRemoveDefeat={handleRemoveDefeat}

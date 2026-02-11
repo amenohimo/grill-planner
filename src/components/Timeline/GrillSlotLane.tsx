@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useRef, useState, type MouseEvent } from 'react';
 import type { SpawnPoint, DefeatPoint, GrillSlot, FrameTime } from '@/types';
 import { useTimelineDrag } from '@/hooks/useTimelineDrag';
-import { TIMELINE_HEIGHT, LANE_WIDTH, pixelYToFrame } from './coordinates';
+import { TIMELINE_HEIGHT, LANE_WIDTH, pixelYToFrame, frameToPixelY } from './coordinates';
 import { SpawnMarker } from './SpawnMarker';
 import { DefeatMarker } from './DefeatMarker';
 import { RespawnConnector } from './RespawnConnector';
@@ -11,6 +11,7 @@ interface GrillSlotLaneProps {
   slot: GrillSlot;
   spawns: readonly SpawnPoint[];
   defeats: readonly DefeatPoint[];
+  inactiveAboveFrame?: FrameTime;
   onAddDefeat?: (slot: GrillSlot, frameTime: number) => boolean;
   onMoveDefeat?: (defeatId: string, frameTime: FrameTime) => void;
   onRemoveDefeat?: (defeatId: string) => void;
@@ -21,6 +22,7 @@ export function GrillSlotLane({
   slot,
   spawns,
   defeats,
+  inactiveAboveFrame,
   onAddDefeat,
   onMoveDefeat,
   onRemoveDefeat,
@@ -168,6 +170,18 @@ export function GrillSlotLane({
           onContextMenu={handleDefeatContextMenu}
         />
       ))}
+
+      {/* B枠の無効エリア（自動湧きより前） */}
+      {inactiveAboveFrame != null && (
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0"
+          style={{
+            height: frameToPixelY(inactiveAboveFrame),
+            backgroundColor: 'rgba(128, 128, 128, 0.3)',
+            zIndex: 5,
+          }}
+        />
+      )}
 
       {/* バリデーション失敗フィードバック */}
       {invalidClick && (
