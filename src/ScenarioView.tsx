@@ -1,7 +1,8 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { useScenario } from '@/hooks/ScenarioContext'
 import { useGrillCalculation } from '@/hooks/useGrillCalculation'
 import { getHazardConfig, generateDefaultDirections, calculateSpawns } from '@/utils/calculations'
+import { exportScenario, importScenarioFromFile } from '@/utils/fileIO'
 import { Header } from '@/components/Header'
 import { HazardLevelInput } from '@/components/Settings/HazardLevelInput'
 import { DisplayModeToggle } from '@/components/Settings/DisplayModeToggle'
@@ -94,10 +95,35 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     [dispatch],
   )
 
+  // ファイル I/O
+  const [ioError, setIoError] = useState<string | null>(null)
+
+  const handleExport = useCallback(() => {
+    exportScenario(state)
+  }, [state])
+
+  const handleImport = useCallback(async () => {
+    const result = await importScenarioFromFile()
+    if (result.success && result.scenario) {
+      dispatch({ type: 'LOAD_SCENARIO', payload: result.scenario })
+      setIoError(null)
+    } else {
+      setIoError(result.error ?? 'インポートに失敗しました')
+      setTimeout(() => setIoError(null), 3000)
+    }
+  }, [dispatch])
+
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       {/* ヘッダー */}
-      <Header />
+      <Header onExport={handleExport} onImport={handleImport} />
+
+      {/* I/O エラー表示 */}
+      {ioError && (
+        <div className="bg-danger px-4 py-2 text-sm text-white">
+          {ioError}
+        </div>
+      )}
 
       {/* 設定パネル */}
       <div className="border-b border-border bg-surface px-4 py-3">
