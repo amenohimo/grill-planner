@@ -66,13 +66,15 @@ export function MemoSection({
                   return (
                     <td key={i} className="px-1 py-0.5">
                       <div className="flex items-center gap-1">
-                        {selectedWeapon && (
-                          <img src={getWeaponIconPath(selectedWeapon.id)} alt="" className="h-6 w-6" />
-                        )}
+                        <div className="h-6 w-6 shrink-0">
+                          {selectedWeapon && (
+                            <img src={getWeaponIconPath(selectedWeapon.id)} alt="" className="h-6 w-6" />
+                          )}
+                        </div>
                         <select
                           value={selectedRowId}
                           onChange={(e) => onSetWeapon(i, e.target.value)}
-                          className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                          className="w-44 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
                         >
                           <option value="">--</option>
                           {weapons.map((w) => (
@@ -92,13 +94,15 @@ export function MemoSection({
                   return (
                     <td key={i} className="px-1 py-0.5">
                       <div className="flex items-center gap-1">
-                        {selectedSpecial && (
-                          <img src={getSpecialIconPath(selectedSpecial.id)} alt="" className="h-6 w-6" />
-                        )}
+                        <div className="h-6 w-6 shrink-0">
+                          {selectedSpecial && (
+                            <img src={getSpecialIconPath(selectedSpecial.id)} alt="" className="h-6 w-6" />
+                          )}
+                        </div>
                         <select
                           value={selectedRowId}
                           onChange={(e) => onSetSpecial(i, e.target.value)}
-                          className="w-32 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                          className="w-44 rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
                         >
                           <option value="">--</option>
                           {specials.map((s) => (
