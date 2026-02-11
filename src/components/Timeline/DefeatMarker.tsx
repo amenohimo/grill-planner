@@ -71,7 +71,7 @@ export function DefeatMarker({
       style={{
         top: pixelY,
         left: '50%',
-        transform: 'translate(-50%, -50%)',
+        transform: `translateX(-${MARKER_SIZE / 2}px) translateY(-50%)`,
         zIndex: isDragging ? 10 : 4,
         cursor,
         animation: 'marker-in 150ms ease-out',
