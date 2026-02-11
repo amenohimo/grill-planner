@@ -1,6 +1,6 @@
 import type { FrameTime } from '@/types';
 import { calculateSpawnerDecisionTime } from '@/utils/calculations';
-import { frameToPixelY, LANE_WIDTH } from './coordinates';
+import { frameToPixelY, LANE_WIDTH, MARKER_SIZE } from './coordinates';
 
 interface RespawnConnectorProps {
   defeatFrame: FrameTime;
@@ -31,9 +31,11 @@ export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorPr
         strokeWidth={2}
       />
 
-      {/* スポナー決定マーク（小◇） */}
-      <polygon
-        points={`${x},${decisionY - 3} ${x + 3},${decisionY} ${x},${decisionY + 3} ${x - 3},${decisionY}`}
+      {/* スポナー決定マーク（小●） */}
+      <circle
+        cx={x}
+        cy={decisionY}
+        r={MARKER_SIZE * 0.25}
         fill="var(--color-spawner-decision)"
         stroke="var(--color-respawn-line)"
         strokeWidth={1}
