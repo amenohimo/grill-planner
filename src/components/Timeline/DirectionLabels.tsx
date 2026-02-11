@@ -78,7 +78,7 @@ function DirectionLabel({ top, height, bgColor, name, originalIndex, onUpdateNam
       onMouseLeave={() => setHovered(false)}
     >
       <span
-        className="select-none truncate px-1 text-xs font-medium text-text"
+        className="select-none truncate px-1 text-sm font-medium text-text"
         title={name}
       >
         {name}

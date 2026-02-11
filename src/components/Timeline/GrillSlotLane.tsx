@@ -124,7 +124,7 @@ export function GrillSlotLane({
     >
       {/* 枠ラベル */}
       <span
-        className="absolute select-none text-xs font-bold"
+        className="absolute select-none text-sm font-bold"
         style={{ left: 4, top: 6, color: slotColor, zIndex: 5 }}
       >
         {slot}枠

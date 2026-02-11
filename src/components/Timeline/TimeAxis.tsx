@@ -63,7 +63,7 @@ export function TimeAxis() {
               />
               <span
                 className="absolute select-none text-text-muted"
-                style={{ right: 14, top: -6, fontSize: 10, whiteSpace: 'nowrap' }}
+                style={{ right: 14, top: -7, fontSize: 12, whiteSpace: 'nowrap' }}
               >
                 {tick.second}s
               </span>

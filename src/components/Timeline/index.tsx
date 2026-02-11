@@ -104,7 +104,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig }: Timeline
             style={{
               right: -110,
               top: 8,
-              fontSize: 10,
+              fontSize: 11,
               color: 'var(--color-text-muted)',
               lineHeight: 1.6,
               whiteSpace: 'nowrap',

@@ -38,7 +38,7 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         className="select-none whitespace-nowrap"
         style={{
           marginLeft: 4,
-          fontSize: 9,
+          fontSize: 11,
           color: 'var(--color-text-muted)',
           backgroundColor: 'rgba(255,255,255,0.85)',
           padding: '1px 4px',
