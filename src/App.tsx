@@ -31,7 +31,11 @@ function App() {
 
   return (
     <ScenarioProvider hazardConfigData={data.hazardConfigData}>
-      <ScenarioView hazardConfigData={data.hazardConfigData} />
+      <ScenarioView
+        hazardConfigData={data.hazardConfigData}
+        weapons={data.weapons}
+        specials={data.specials}
+      />
     </ScenarioProvider>
   )
 }
