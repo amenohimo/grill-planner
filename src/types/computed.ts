@@ -5,7 +5,6 @@ export interface InterpolatedHazardConfig {
   readonly dozerIncrSecond: number;
   readonly waveChangeNum: number;
   readonly directionInterval: number;
-  readonly bSlotSpawnerDecisionFrame: FrameTime;
   readonly bSlotOpenFrame: FrameTime;
 }
 

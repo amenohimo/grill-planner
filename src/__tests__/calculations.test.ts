@@ -102,7 +102,6 @@ describe('calculateSpawns', () => {
     dozerIncrSecond: 30,
     waveChangeNum: 5,
     directionInterval: 14.4,
-    bSlotSpawnerDecisionFrame: 3816,
     bSlotOpenFrame: 3786,
   };
 
@@ -134,7 +133,6 @@ describe('calculateSpawns', () => {
     const noBSlotConfig: InterpolatedHazardConfig = {
       ...hazardConfig,
       bSlotOpenFrame: -1,
-      bSlotSpawnerDecisionFrame: -1,
     };
     const directions = generateDefaultDirections(14.4);
     const spawns = calculateSpawns(noBSlotConfig, directions, []);

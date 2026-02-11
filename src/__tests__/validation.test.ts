@@ -11,7 +11,6 @@ const hazardConfig: InterpolatedHazardConfig = {
   dozerIncrSecond: 30,
   waveChangeNum: 5,
   directionInterval: 14.4,
-  bSlotSpawnerDecisionFrame: 3816,
   bSlotOpenFrame: 3786,
 };
 

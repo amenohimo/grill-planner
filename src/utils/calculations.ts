@@ -106,14 +106,12 @@ function buildHazardConfig(
 ): InterpolatedHazardConfig {
   const directionInterval = DIRECTION_SWITCH_BASE / waveChangeNum;
   const bSlotBaseFrame = secondsToFrames(GAME_DURATION_SECONDS - dozerIncrSecond);
-  const bSlotSpawnerDecisionFrame = bSlotBaseFrame - SPAWNER_DECISION_FRAMES;
   const bSlotOpenFrame = bSlotBaseFrame - RESPAWN_FRAMES;
 
   return {
     dozerIncrSecond,
     waveChangeNum,
     directionInterval,
-    bSlotSpawnerDecisionFrame,
     bSlotOpenFrame,
   };
 }
