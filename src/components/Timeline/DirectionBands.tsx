@@ -25,6 +25,7 @@ export function DirectionBands({ directions }: DirectionBandsProps) {
               top,
               height,
               backgroundColor: color,
+              borderTop: index > 0 ? '1px dashed var(--color-border)' : 'none',
             }}
           />
         );
