@@ -1,9 +1,9 @@
 export const SPAWNER_DECISION_FRAMES = 184 as const;
 export const SPAWN_WAIT_FRAMES = 30 as const;
-export const RESPAWN_FRAMES = 214; // SPAWNER_DECISION_FRAMES + SPAWN_WAIT_FRAMES
+export const RESPAWN_FRAMES = 214 as const; // SPAWNER_DECISION_FRAMES + SPAWN_WAIT_FRAMES
 export const FPS = 60 as const;
 export const GAME_DURATION_SECONDS = 100 as const;
-export const GAME_DURATION_FRAMES = 6000; // GAME_DURATION_SECONDS * FPS
+export const GAME_DURATION_FRAMES = 6000 as const; // GAME_DURATION_SECONDS * FPS
 export const DIRECTION_SWITCH_BASE = 72 as const;
 
 export const GRILL_SLOTS = ['A', 'B'] as const;
