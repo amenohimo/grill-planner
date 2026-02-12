@@ -216,7 +216,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
         </div>
 
         {/* 右ペイン — 独立スクロール */}
-        <div className="w-70 shrink-0 overflow-y-auto border-l border-border bg-surface p-4">
+        <div className="w-80 shrink-0 overflow-y-auto border-l border-border bg-surface p-4">
           <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} presetNames={state.directionPresets} />
           <div className="mt-4 border-t border-border pt-4">
             <TargetOrderTable
