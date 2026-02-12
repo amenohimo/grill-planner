@@ -117,20 +117,32 @@ export function MemoSection({
 
       {open && (
         <div className="space-y-3 px-4 pb-4">
-          {/* シナリオコード */}
-          <div>
-            <label className="mb-1 block text-xs text-text-muted">シナリオコード</label>
-            <input
-              ref={codeInputRef}
-              type="text"
-              value={memo.scenarioCode}
-              onChange={handleCodeChange}
-              placeholder="Sxxx-xxxx-xxxx-xxxx"
-              maxLength={19}
-              className={`w-52 rounded-sm border px-2 py-1 text-sm text-text ${
-                codeError ? "border-danger" : "border-border"
-              } bg-surface`}
-            />
+          {/* シナリオコード + タマヒロイ方向（横並び） */}
+          <div className="flex items-end gap-4">
+            <div>
+              <label className="mb-1 block text-xs text-text-muted">シナリオコード</label>
+              <input
+                ref={codeInputRef}
+                type="text"
+                value={memo.scenarioCode}
+                onChange={handleCodeChange}
+                placeholder="Sxxx-xxxx-xxxx-xxxx"
+                maxLength={19}
+                className={`w-52 rounded-sm border px-2 py-1 text-sm text-text ${
+                  codeError ? "border-danger" : "border-border"
+                } bg-surface`}
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-text-muted">タマヒロイ方向</label>
+              <input
+                type="text"
+                value={memo.snatchers}
+                onChange={(e) => onSetSnatchers(e.target.value)}
+                placeholder="右ヒロイ"
+                className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
+              />
+            </div>
           </div>
 
           {/* ブキ/スペシャル選択（表レイアウト） */}
@@ -208,18 +220,6 @@ export function MemoSection({
               </tr>
             </tbody>
           </table>
-
-          {/* サッチャーメモ */}
-          <div>
-            <label className="mb-1 block text-xs text-text-muted">タマヒロイ方向</label>
-            <input
-              type="text"
-              value={memo.snatchers}
-              onChange={(e) => onSetSnatchers(e.target.value)}
-              placeholder="右ヒロイ"
-              className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
-            />
-          </div>
 
           {/* 自由メモ */}
           <div>
