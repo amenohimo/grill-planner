@@ -157,7 +157,7 @@ export function MemoSection({
                     type="text"
                     value={preset}
                     onChange={(e) => onSetDirectionPreset(i as 0 | 1 | 2, e.target.value)}
-                    className="w-16 rounded-sm border border-border bg-surface px-1 py-0.5 text-center text-xs text-text"
+                    className="w-16 rounded-sm border border-border bg-surface px-2 py-1 text-center text-sm text-text"
                     maxLength={10}
                   />
                 ))}
