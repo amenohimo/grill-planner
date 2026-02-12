@@ -104,17 +104,27 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
           <div
             className="pointer-events-none absolute select-none"
             style={{
-              right: -110,
+              right: -140,
               top: 8,
-              fontSize: 11,
-              color: 'var(--color-text-muted)',
-              lineHeight: 1.6,
-              whiteSpace: 'nowrap',
+              zIndex: 0,
             }}
           >
-            <div>クリック: 撃破追加</div>
-            <div>ドラッグ: 撃破移動</div>
-            <div>右クリック: 撃破削除</div>
+            <div
+              className="rounded-md border border-border px-3 py-2"
+              style={{
+                fontSize: 11,
+                color: 'var(--color-text-muted)',
+                lineHeight: 1.6,
+                backgroundColor: 'var(--color-bg)',
+              }}
+            >
+              <div className="mb-1 text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+                操作方法
+              </div>
+              <div>クリック: 撃破追加</div>
+              <div>ドラッグ: 撃破移動</div>
+              <div>右クリック: 撃破削除</div>
+            </div>
           </div>
 
           {/* レーン（前面） */}
