@@ -1,4 +1,4 @@
-import type { FrameTime, DirectionId, DirectionSetting } from '@/types';
+import type { FrameTime, DirectionId } from '@/types';
 import { GAME_DURATION_SECONDS } from '@/constants';
 import { framesToSeconds, secondsToFrames } from '@/utils/calculations';
 
@@ -29,36 +29,14 @@ export function pixelYToFrame(pixelY: number): FrameTime {
   return secondsToFrames(seconds);
 }
 
-/** 方面バンドの色（CSSカスタムプロパティ） */
-export const DIR_BAND_COLORS = [
-  'var(--color-dir-1)',
-  'var(--color-dir-2)',
-  'var(--color-dir-3)',
-  'var(--color-dir-4)',
-  'var(--color-dir-5)',
-  'var(--color-dir-6)',
-  'var(--color-dir-7)',
-  'var(--color-dir-8)',
-  'var(--color-dir-9)',
-] as const;
+/** 方面ID固定色 */
+const DIRECTION_ID_COLORS: Record<DirectionId, string> = {
+  0: 'var(--color-dir-0)',
+  1: 'var(--color-dir-1)',
+  2: 'var(--color-dir-2)',
+};
 
-/** 方面ID → カラーのマッピング（同ID方面は同色） */
-export function getDirectionColorMap(
-  directions: readonly DirectionSetting[],
-): Map<DirectionId, string> {
-  const sorted = [...directions].sort((a, b) => b.frameTime - a.frameTime);
-  const colorMap = new Map<DirectionId, string>();
-  let colorIdx = 0;
-
-  for (const dir of sorted) {
-    if (!colorMap.has(dir.direction)) {
-      colorMap.set(
-        dir.direction,
-        DIR_BAND_COLORS[colorIdx % DIR_BAND_COLORS.length] ?? DIR_BAND_COLORS[0],
-      );
-      colorIdx++;
-    }
-  }
-
-  return colorMap;
+/** 方面IDから色を取得 */
+export function getDirectionColor(id: DirectionId): string {
+  return DIRECTION_ID_COLORS[id];
 }

@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, type MouseEvent } from 'react';
 import type { DirectionId, DirectionSetting } from '@/types';
-import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, getDirectionColorMap } from './coordinates';
+import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, getDirectionColor } from './coordinates';
 
 interface DirectionLabelsProps {
   directions: readonly DirectionSetting[];
@@ -12,8 +12,6 @@ export function DirectionLabels({ directions, presetNames, onUpdateDirection }: 
   const sortedDirs = directions
     .map((dir, originalIndex) => ({ ...dir, originalIndex }))
     .sort((a, b) => b.frameTime - a.frameTime);
-  const colorMap = getDirectionColorMap(directions);
-
   return (
     <div
       className="relative"
@@ -24,7 +22,7 @@ export function DirectionLabels({ directions, presetNames, onUpdateDirection }: 
         const nextDir = sortedDirs[index + 1];
         const bottom = nextDir ? frameToPixelY(nextDir.frameTime) : TIMELINE_HEIGHT;
         const height = bottom - top;
-        const color = colorMap.get(dir.direction) ?? 'var(--color-dir-1)';
+        const color = getDirectionColor(dir.direction);
         const displayName = presetNames[dir.direction] ?? `方面${dir.direction + 1}`;
 
         return (

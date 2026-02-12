@@ -23,16 +23,10 @@
   --color-defeat-drag: #c2410c;
   --color-defeat-invalid: #a3a3a3;
 
-  /* Direction band colors (up to 9 intervals) */
-  --color-dir-1: #dbeafe;
-  --color-dir-2: #fce7f3;
-  --color-dir-3: #d1fae5;
-  --color-dir-4: #fef3c7;
-  --color-dir-5: #e0e7ff;
-  --color-dir-6: #ffe4e6;
-  --color-dir-7: #ccfbf1;
-  --color-dir-8: #fef9c3;
-  --color-dir-9: #f3e8ff;
+  /* Direction band colors (fixed per ID) */
+  --color-dir-0: #fef9c3;
+  --color-dir-1: #fee2e2;
+  --color-dir-2: #dbeafe;
 
   /* Respawn connector */
   --color-respawn-line: #a3a3a3;
