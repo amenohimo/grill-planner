@@ -18,7 +18,7 @@ function normalizeScenarioCode(raw: string): string {
   // 4. ハイフンを全除去（再挿入するため）
   s = s.replace(/-/g, "");
   // 5. 最大16文字
-  s = s.slice(0, 17);
+  s = s.slice(0, 16);
   // 6. ハイフン自動挿入: Sxxx-xxxx-xxxx-xxxx
   s = (s.match(/.{1,4}/g) ?? []).join("-");
   return s;
@@ -126,7 +126,7 @@ export function MemoSection({
               value={memo.scenarioCode}
               onChange={handleCodeChange}
               placeholder="Sxxx-xxxx-xxxx-xxxx"
-              maxLength={20}
+              maxLength={19}
               className={`w-52 rounded-sm border px-2 py-1 text-sm text-text ${
                 codeError ? "border-danger" : "border-border"
               } bg-surface`}
