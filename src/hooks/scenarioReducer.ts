@@ -38,6 +38,8 @@ export type ScenarioAction =
   | { type: 'SET_SPECIAL'; payload: { index: number; rowId: string } }
   | { type: 'SET_TARGET_MODE'; payload: TargetMode }
   | { type: 'SET_TARGET_ORDER'; payload: readonly string[] }
+  | { type: 'SET_TARGET_ORDER_ENTRY'; payload: { index: number; value: string } }
+  | { type: 'SHIFT_TARGET_ORDER'; payload: 'up' | 'down' }
   | { type: 'SET_SNATCHERS'; payload: string }
   | { type: 'SET_FREE_NOTE'; payload: string }
 
@@ -159,6 +161,39 @@ export function scenarioReducer(
           targetOrder: { ...state.memo.targetOrder, order: action.payload },
         },
       };
+
+    case 'SET_TARGET_ORDER_ENTRY': {
+      const order = [...state.memo.targetOrder.order];
+      // 配列を25要素に拡張（足りない場合）
+      while (order.length < 25) order.push('-');
+      order[action.payload.index] = action.payload.value;
+      return {
+        ...state,
+        memo: {
+          ...state.memo,
+          targetOrder: { ...state.memo.targetOrder, order },
+        },
+      };
+    }
+
+    case 'SHIFT_TARGET_ORDER': {
+      const order = [...state.memo.targetOrder.order];
+      while (order.length < 25) order.push('-');
+      if (action.payload === 'down') {
+        order.shift();
+        order.push('-');
+      } else {
+        order.pop();
+        order.unshift('-');
+      }
+      return {
+        ...state,
+        memo: {
+          ...state.memo,
+          targetOrder: { ...state.memo.targetOrder, order },
+        },
+      };
+    }
 
     case 'SET_SNATCHERS':
       return { ...state, memo: { ...state.memo, snatchers: action.payload } };

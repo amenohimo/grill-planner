@@ -8,6 +8,7 @@ import { HazardLevelInput } from '@/components/Settings/HazardLevelInput'
 import { DisplayModeToggle } from '@/components/Settings/DisplayModeToggle'
 import { MemoSection } from '@/components/Settings/MemoSection'
 import { DirectionStatsTable } from '@/components/Statistics/DirectionStatsTable'
+import { TargetOrderTable } from '@/components/Statistics/TargetOrderTable'
 import { Timeline } from '@/components/Timeline'
 import { ButtonGroup } from '@/components/ButtonGroup'
 import type { HazardConfigData, WeaponMaster, SpecialMaster, TargetMode, DisplayMode } from '@/types'
@@ -101,6 +102,14 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
   )
   const handleSetDirectionPreset = useCallback(
     (index: 0 | 1 | 2, name: string) => dispatch({ type: 'SET_DIRECTION_PRESET', payload: { index, name } }),
+    [dispatch],
+  )
+  const handleSetTargetOrderEntry = useCallback(
+    (index: number, value: string) => dispatch({ type: 'SET_TARGET_ORDER_ENTRY', payload: { index, value } }),
+    [dispatch],
+  )
+  const handleShiftTargetOrder = useCallback(
+    (direction: 'up' | 'down') => dispatch({ type: 'SHIFT_TARGET_ORDER', payload: direction }),
     [dispatch],
   )
 
@@ -209,6 +218,15 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
         {/* 右ペイン — 独立スクロール */}
         <div className="w-70 shrink-0 overflow-y-auto border-l border-border bg-surface p-4">
           <DirectionStatsTable stats={directionStats} totalGrillCount={totalGrillCount} presetNames={state.directionPresets} />
+          <div className="mt-4 border-t border-border pt-4">
+            <TargetOrderTable
+              order={state.memo.targetOrder.order}
+              weapons={state.memo.weapons}
+              weaponMaster={weapons}
+              onSetEntry={handleSetTargetOrderEntry}
+              onShift={handleShiftTargetOrder}
+            />
+          </div>
         </div>
       </div>
     </div>
