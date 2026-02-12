@@ -24,9 +24,9 @@
   --color-defeat-invalid: #a3a3a3;
 
   /* Direction band colors (fixed per ID) */
-  --color-dir-0: #fef9c3;
-  --color-dir-1: #fee2e2;
-  --color-dir-2: #dbeafe;
+  --color-dir-0: #fdf2f8;
+  --color-dir-1: #fefce8;
+  --color-dir-2: #ecfeff;
 
   /* Respawn connector */
   --color-respawn-line: #a3a3a3;
