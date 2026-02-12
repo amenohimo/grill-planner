@@ -26,8 +26,8 @@ export function ButtonGroup<T extends string>({ options, selected, onChange }: B
         >
           {option.label}
           {option.icon !== undefined && (
-            <div className="ml-0.5 h-4 w-4 shrink-0">
-              {option.icon && <img src={option.icon} alt="" className="h-4 w-4" />}
+            <div className="ml-0.5 h-5 w-5 shrink-0">
+              {option.icon && <img src={option.icon} alt="" className="h-5 w-5" />}
             </div>
           )}
         </button>
