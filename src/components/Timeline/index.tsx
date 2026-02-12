@@ -174,6 +174,36 @@ export function Timeline({
               <div>クリック: 撃破追加</div>
               <div>ドラッグ: 撃破移動</div>
               <div>右クリック: 撃破削除</div>
+
+              {/* 凡例 */}
+              <div className="mt-2 border-t border-border pt-2">
+                <div className="mb-1 text-xs font-medium">凡例</div>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      backgroundColor: "var(--color-spawn)",
+                      border: "1.5px solid var(--color-slot-a)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>湧き</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      backgroundColor: "var(--color-defeat)",
+                      transform: "rotate(45deg)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>撃破</span>
+                </div>
+              </div>
             </div>
           </div>
 
