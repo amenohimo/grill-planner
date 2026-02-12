@@ -1,6 +1,6 @@
 import type { FrameTime } from "@/types";
 import { calculateSpawnerDecisionTime } from "@/utils/calculations";
-import { frameToPixelY, LANE_WIDTH, MARKER_SIZE } from "./coordinates";
+import { frameToPixelY, LANE_WIDTH, MARKER_CENTER_RATIO, MARKER_SIZE } from "./coordinates";
 
 interface RespawnConnectorProps {
   defeatFrame: FrameTime;
@@ -14,7 +14,7 @@ export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorPr
   const decisionY = frameToPixelY(spawnerDecisionFrame);
   const spawnY = frameToPixelY(spawnFrame);
 
-  const x = LANE_WIDTH / 2;
+  const x = LANE_WIDTH * MARKER_CENTER_RATIO;
 
   return (
     <svg

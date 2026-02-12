@@ -1,5 +1,5 @@
 import type { FrameTime } from "@/types";
-import { ACTIVITY_BAR_WIDTH, frameToPixelY } from "./coordinates";
+import { ACTIVITY_BAR_WIDTH, frameToPixelY, MARKER_CENTER_RATIO } from "./coordinates";
 
 interface ActivePeriodProps {
   spawnFrame: FrameTime;
@@ -21,7 +21,7 @@ export function ActivePeriod({ spawnFrame, defeatFrame, slot }: ActivePeriodProp
       className="absolute"
       style={{
         top: topY,
-        left: "50%",
+        left: `${MARKER_CENTER_RATIO * 100}%`,
         transform: "translateX(-50%)",
         height,
         width: ACTIVITY_BAR_WIDTH,

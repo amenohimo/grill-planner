@@ -1,7 +1,7 @@
 import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { DefeatPoint, FrameTime } from "@/types";
 import { framesToSeconds } from "@/utils/calculations";
-import { frameToPixelY, MARKER_SIZE } from "./coordinates";
+import { frameToPixelY, MARKER_CENTER_RATIO, MARKER_SIZE } from "./coordinates";
 
 interface DefeatMarkerProps {
   defeat: DefeatPoint;
@@ -119,7 +119,7 @@ export function DefeatMarker({
       className="absolute flex items-center"
       style={{
         top: pixelY,
-        left: "50%",
+        left: `${MARKER_CENTER_RATIO * 100}%`,
         transform: `translateX(-${MARKER_SIZE / 2}px) translateY(-50%)`,
         zIndex: isDragging ? 10 : 4,
         cursor,

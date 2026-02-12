@@ -1,6 +1,6 @@
 import type { DisplayMode, SpawnPoint } from "@/types";
 import { framesToSeconds } from "@/utils/calculations";
-import { frameToPixelY, MARKER_SIZE } from "./coordinates";
+import { frameToPixelY, MARKER_CENTER_RATIO, MARKER_SIZE } from "./coordinates";
 
 export interface SpawnDisplayInfo {
   directionName: string;
@@ -28,7 +28,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProp
       className="absolute flex items-center"
       style={{
         top: pixelY,
-        left: "50%",
+        left: `${MARKER_CENTER_RATIO * 100}%`,
         transform: `translateX(-${MARKER_SIZE / 2}px) translateY(-50%)`,
         zIndex: 3,
         animation: "marker-in 150ms ease-out",

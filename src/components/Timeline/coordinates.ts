@@ -12,8 +12,9 @@ export const TIMELINE_PADDING = 12; // 上下のパディング
 
 export const DIRECTION_LABEL_WIDTH = 56;
 export const TIME_AXIS_WIDTH = 28;
-export const LANE_WIDTH = 120;
+export const LANE_WIDTH = 160;
 export const LANE_SPACING = 4;
+export const MARKER_CENTER_RATIO = 1 / 3;
 export const MARKER_SIZE = 14;
 export const ACTIVITY_BAR_WIDTH = 8;
 
