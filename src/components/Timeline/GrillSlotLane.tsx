@@ -144,33 +144,39 @@ export function GrillSlotLane({
         {slot}枠
       </span>
 
-      {/* 活動期間バー */}
-      {spawnDefeatPairs.map(({ spawn, defeat }) => (
-        <ActivePeriod
-          key={`active-${spawn.id}`}
-          spawnFrame={spawn.frameTime}
-          defeatFrame={defeat?.frameTime ?? null}
-          slot={slot}
-        />
-      ))}
-
-      {/* リスポーン接続線 */}
-      {respawnSpawns.map((spawn) => {
-        const defeat = defeats.find((d) => d.id === spawn.defeatId);
-        if (!defeat) return null;
-        return (
-          <RespawnConnector
-            key={`connector-${spawn.id}`}
-            defeatFrame={defeat.frameTime}
+      {/* 活動期間バー（frameTime > 0 のみ） */}
+      {spawnDefeatPairs
+        .filter(({ spawn }) => spawn.frameTime > 0)
+        .map(({ spawn, defeat }) => (
+          <ActivePeriod
+            key={`active-${spawn.id}`}
             spawnFrame={spawn.frameTime}
+            defeatFrame={defeat?.frameTime ?? null}
+            slot={slot}
           />
-        );
-      })}
+        ))}
 
-      {/* 湧きマーカー */}
-      {slotSpawns.map((spawn) => (
-        <SpawnMarker key={spawn.id} spawn={spawn} />
-      ))}
+      {/* リスポーン接続線（frameTime > 0 のみ） */}
+      {respawnSpawns
+        .filter((spawn) => spawn.frameTime > 0)
+        .map((spawn) => {
+          const defeat = defeats.find((d) => d.id === spawn.defeatId);
+          if (!defeat) return null;
+          return (
+            <RespawnConnector
+              key={`connector-${spawn.id}`}
+              defeatFrame={defeat.frameTime}
+              spawnFrame={spawn.frameTime}
+            />
+          );
+        })}
+
+      {/* 湧きマーカー（frameTime > 0 のみ） */}
+      {slotSpawns
+        .filter((spawn) => spawn.frameTime > 0)
+        .map((spawn) => (
+          <SpawnMarker key={spawn.id} spawn={spawn} />
+        ))}
 
       {/* 撃破マーカー */}
       {slotDefeats.map((defeat) => (
