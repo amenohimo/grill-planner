@@ -21,7 +21,8 @@ export function ActivePeriod({ spawnFrame, defeatFrame, slot }: ActivePeriodProp
       className="absolute"
       style={{
         top: topY,
-        right: 4,
+        left: '50%',
+        transform: 'translateX(-50%)',
         height,
         width: ACTIVITY_BAR_WIDTH,
         backgroundColor: bgColor,
