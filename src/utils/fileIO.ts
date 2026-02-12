@@ -165,40 +165,72 @@ function parseAndValidate(
     }
   }
 
-  // memo（存在しない場合はデフォルトで補完）
-  if (scenario.memo !== undefined && !isObject(scenario.memo)) {
-    return { success: false, error: 'memo が不正です' };
-  }
+  // memo フィールドの補完
+  const defaultMemo = {
+    scenarioCode: '',
+    weapons: [] as string[],
+    specials: [] as string[],
+    targetOrder: { mode: 'weapon' as const, order: [] as string[] },
+    snatchers: '',
+    freeNote: '',
+  };
 
-  // displayMode
-  if (scenario.displayMode !== undefined &&
-      scenario.displayMode !== 'icon' &&
-      scenario.displayMode !== 'text' &&
-      scenario.displayMode !== 'both') {
-    return { success: false, error: 'displayMode が不正です' };
-  }
+  const rawMemo = isObject(scenario.memo) ? scenario.memo as Record<string, unknown> : {};
+  const mergedMemo = { ...defaultMemo, ...rawMemo };
 
   // memo.weapons / memo.specials: number[] → string[] (RowId) 後方互換変換
-  if (isObject(scenario.memo)) {
-    const memo = scenario.memo as Record<string, unknown>;
-    if (Array.isArray(memo.weapons)) {
-      memo.weapons = (memo.weapons as unknown[]).map((v) => {
-        if (typeof v === 'number') {
-          const found = weapons.find((w) => w.id === v);
-          return found?.rowId ?? '';
-        }
-        return typeof v === 'string' ? v : '';
-      });
+  if (Array.isArray(mergedMemo.weapons)) {
+    mergedMemo.weapons = (mergedMemo.weapons as unknown[]).map((v) => {
+      if (typeof v === 'number') {
+        const found = weapons.find((w) => w.id === v);
+        return found?.rowId ?? '';
+      }
+      return typeof v === 'string' ? v : '';
+    });
+  }
+  if (Array.isArray(mergedMemo.specials)) {
+    mergedMemo.specials = (mergedMemo.specials as unknown[]).map((v) => {
+      if (typeof v === 'number') {
+        const found = specials.find((s) => s.id === v);
+        return found?.rowId ?? '';
+      }
+      return typeof v === 'string' ? v : '';
+    });
+  }
+
+  // targetOrder の補完・バリデーション
+  if (!isObject(mergedMemo.targetOrder)) {
+    mergedMemo.targetOrder = defaultMemo.targetOrder;
+  } else {
+    const to = mergedMemo.targetOrder as Record<string, unknown>;
+    if (to.mode !== 'weapon' && to.mode !== 'player') {
+      to.mode = 'weapon';
     }
-    if (Array.isArray(memo.specials)) {
-      memo.specials = (memo.specials as unknown[]).map((v) => {
-        if (typeof v === 'number') {
-          const found = specials.find((s) => s.id === v);
-          return found?.rowId ?? '';
-        }
-        return typeof v === 'string' ? v : '';
-      });
+    const VALID_TARGETS = new Set(['1P', '2P', '3P', '4P', '-']);
+    if (Array.isArray(to.order)) {
+      to.order = (to.order as unknown[]).map((v) =>
+        typeof v === 'string' && VALID_TARGETS.has(v) ? v : '-',
+      );
+    } else {
+      to.order = [];
     }
+  }
+
+  // freeNote / snatchers / scenarioCode の型安全性
+  if (typeof mergedMemo.freeNote !== 'string') mergedMemo.freeNote = '';
+  if (typeof mergedMemo.snatchers !== 'string') mergedMemo.snatchers = '';
+  if (typeof mergedMemo.scenarioCode !== 'string') mergedMemo.scenarioCode = '';
+
+  scenario.memo = mergedMemo;
+
+  // directionPresets の補完
+  if (!Array.isArray(scenario.directionPresets) || (scenario.directionPresets as unknown[]).length !== 3) {
+    scenario.directionPresets = ['左', '正面', '右'];
+  }
+
+  // displayMode の補完
+  if (scenario.displayMode !== 'icon' && scenario.displayMode !== 'text' && scenario.displayMode !== 'both') {
+    scenario.displayMode = 'both';
   }
 
   // スキーマチェック通過 → 撃破点の整合性チェック
