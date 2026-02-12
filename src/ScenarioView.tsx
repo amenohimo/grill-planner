@@ -9,6 +9,7 @@ import { DisplayModeToggle } from '@/components/Settings/DisplayModeToggle'
 import { MemoSection } from '@/components/Settings/MemoSection'
 import { DirectionStatsTable } from '@/components/Statistics/DirectionStatsTable'
 import { Timeline } from '@/components/Timeline'
+import { ButtonGroup } from '@/components/ButtonGroup'
 import type { HazardConfigData, WeaponMaster, SpecialMaster, TargetMode, DisplayMode } from '@/types'
 
 interface ScenarioViewProps {
@@ -158,26 +159,14 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-muted">ターゲット基準:</span>
-                <button
-                  onClick={() => handleSetTargetMode('weapon')}
-                  className={`rounded-sm px-2 py-0.5 text-xs ${
-                    state.memo.targetOrder.mode === 'weapon'
-                      ? 'bg-primary text-white'
-                      : 'border border-border bg-surface text-text hover:bg-bg'
-                  }`}
-                >
-                  ブキ
-                </button>
-                <button
-                  onClick={() => handleSetTargetMode('player')}
-                  className={`rounded-sm px-2 py-0.5 text-xs ${
-                    state.memo.targetOrder.mode === 'player'
-                      ? 'bg-primary text-white'
-                      : 'border border-border bg-surface text-text hover:bg-bg'
-                  }`}
-                >
-                  プレイヤー
-                </button>
+                <ButtonGroup
+                  options={[
+                    { value: 'weapon' as TargetMode, label: 'ブキ' },
+                    { value: 'player' as TargetMode, label: 'プレイヤー' },
+                  ]}
+                  selected={state.memo.targetOrder.mode}
+                  onChange={handleSetTargetMode}
+                />
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-sm text-text-muted">方面名:</span>

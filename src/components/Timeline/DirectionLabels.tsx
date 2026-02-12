@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef, type MouseEvent } from 'react';
+import { useState, useCallback, useMemo, useRef, type MouseEvent } from 'react';
 import type { DirectionId, DirectionSetting } from '@/types';
+import { ButtonGroup } from '@/components/ButtonGroup';
 import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, getDirectionColor } from './coordinates';
 
 interface DirectionLabelsProps {
@@ -58,8 +59,9 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
   const [hovered, setHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const selectPreset = useCallback(
-    (presetId: DirectionId) => {
+  const handleSelect = useCallback(
+    (value: string) => {
+      const presetId = Number(value) as DirectionId;
       if (presetId !== directionId) {
         onUpdateDirection?.(originalIndex, presetId);
       }
@@ -73,6 +75,11 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
     if (containerRef.current?.contains(related)) return;
     setHovered(false);
   }, []);
+
+  const options = useMemo(
+    () => presetNames.map((preset, i) => ({ value: String(i), label: preset })),
+    [presetNames],
+  );
 
   return (
     <div
@@ -98,7 +105,7 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
       {/* ホバー時フロート */}
       {hovered && (
         <div
-          className="absolute flex items-center gap-1 rounded border border-border bg-surface p-1 shadow-sm"
+          className="absolute"
           style={{
             left: 0,
             top: '50%',
@@ -107,20 +114,11 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
             whiteSpace: 'nowrap',
           }}
         >
-          {presetNames.map((preset, presetId) => (
-            <button
-              key={presetId}
-              type="button"
-              className="rounded px-1.5 py-0.5 text-xs hover:bg-primary hover:text-white"
-              style={{
-                backgroundColor: presetId === directionId ? 'var(--color-primary)' : undefined,
-                color: presetId === directionId ? 'white' : undefined,
-              }}
-              onClick={() => selectPreset(presetId as DirectionId)}
-            >
-              {preset}
-            </button>
-          ))}
+          <ButtonGroup
+            options={options}
+            selected={String(directionId)}
+            onChange={handleSelect}
+          />
         </div>
       )}
     </div>
