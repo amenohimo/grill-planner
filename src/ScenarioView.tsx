@@ -159,29 +159,18 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
             <div className="flex flex-wrap items-center gap-6">
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-text-muted">方面名:</span>
-                {state.directionPresets.map((preset, i) => (
-                  <input
-                    key={i}
-                    type="text"
-                    value={preset}
-                    onChange={(e) => handleSetDirectionPreset(i as 0 | 1 | 2, e.target.value)}
-                    className="w-16 rounded-sm border border-border bg-surface px-1 py-0.5 text-center text-xs text-text"
-                    maxLength={10}
-                  />
-                ))}
-              </div>
             </div>
             <MemoSection
               memo={state.memo}
               weapons={weapons}
               specials={specials}
+              directionPresets={state.directionPresets}
               onSetScenarioCode={handleSetScenarioCode}
               onSetWeapon={handleSetWeapon}
               onSetSpecial={handleSetSpecial}
               onSetSnatchers={handleSetSnatchers}
               onSetFreeNote={handleSetFreeNote}
+              onSetDirectionPreset={handleSetDirectionPreset}
             />
           </div>
 

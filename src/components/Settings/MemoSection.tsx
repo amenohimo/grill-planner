@@ -36,22 +36,26 @@ interface MemoSectionProps {
   memo: ScenarioMemo;
   weapons: readonly WeaponMaster[];
   specials: readonly SpecialMaster[];
+  directionPresets: readonly [string, string, string];
   onSetScenarioCode: (code: string) => void;
   onSetWeapon: (index: number, rowId: string) => void;
   onSetSpecial: (index: number, rowId: string) => void;
   onSetSnatchers: (value: string) => void;
   onSetFreeNote: (value: string) => void;
+  onSetDirectionPreset: (index: 0 | 1 | 2, name: string) => void;
 }
 
 export function MemoSection({
   memo,
   weapons,
   specials,
+  directionPresets,
   onSetScenarioCode,
   onSetWeapon,
   onSetSpecial,
   onSetSnatchers,
   onSetFreeNote,
+  onSetDirectionPreset,
 }: MemoSectionProps) {
   const [open, setOpen] = useState(false);
   const [codeError, setCodeError] = useState(false);
@@ -110,15 +114,15 @@ export function MemoSection({
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center gap-2 px-4 py-2 text-sm font-medium text-text hover:bg-bg"
+        className="flex w-full items-center gap-2 px-4 py-1 text-sm font-medium text-text hover:bg-bg"
       >
         <span className="text-xs text-text-muted">{open ? "▼" : "▶"}</span>
-        メモ
+        詳細
       </button>
 
       {open && (
         <div className="space-y-3 px-4 pb-4">
-          {/* シナリオコード + タマヒロイ方向（横並び） */}
+          {/* シナリオコード + タマヒロイ方向 + 方面名（横並び） */}
           <div className="flex items-end gap-4">
             <div>
               <label className="mb-1 block text-xs text-text-muted">シナリオコード</label>
@@ -143,6 +147,21 @@ export function MemoSection({
                 placeholder="右ヒロイ"
                 className="w-48 rounded-sm border border-border bg-surface px-2 py-1 text-sm text-text"
               />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-text-muted">方面名</label>
+              <div className="flex gap-1">
+                {directionPresets.map((preset, i) => (
+                  <input
+                    key={i}
+                    type="text"
+                    value={preset}
+                    onChange={(e) => onSetDirectionPreset(i as 0 | 1 | 2, e.target.value)}
+                    className="w-16 rounded-sm border border-border bg-surface px-1 py-0.5 text-center text-xs text-text"
+                    maxLength={10}
+                  />
+                ))}
+              </div>
             </div>
           </div>
 
