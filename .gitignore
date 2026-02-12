@@ -1,4 +1,31 @@
+# Dependencies
 node_modules
-dist
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+
+# Test coverage
+coverage/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Editor settings (share only settings.json and extensions.json)
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS files
 .DS_Store
+Thumbs.db
+
+# Vite local env
 *.local
