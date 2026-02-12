@@ -181,7 +181,7 @@ function parseAndValidate(
     scenarioCode: "",
     weapons: [] as string[],
     specials: [] as string[],
-    targetOrder: { mode: "weapon" as const, order: [] as string[] },
+    targetOrder: [] as string[],
     snatchers: "",
     freeNote: "",
   };
@@ -209,20 +209,24 @@ function parseAndValidate(
     });
   }
 
-  // targetOrder の補完・バリデーション
-  if (!isObject(mergedMemo.targetOrder)) {
-    mergedMemo.targetOrder = defaultMemo.targetOrder;
-  } else {
+  // targetOrder の補完・バリデーション（旧形式 { mode, order } と新形式 string[] の両方を受け入れ）
+  const VALID_TARGETS = new Set(["1P", "2P", "3P", "4P", "-"]);
+  if (Array.isArray(mergedMemo.targetOrder)) {
+    mergedMemo.targetOrder = (mergedMemo.targetOrder as unknown[]).map((v) =>
+      typeof v === "string" && VALID_TARGETS.has(v) ? v : "-",
+    );
+  } else if (isObject(mergedMemo.targetOrder)) {
+    // 旧形式: { mode, order } → order 配列だけ抽出
     const to = mergedMemo.targetOrder as Record<string, unknown>;
-    if (to.mode !== "weapon" && to.mode !== "player") {
-      to.mode = "weapon";
-    }
-    const VALID_TARGETS = new Set(["1P", "2P", "3P", "4P", "-"]);
     if (Array.isArray(to.order)) {
-      to.order = (to.order as unknown[]).map((v) => (typeof v === "string" && VALID_TARGETS.has(v) ? v : "-"));
+      mergedMemo.targetOrder = (to.order as unknown[]).map((v) =>
+        typeof v === "string" && VALID_TARGETS.has(v) ? v : "-",
+      );
     } else {
-      to.order = [];
+      mergedMemo.targetOrder = [];
     }
+  } else {
+    mergedMemo.targetOrder = [];
   }
 
   // freeNote / snatchers / scenarioCode の型安全性

@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { ButtonGroup } from "@/components/ButtonGroup";
 import { Header } from "@/components/Header";
 import { DisplayModeToggle } from "@/components/Settings/DisplayModeToggle";
 import { HazardLevelInput } from "@/components/Settings/HazardLevelInput";
@@ -9,7 +8,7 @@ import { TargetOrderTable } from "@/components/Statistics/TargetOrderTable";
 import { Timeline } from "@/components/Timeline";
 import { useScenario } from "@/hooks/ScenarioContext";
 import { useGrillCalculation } from "@/hooks/useGrillCalculation";
-import type { DisplayMode, HazardConfigData, SpecialMaster, TargetMode, WeaponMaster } from "@/types";
+import type { DisplayMode, HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 import { exportScenario, importScenarioFromFile } from "@/utils/fileIO";
 
@@ -88,10 +87,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     (index: number, rowId: string) => dispatch({ type: "SET_SPECIAL", payload: { index, rowId } }),
     [dispatch],
   );
-  const handleSetTargetMode = useCallback(
-    (mode: TargetMode) => dispatch({ type: "SET_TARGET_MODE", payload: mode }),
-    [dispatch],
-  );
   const handleSetSnatchers = useCallback(
     (value: string) => dispatch({ type: "SET_SNATCHERS", payload: value }),
     [dispatch],
@@ -165,17 +160,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
               <div className="flex items-center gap-2">
-                <span className="text-sm text-text-muted">ターゲット基準:</span>
-                <ButtonGroup
-                  options={[
-                    { value: "weapon" as TargetMode, label: "ブキ" },
-                    { value: "player" as TargetMode, label: "プレイヤー" },
-                  ]}
-                  selected={state.memo.targetOrder.mode}
-                  onChange={handleSetTargetMode}
-                />
-              </div>
-              <div className="flex items-center gap-2">
                 <span className="text-sm text-text-muted">方面名:</span>
                 {state.directionPresets.map((preset, i) => (
                   <input
@@ -209,7 +193,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               directions={state.directions}
               hazardConfig={hazardConfig}
               directionPresets={state.directionPresets}
-              targetOrder={state.memo.targetOrder.order}
+              targetOrder={state.memo.targetOrder}
               weapons={state.memo.weapons}
               weaponMaster={weapons}
               displayMode={state.displayMode}
@@ -226,7 +210,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
           />
           <div className="mt-4 border-t border-border pt-4">
             <TargetOrderTable
-              order={state.memo.targetOrder.order}
+              order={state.memo.targetOrder}
               weapons={state.memo.weapons}
               weaponMaster={weapons}
               onSetEntry={handleSetTargetOrderEntry}
