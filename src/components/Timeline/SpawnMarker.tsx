@@ -45,7 +45,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProp
         }}
       />
 
-      {/* 右側ラベル（時刻+方面+ターゲット） */}
+      {/* フキダシ（時刻+方面+ターゲットテキスト）— アイコンは含まない */}
       <span
         className="inline-flex items-center select-none whitespace-nowrap"
         style={{
@@ -60,15 +60,23 @@ export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProp
       >
         {seconds}s {dirName}
         {targetLabel && displayMode !== "icon" && <> {targetLabel}</>}
-        {targetIcon && displayMode !== "text" && (
-          <img
-            src={targetIcon}
-            alt=""
-            className="inline-block"
-            style={{ width: 28, height: 28, marginLeft: 2, verticalAlign: "middle" }}
-          />
-        )}
       </span>
+
+      {/* ブキアイコン（フキダシの右外、独立背景付き） */}
+      {targetIcon && displayMode !== "text" && (
+        <div
+          style={{
+            marginLeft: 3,
+            padding: 2,
+            backgroundColor: "rgba(255,255,255,0.85)",
+            border: "1px solid var(--color-border)",
+            borderRadius: 4,
+            lineHeight: 0,
+          }}
+        >
+          <img src={targetIcon} alt="" style={{ width: 28, height: 28, display: "block" }} />
+        </div>
+      )}
     </div>
   );
 }
