@@ -154,7 +154,7 @@ export function Timeline({
           <div
             className="pointer-events-none absolute select-none"
             style={{
-              right: -280,
+              left: lanesWidth + 20,
               top: 8,
               zIndex: 0,
             }}
