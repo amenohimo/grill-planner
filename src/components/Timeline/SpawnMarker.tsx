@@ -65,7 +65,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProp
             src={targetIcon}
             alt=""
             className="inline-block"
-            style={{ width: 14, height: 14, marginLeft: 2, verticalAlign: "middle" }}
+            style={{ width: 28, height: 28, marginLeft: 2, verticalAlign: "middle" }}
           />
         )}
       </span>
