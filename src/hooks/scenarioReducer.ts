@@ -153,11 +153,11 @@ export function scenarioReducer(state: ScenarioData, action: ScenarioAction): Sc
       const order = [...state.memo.targetOrder];
       while (order.length < 25) order.push("-");
       if (action.payload === "down") {
-        order.shift();
-        order.push("-");
-      } else {
         order.pop();
         order.unshift("-");
+      } else {
+        order.shift();
+        order.push("-");
       }
       return {
         ...state,
