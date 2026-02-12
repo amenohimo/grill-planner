@@ -136,14 +136,6 @@ export function GrillSlotLane({
       }}
       onClick={handleClick}
     >
-      {/* 枠ラベル */}
-      <span
-        className="absolute select-none text-sm font-bold"
-        style={{ left: 4, top: 6, color: slotColor, zIndex: 5 }}
-      >
-        {slot}枠
-      </span>
-
       {/* 活動期間バー（frameTime > 0 のみ） */}
       {spawnDefeatPairs
         .filter(({ spawn }) => spawn.frameTime > 0)
