@@ -25,7 +25,7 @@ export function DirectionStatsTable({ stats, totalGrillCount, presetNames }: Dir
   return (
     <div>
       <h3 className="mb-2 text-sm font-bold text-text">方面別統計</h3>
-      <table className="w-full text-sm">
+      <table className="w-full text-xs">
         <thead>
           <tr className="border-b border-border text-left text-xs text-text-muted">
             <th className="py-1 pr-2">#</th>
@@ -56,7 +56,7 @@ export function DirectionStatsTable({ stats, totalGrillCount, presetNames }: Dir
       {hasDuplicateIds && (
         <div className="mt-3 border-t border-border pt-2">
           <h4 className="mb-1 text-xs font-medium text-text-muted">方面名別合計</h4>
-          <table className="w-full text-sm">
+          <table className="w-full text-xs">
             <thead>
               <tr className="text-left text-xs text-text-muted">
                 <th className="py-1 pr-2">方面</th>
