@@ -1,5 +1,5 @@
-import type { TargetMode, DisplayMode } from './base';
-import type { DefeatPoint, DirectionSetting } from './game';
+import type { DisplayMode, TargetMode } from "./base";
+import type { DefeatPoint, DirectionSetting } from "./game";
 
 /** メモ情報（計算には無関係） */
 export interface ScenarioMemo {

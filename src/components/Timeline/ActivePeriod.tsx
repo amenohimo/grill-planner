@@ -1,10 +1,10 @@
-import type { FrameTime } from '@/types';
-import { frameToPixelY, ACTIVITY_BAR_WIDTH } from './coordinates';
+import type { FrameTime } from "@/types";
+import { ACTIVITY_BAR_WIDTH, frameToPixelY } from "./coordinates";
 
 interface ActivePeriodProps {
   spawnFrame: FrameTime;
   defeatFrame: FrameTime | null; // null = 未撃破（0秒まで活動）
-  slot: 'A' | 'B';
+  slot: "A" | "B";
 }
 
 export function ActivePeriod({ spawnFrame, defeatFrame, slot }: ActivePeriodProps) {
@@ -14,15 +14,15 @@ export function ActivePeriod({ spawnFrame, defeatFrame, slot }: ActivePeriodProp
 
   if (height <= 0) return null;
 
-  const bgColor = slot === 'A' ? 'var(--color-slot-a-light)' : 'var(--color-slot-b-light)';
+  const bgColor = slot === "A" ? "var(--color-slot-a-light)" : "var(--color-slot-b-light)";
 
   return (
     <div
       className="absolute"
       style={{
         top: topY,
-        left: '50%',
-        transform: 'translateX(-50%)',
+        left: "50%",
+        transform: "translateX(-50%)",
         height,
         width: ACTIVITY_BAR_WIDTH,
         backgroundColor: bgColor,

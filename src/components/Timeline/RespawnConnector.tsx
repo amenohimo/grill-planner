@@ -1,6 +1,6 @@
-import type { FrameTime } from '@/types';
-import { calculateSpawnerDecisionTime } from '@/utils/calculations';
-import { frameToPixelY, LANE_WIDTH, MARKER_SIZE } from './coordinates';
+import type { FrameTime } from "@/types";
+import { calculateSpawnerDecisionTime } from "@/utils/calculations";
+import { frameToPixelY, LANE_WIDTH, MARKER_SIZE } from "./coordinates";
 
 interface RespawnConnectorProps {
   defeatFrame: FrameTime;
@@ -19,17 +19,10 @@ export function RespawnConnector({ defeatFrame, spawnFrame }: RespawnConnectorPr
   return (
     <svg
       className="pointer-events-none absolute inset-0"
-      style={{ width: '100%', height: '100%', zIndex: 2, overflow: 'visible' }}
+      style={{ width: "100%", height: "100%", zIndex: 2, overflow: "visible" }}
     >
       {/* 撃破 → スポナー決定（実線） */}
-      <line
-        x1={x}
-        y1={defeatY}
-        x2={x}
-        y2={decisionY}
-        stroke="var(--color-respawn-line)"
-        strokeWidth={2}
-      />
+      <line x1={x} y1={defeatY} x2={x} y2={decisionY} stroke="var(--color-respawn-line)" strokeWidth={2} />
 
       {/* スポナー決定マーク（小●） */}
       <circle

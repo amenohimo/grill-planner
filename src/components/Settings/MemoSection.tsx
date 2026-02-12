@@ -1,6 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from "react";
-import type { ScenarioMemo, WeaponMaster, SpecialMaster } from "@/types";
-import { getWeaponIconPath, getSpecialIconPath, PLAYER_IDS } from "@/constants";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { getSpecialIconPath, getWeaponIconPath, PLAYER_IDS } from "@/constants";
+import type { ScenarioMemo, SpecialMaster, WeaponMaster } from "@/types";
 
 // ============================================================
 // シナリオコード正規化・バリデーション
@@ -108,6 +108,7 @@ export function MemoSection({
   return (
     <div className="border-t border-border">
       <button
+        type="button"
         onClick={() => setOpen(!open)}
         className="flex w-full items-center gap-2 px-4 py-2 text-sm font-medium text-text hover:bg-bg"
       >

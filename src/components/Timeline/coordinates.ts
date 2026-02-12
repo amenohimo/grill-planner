@@ -1,6 +1,6 @@
-import type { FrameTime, DirectionId } from '@/types';
-import { GAME_DURATION_SECONDS } from '@/constants';
-import { framesToSeconds, secondsToFrames } from '@/utils/calculations';
+import { GAME_DURATION_SECONDS } from "@/constants";
+import type { DirectionId, FrameTime } from "@/types";
+import { framesToSeconds, secondsToFrames } from "@/utils/calculations";
 
 // ============================================================
 // タイムライン座標系（縦軸＝時間、上=100s、下=0s）
@@ -31,9 +31,9 @@ export function pixelYToFrame(pixelY: number): FrameTime {
 
 /** 方面ID固定色 */
 const DIRECTION_ID_COLORS: Record<DirectionId, string> = {
-  0: 'var(--color-dir-0)',
-  1: 'var(--color-dir-1)',
-  2: 'var(--color-dir-2)',
+  0: "var(--color-dir-0)",
+  1: "var(--color-dir-1)",
+  2: "var(--color-dir-2)",
 };
 
 /** 方面IDから色を取得 */

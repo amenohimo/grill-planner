@@ -1,4 +1,4 @@
-import type { FrameTime, DirectionId } from './base';
+import type { DirectionId, FrameTime } from "./base";
 
 /** 補間後のキケン度設定 */
 export interface InterpolatedHazardConfig {

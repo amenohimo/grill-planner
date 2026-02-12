@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { WeaponMaster, SpecialMaster, HazardConfigData } from '@/types';
-import { DATA_PATHS } from '@/constants';
+import { useCallback, useEffect, useState } from "react";
+import { DATA_PATHS } from "@/constants";
+import type { HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 
 interface RawWeaponEntry {
   Id: number;
@@ -39,7 +39,7 @@ export function useDataLoader(): DataLoaderResult {
   const [data, setData] = useState<MasterData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
+  const [_retryCount, setRetryCount] = useState(0);
 
   const retry = useCallback(() => {
     setRetryCount((c) => c + 1);
@@ -77,14 +77,14 @@ export function useDataLoader(): DataLoaderResult {
       })
       .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err instanceof Error ? err.message : 'Unknown error loading data');
+        setError(err instanceof Error ? err.message : "Unknown error loading data");
         setIsLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [retryCount]);
+  }, []);
 
   return { data, isLoading, error, retry };
 }

@@ -10,11 +10,7 @@ interface ButtonGroupProps<T extends string> {
   onChange: (value: T) => void;
 }
 
-export function ButtonGroup<T extends string>({
-  options,
-  selected,
-  onChange,
-}: ButtonGroupProps<T>) {
+export function ButtonGroup<T extends string>({ options, selected, onChange }: ButtonGroupProps<T>) {
   return (
     <div className="inline-flex overflow-hidden rounded-md border border-border">
       {options.map((option, i) => (
@@ -23,12 +19,10 @@ export function ButtonGroup<T extends string>({
           type="button"
           onClick={() => onChange(option.value)}
           className={[
-            'flex items-center px-2 py-0.5 text-xs',
-            i > 0 ? 'border-l border-border' : '',
-            selected === option.value
-              ? 'bg-primary text-white'
-              : 'bg-surface text-text hover:bg-bg',
-          ].join(' ')}
+            "flex items-center px-2 py-0.5 text-xs",
+            i > 0 ? "border-l border-border" : "",
+            selected === option.value ? "bg-primary text-white" : "bg-surface text-text hover:bg-bg",
+          ].join(" ")}
         >
           {option.label}
           {option.icon !== undefined && (

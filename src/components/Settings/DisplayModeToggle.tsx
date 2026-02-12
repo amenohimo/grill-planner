@@ -1,5 +1,5 @@
-import type { DisplayMode } from '@/types';
-import { ButtonGroup } from '@/components/ButtonGroup';
+import { ButtonGroup } from "@/components/ButtonGroup";
+import type { DisplayMode } from "@/types";
 
 interface DisplayModeToggleProps {
   value: DisplayMode;
@@ -7,9 +7,9 @@ interface DisplayModeToggleProps {
 }
 
 const modes = [
-  { value: 'icon' as const, label: 'アイコン' },
-  { value: 'text' as const, label: 'テキスト' },
-  { value: 'both' as const, label: '両方' },
+  { value: "icon" as const, label: "アイコン" },
+  { value: "text" as const, label: "テキスト" },
+  { value: "both" as const, label: "両方" },
 ];
 
 export function DisplayModeToggle({ value, onChange }: DisplayModeToggleProps) {

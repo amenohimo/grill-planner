@@ -1,22 +1,22 @@
-import type {
-  FrameTime,
-  SecondTime,
-  DefeatPoint,
-  SpawnPoint,
-  DirectionSetting,
-  DirectionId,
-  HazardConfigData,
-  InterpolatedHazardConfig,
-} from '@/types';
 import {
+  DIRECTION_SWITCH_BASE,
   FPS,
-  SPAWNER_DECISION_FRAMES,
-  RESPAWN_FRAMES,
-  SPAWN_WAIT_FRAMES,
   GAME_DURATION_FRAMES,
   GAME_DURATION_SECONDS,
-  DIRECTION_SWITCH_BASE,
-} from '@/constants';
+  RESPAWN_FRAMES,
+  SPAWN_WAIT_FRAMES,
+  SPAWNER_DECISION_FRAMES,
+} from "@/constants";
+import type {
+  DefeatPoint,
+  DirectionId,
+  DirectionSetting,
+  FrameTime,
+  HazardConfigData,
+  InterpolatedHazardConfig,
+  SecondTime,
+  SpawnPoint,
+} from "@/types";
 
 // ============================================================
 // 1. 時間変換（02_GAME_MECHANICS §1.2）
@@ -51,10 +51,7 @@ export function calculateSpawnTime(defeatFrame: FrameTime): FrameTime {
 // ============================================================
 
 /** キケン度からパラメータを取得（線形補間） */
-export function getHazardConfig(
-  hazardLevel: number,
-  configData: HazardConfigData,
-): InterpolatedHazardConfig {
+export function getHazardConfig(hazardLevel: number, configData: HazardConfigData): InterpolatedHazardConfig {
   // 完全一致を探す
   const exact = configData.find((c) => c.Difficulty === hazardLevel);
   if (exact) {
@@ -83,27 +80,18 @@ export function getHazardConfig(
 
   // lower と upper が同じ場合（範囲外）はそのまま使用
   if (lower === upper || lower.Difficulty === upper.Difficulty) {
-    return buildHazardConfig(
-      lower.EventDozer.DozerIncrSecond,
-      lower.WaveChangeNum,
-    );
+    return buildHazardConfig(lower.EventDozer.DozerIncrSecond, lower.WaveChangeNum);
   }
 
   const ratio = (hazardLevel - lower.Difficulty) / (upper.Difficulty - lower.Difficulty);
   const dozerIncrSecond =
-    lower.EventDozer.DozerIncrSecond +
-    (upper.EventDozer.DozerIncrSecond - lower.EventDozer.DozerIncrSecond) * ratio;
-  const waveChangeNum = Math.floor(
-    lower.WaveChangeNum + (upper.WaveChangeNum - lower.WaveChangeNum) * ratio,
-  );
+    lower.EventDozer.DozerIncrSecond + (upper.EventDozer.DozerIncrSecond - lower.EventDozer.DozerIncrSecond) * ratio;
+  const waveChangeNum = Math.floor(lower.WaveChangeNum + (upper.WaveChangeNum - lower.WaveChangeNum) * ratio);
 
   return buildHazardConfig(dozerIncrSecond, waveChangeNum);
 }
 
-function buildHazardConfig(
-  dozerIncrSecond: number,
-  waveChangeNum: number,
-): InterpolatedHazardConfig {
+function buildHazardConfig(dozerIncrSecond: number, waveChangeNum: number): InterpolatedHazardConfig {
   const directionInterval = DIRECTION_SWITCH_BASE / waveChangeNum;
   const bSlotBaseFrame = secondsToFrames(GAME_DURATION_SECONDS - dozerIncrSecond);
   const bSlotOpenFrame = bSlotBaseFrame - RESPAWN_FRAMES;
@@ -133,9 +121,7 @@ export function getDirectionSwitchTimes(directionInterval: number): FrameTime[] 
 }
 
 /** デフォルトの方面設定を生成 */
-export function generateDefaultDirections(
-  directionInterval: number,
-): readonly DirectionSetting[] {
+export function generateDefaultDirections(directionInterval: number): readonly DirectionSetting[] {
   const times = getDirectionSwitchTimes(directionInterval);
   return times.map((frameTime) => ({
     frameTime,
@@ -188,8 +174,8 @@ export function calculateSpawns(
   // スポナー決定時刻 = 6000 + 30 = 6030F（ゲーム開始前）→ 最初の区間
   const firstDirection: DirectionId = sortedDirections[0]?.direction ?? 1;
   result.push({
-    id: 'auto-a',
-    slot: 'A',
+    id: "auto-a",
+    slot: "A",
     frameTime: GAME_DURATION_FRAMES,
     direction: firstDirection,
     isAuto: true,
@@ -200,8 +186,8 @@ export function calculateSpawns(
     // B枠のスポナー決定時刻 = 出現フレーム + SPAWN_WAIT_FRAMES
     const bSlotSpawnerDecision = hazardConfig.bSlotOpenFrame + SPAWN_WAIT_FRAMES;
     result.push({
-      id: 'auto-b',
-      slot: 'B',
+      id: "auto-b",
+      slot: "B",
       frameTime: hazardConfig.bSlotOpenFrame,
       direction: getDirectionAtTime(bSlotSpawnerDecision, sortedDirections),
       isAuto: true,

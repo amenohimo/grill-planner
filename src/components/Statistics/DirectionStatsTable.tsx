@@ -1,4 +1,4 @@
-import type { DirectionId, DirectionStats } from '@/types';
+import type { DirectionId, DirectionStats } from "@/types";
 
 interface DirectionStatsTableProps {
   stats: readonly DirectionStats[];

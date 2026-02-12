@@ -1,13 +1,21 @@
-import { useCallback, useRef } from 'react';
-import type { SpawnPoint, DefeatPoint, DirectionSetting, InterpolatedHazardConfig, GrillSlot, FrameTime, DirectionId } from '@/types';
-import { useScenario } from '@/hooks/ScenarioContext';
-import { useValidation } from '@/hooks/useValidation';
-import { getAffectedDefeats, findCascadeRemovals } from '@/utils/validation';
-import { TimeAxis } from './TimeAxis';
-import { DirectionBands } from './DirectionBands';
-import { DirectionLabels } from './DirectionLabels';
-import { GrillSlotLane } from './GrillSlotLane';
-import { TIMELINE_PADDING, LANE_WIDTH, LANE_SPACING } from './coordinates';
+import { useCallback, useRef } from "react";
+import { useScenario } from "@/hooks/ScenarioContext";
+import { useValidation } from "@/hooks/useValidation";
+import type {
+  DefeatPoint,
+  DirectionId,
+  DirectionSetting,
+  FrameTime,
+  GrillSlot,
+  InterpolatedHazardConfig,
+  SpawnPoint,
+} from "@/types";
+import { findCascadeRemovals, getAffectedDefeats } from "@/utils/validation";
+import { LANE_SPACING, LANE_WIDTH, TIMELINE_PADDING } from "./coordinates";
+import { DirectionBands } from "./DirectionBands";
+import { DirectionLabels } from "./DirectionLabels";
+import { GrillSlotLane } from "./GrillSlotLane";
+import { TimeAxis } from "./TimeAxis";
 
 interface TimelineProps {
   spawns: readonly SpawnPoint[];
@@ -23,9 +31,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
   const defeatCounterRef = useRef(0);
 
   const showBSlot = hazardConfig.bSlotOpenFrame >= 0;
-  const lanesWidth = showBSlot
-    ? LANE_WIDTH * 2 + LANE_SPACING
-    : LANE_WIDTH;
+  const lanesWidth = showBSlot ? LANE_WIDTH * 2 + LANE_SPACING : LANE_WIDTH;
 
   const handleAddDefeat = useCallback(
     (slot: GrillSlot, frameTime: number): boolean => {
@@ -35,7 +41,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
       const result = canAddDefeat(newDefeat);
       if (!result.valid) return false;
 
-      dispatch({ type: 'ADD_DEFEAT', payload: newDefeat });
+      dispatch({ type: "ADD_DEFEAT", payload: newDefeat });
       return true;
     },
     [canAddDefeat, dispatch],
@@ -46,9 +52,9 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
       // 影響を受ける撃破点を取得してカスケード削除
       const affected = getAffectedDefeats(defeatId, frameTime, defeats);
       if (affected.length > 0) {
-        dispatch({ type: 'REMOVE_DEFEATS', payload: affected.map((d) => d.id) });
+        dispatch({ type: "REMOVE_DEFEATS", payload: affected.map((d) => d.id) });
       }
-      dispatch({ type: 'MOVE_DEFEAT', payload: { id: defeatId, frameTime } });
+      dispatch({ type: "MOVE_DEFEAT", payload: { id: defeatId, frameTime } });
     },
     [defeats, dispatch],
   );
@@ -56,14 +62,14 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
   const handleRemoveDefeat = useCallback(
     (defeatId: string) => {
       const cascadeIds = findCascadeRemovals(defeatId, defeats, hazardConfig, directions);
-      dispatch({ type: 'REMOVE_DEFEATS', payload: cascadeIds });
+      dispatch({ type: "REMOVE_DEFEATS", payload: cascadeIds });
     },
     [defeats, hazardConfig, directions, dispatch],
   );
 
   const handleUpdateDirection = useCallback(
     (index: number, directionId: DirectionId) => {
-      dispatch({ type: 'UPDATE_DIRECTION', payload: { index, directionId } });
+      dispatch({ type: "UPDATE_DIRECTION", payload: { index, directionId } });
     },
     [dispatch],
   );
@@ -113,12 +119,12 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
               className="rounded-md border border-border px-3 py-2"
               style={{
                 fontSize: 11,
-                color: 'var(--color-text-muted)',
+                color: "var(--color-text-muted)",
                 lineHeight: 1.6,
-                backgroundColor: 'var(--color-bg)',
+                backgroundColor: "var(--color-bg)",
               }}
             >
-              <div className="mb-1 text-xs font-medium" style={{ color: 'var(--color-text-muted)' }}>
+              <div className="mb-1 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
                 操作方法
               </div>
               <div>クリック: 撃破追加</div>

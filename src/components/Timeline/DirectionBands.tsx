@@ -1,5 +1,5 @@
-import type { DirectionSetting } from '@/types';
-import { frameToPixelY, TIMELINE_HEIGHT, getDirectionColor } from './coordinates';
+import type { DirectionSetting } from "@/types";
+import { frameToPixelY, getDirectionColor, TIMELINE_HEIGHT } from "./coordinates";
 
 interface DirectionBandsProps {
   directions: readonly DirectionSetting[];
@@ -24,7 +24,7 @@ export function DirectionBands({ directions }: DirectionBandsProps) {
               top,
               height,
               backgroundColor: getDirectionColor(dir.direction),
-              borderTop: index > 0 ? '1px dashed var(--color-border)' : 'none',
+              borderTop: index > 0 ? "1px dashed var(--color-border)" : "none",
             }}
           />
         );

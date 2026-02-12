@@ -1,4 +1,4 @@
-import type { ScenarioData } from './scenario';
+import type { ScenarioData } from "./scenario";
 
 /** 保存ファイル形式 */
 export interface SaveData {

@@ -1,6 +1,6 @@
-import { useCallback } from 'react';
-import type { DefeatPoint, InterpolatedHazardConfig, DirectionSetting } from '@/types';
-import { validateAddDefeat, validateMoveDefeat } from '@/utils/validation';
+import { useCallback } from "react";
+import type { DefeatPoint, DirectionSetting, InterpolatedHazardConfig } from "@/types";
+import { validateAddDefeat, validateMoveDefeat } from "@/utils/validation";
 
 export function useValidation(
   defeats: readonly DefeatPoint[],

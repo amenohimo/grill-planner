@@ -1,6 +1,6 @@
-import { useState, useCallback, useRef, type MouseEvent } from 'react';
-import { GAME_DURATION_SECONDS } from '@/constants';
-import { PIXELS_PER_SECOND, TIMELINE_HEIGHT, TIME_AXIS_WIDTH } from './coordinates';
+import { type MouseEvent, useCallback, useRef, useState } from "react";
+import { GAME_DURATION_SECONDS } from "@/constants";
+import { PIXELS_PER_SECOND, TIME_AXIS_WIDTH, TIMELINE_HEIGHT } from "./coordinates";
 
 // ============================================================
 // 時間軸の目盛り（静的データ、毎レンダーで再計算不要）
@@ -9,15 +9,15 @@ import { PIXELS_PER_SECOND, TIMELINE_HEIGHT, TIME_AXIS_WIDTH } from './coordinat
 interface Tick {
   second: number;
   pixelY: number;
-  type: 'major' | 'minor' | 'micro';
+  type: "major" | "minor" | "micro";
 }
 
 const ticks: Tick[] = [];
 for (let s = 0; s <= GAME_DURATION_SECONDS; s++) {
   const pixelY = (GAME_DURATION_SECONDS - s) * PIXELS_PER_SECOND;
-  let type: Tick['type'] = 'micro';
-  if (s % 10 === 0) type = 'major';
-  else if (s % 5 === 0) type = 'minor';
+  let type: Tick["type"] = "micro";
+  if (s % 10 === 0) type = "major";
+  else if (s % 5 === 0) type = "minor";
   ticks.push({ second: s, pixelY, type });
 }
 
@@ -50,37 +50,20 @@ export function TimeAxis() {
       onMouseLeave={handleMouseLeave}
     >
       {ticks.map((tick) => (
-        <div
-          key={tick.second}
-          className="absolute left-0"
-          style={{ top: tick.pixelY, width: '100%' }}
-        >
-          {tick.type === 'major' && (
+        <div key={tick.second} className="absolute left-0" style={{ top: tick.pixelY, width: "100%" }}>
+          {tick.type === "major" && (
             <>
-              <div
-                className="absolute right-0 bg-text"
-                style={{ width: 12, height: 1 }}
-              />
+              <div className="absolute right-0 bg-text" style={{ width: 12, height: 1 }} />
               <span
                 className="absolute select-none text-text-muted"
-                style={{ right: 14, top: -7, fontSize: 12, whiteSpace: 'nowrap' }}
+                style={{ right: 14, top: -7, fontSize: 12, whiteSpace: "nowrap" }}
               >
                 {tick.second}s
               </span>
             </>
           )}
-          {tick.type === 'minor' && (
-            <div
-              className="absolute right-0 bg-text-muted"
-              style={{ width: 8, height: 1 }}
-            />
-          )}
-          {tick.type === 'micro' && (
-            <div
-              className="absolute right-0 bg-border"
-              style={{ width: 4, height: 1 }}
-            />
-          )}
+          {tick.type === "minor" && <div className="absolute right-0 bg-text-muted" style={{ width: 8, height: 1 }} />}
+          {tick.type === "micro" && <div className="absolute right-0 bg-border" style={{ width: 4, height: 1 }} />}
         </div>
       ))}
 
@@ -91,8 +74,8 @@ export function TimeAxis() {
           style={{
             top: hoverInfo.y,
             right: -4,
-            transform: 'translate(100%, -50%)',
-            whiteSpace: 'nowrap',
+            transform: "translate(100%, -50%)",
+            whiteSpace: "nowrap",
             zIndex: 20,
           }}
         >

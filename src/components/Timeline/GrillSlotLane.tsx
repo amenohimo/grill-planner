@@ -1,12 +1,12 @@
-import { useCallback, useMemo, useRef, useState, type MouseEvent } from 'react';
-import type { SpawnPoint, DefeatPoint, GrillSlot, FrameTime } from '@/types';
-import { secondsToFrames } from '@/utils/calculations';
-import { useTimelineDrag } from '@/hooks/useTimelineDrag';
-import { TIMELINE_HEIGHT, LANE_WIDTH, pixelYToFrame, frameToPixelY } from './coordinates';
-import { SpawnMarker } from './SpawnMarker';
-import { DefeatMarker } from './DefeatMarker';
-import { RespawnConnector } from './RespawnConnector';
-import { ActivePeriod } from './ActivePeriod';
+import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
+import { useTimelineDrag } from "@/hooks/useTimelineDrag";
+import type { DefeatPoint, FrameTime, GrillSlot, SpawnPoint } from "@/types";
+import { secondsToFrames } from "@/utils/calculations";
+import { ActivePeriod } from "./ActivePeriod";
+import { frameToPixelY, LANE_WIDTH, pixelYToFrame, TIMELINE_HEIGHT } from "./coordinates";
+import { DefeatMarker } from "./DefeatMarker";
+import { RespawnConnector } from "./RespawnConnector";
+import { SpawnMarker } from "./SpawnMarker";
 
 interface GrillSlotLaneProps {
   slot: GrillSlot;
@@ -37,7 +37,7 @@ export function GrillSlotLane({
     () => [...defeats.filter((d) => d.slot === slot)].sort((a, b) => b.frameTime - a.frameTime),
     [defeats, slot],
   );
-  const slotColor = slot === 'A' ? 'var(--color-slot-a)' : 'var(--color-slot-b)';
+  const slotColor = slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const laneRef = useRef<HTMLDivElement>(null);
 
   // バリデーション失敗時のフィードバック
@@ -120,10 +120,7 @@ export function GrillSlotLane({
   }, [slotSpawns, slotDefeats]);
 
   // 撃破由来の湧き（RespawnConnector 用）
-  const respawnSpawns = useMemo(
-    () => slotSpawns.filter((s) => !s.isAuto && s.defeatId),
-    [slotSpawns],
-  );
+  const respawnSpawns = useMemo(() => slotSpawns.filter((s) => !s.isAuto && s.defeatId), [slotSpawns]);
 
   return (
     <div
@@ -190,7 +187,7 @@ export function GrillSlotLane({
           className="pointer-events-none absolute inset-x-0 top-0"
           style={{
             height: frameToPixelY(inactiveAboveFrame),
-            backgroundColor: 'rgba(128, 128, 128, 0.3)',
+            backgroundColor: "rgba(128, 128, 128, 0.3)",
             zIndex: 5,
           }}
         />
@@ -203,9 +200,9 @@ export function GrillSlotLane({
           style={{
             left: invalidClick.x,
             top: invalidClick.y,
-            transform: 'translate(-50%, -50%)',
+            transform: "translate(-50%, -50%)",
             zIndex: 10,
-            pointerEvents: 'none',
+            pointerEvents: "none",
           }}
         >
           ✕

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent, type KeyboardEvent } from 'react';
-import type { DefeatPoint, FrameTime } from '@/types';
-import { framesToSeconds } from '@/utils/calculations';
-import { frameToPixelY, MARKER_SIZE } from './coordinates';
+import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
+import type { DefeatPoint, FrameTime } from "@/types";
+import { framesToSeconds } from "@/utils/calculations";
+import { frameToPixelY, MARKER_SIZE } from "./coordinates";
 
 interface DefeatMarkerProps {
   defeat: DefeatPoint;
@@ -24,27 +24,27 @@ export function DefeatMarker({
 }: DefeatMarkerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState('');
+  const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const displayFrame = isDragging && dragFrameTime != null ? dragFrameTime : defeat.frameTime;
   const pixelY = frameToPixelY(displayFrame);
-  const borderColor = defeat.slot === 'A' ? 'var(--color-slot-a)' : 'var(--color-slot-b)';
+  const borderColor = defeat.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const seconds = framesToSeconds(displayFrame);
 
   // 色の決定
-  let bgColor = isHovered && !isDragging ? 'var(--color-defeat-hover)' : 'var(--color-defeat)';
-  let cursor = 'grab';
-  let shadow = '';
-  let borderStyle = 'solid';
+  let bgColor = isHovered && !isDragging ? "var(--color-defeat-hover)" : "var(--color-defeat)";
+  let cursor = "grab";
+  let shadow = "";
+  let borderStyle = "solid";
   if (isDragging) {
     if (isValidPosition) {
-      bgColor = 'var(--color-defeat-drag)';
-      cursor = 'grabbing';
-      shadow = '0 2px 8px rgba(0,0,0,0.3)';
+      bgColor = "var(--color-defeat-drag)";
+      cursor = "grabbing";
+      shadow = "0 2px 8px rgba(0,0,0,0.3)";
     } else {
-      bgColor = 'var(--color-defeat-invalid)';
-      cursor = 'grabbing';
-      borderStyle = 'dashed';
+      bgColor = "var(--color-defeat-invalid)";
+      cursor = "grabbing";
+      borderStyle = "dashed";
     }
   }
 
@@ -93,7 +93,7 @@ export function DefeatMarker({
   const confirmEdit = useCallback(() => {
     setEditing(false);
     const newSeconds = parseFloat(editValue);
-    if (isNaN(newSeconds) || newSeconds < 0 || newSeconds > 100) return;
+    if (Number.isNaN(newSeconds) || newSeconds < 0 || newSeconds > 100) return;
     if (newSeconds === seconds) return;
     onTimeEdit?.(defeat.id, newSeconds);
   }, [editValue, seconds, defeat.id, onTimeEdit]);
@@ -101,9 +101,9 @@ export function DefeatMarker({
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       e.stopPropagation();
-      if (e.key === 'Enter') {
+      if (e.key === "Enter") {
         confirmEdit();
-      } else if (e.key === 'Escape') {
+      } else if (e.key === "Escape") {
         setEditing(false);
       }
     },
@@ -119,11 +119,11 @@ export function DefeatMarker({
       className="absolute flex items-center"
       style={{
         top: pixelY,
-        left: '50%',
+        left: "50%",
         transform: `translateX(-${MARKER_SIZE / 2}px) translateY(-50%)`,
         zIndex: isDragging ? 10 : 4,
         cursor,
-        animation: 'marker-in 150ms ease-out',
+        animation: "marker-in 150ms ease-out",
       }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
@@ -140,9 +140,9 @@ export function DefeatMarker({
           backgroundColor: bgColor,
           border: `2px ${borderStyle} ${borderColor}`,
           borderRadius: 3,
-          transform: 'rotate(45deg)',
+          transform: "rotate(45deg)",
           boxShadow: shadow,
-          transition: isDragging ? 'none' : 'background-color 0.15s',
+          transition: isDragging ? "none" : "background-color 0.15s",
         }}
       />
 
@@ -168,9 +168,9 @@ export function DefeatMarker({
           style={{
             marginLeft: 4,
             fontSize: 11,
-            color: 'var(--color-text-muted)',
-            backgroundColor: 'rgba(255,255,255,0.85)',
-            padding: '1px 4px',
+            color: "var(--color-text-muted)",
+            backgroundColor: "rgba(255,255,255,0.85)",
+            padding: "1px 4px",
             borderRadius: 2,
           }}
           onClick={startEdit}

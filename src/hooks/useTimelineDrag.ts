@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
-import type { FrameTime } from '@/types';
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FrameTime } from "@/types";
 
 const DRAG_THRESHOLD = 5; // ドラッグ開始閾値（ピクセル）
 
@@ -48,12 +48,9 @@ export function useTimelineDrag(
   const candidateRef = useRef<{ defeatId: string; startY: number } | null>(null);
   const justFinishedDragRef = useRef(false);
 
-  const startDragCandidate = useCallback(
-    (defeatId: string, startY: number) => {
-      candidateRef.current = { defeatId, startY };
-    },
-    [],
-  );
+  const startDragCandidate = useCallback((defeatId: string, startY: number) => {
+    candidateRef.current = { defeatId, startY };
+  }, []);
 
   const cancelDrag = useCallback(() => {
     candidateRef.current = null;
@@ -104,20 +101,20 @@ export function useTimelineDrag(
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         candidateRef.current = null;
         setDragState(INITIAL_STATE);
       }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    window.addEventListener('mouseup', handleMouseUp);
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("mousemove", handleMouseMove);
+    window.addEventListener("mouseup", handleMouseUp);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("mouseup", handleMouseUp);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [laneRef]);
 

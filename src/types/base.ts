@@ -5,7 +5,7 @@ export type FrameTime = number;
 export type SecondTime = number;
 
 /** グリル枠の識別子 */
-export type GrillSlot = 'A' | 'B';
+export type GrillSlot = "A" | "B";
 
 /** 方面名。ユーザー入力による任意文字列。 */
 export type DirectionName = string;
@@ -14,7 +14,7 @@ export type DirectionName = string;
 export type DirectionId = 0 | 1 | 2;
 
 /** ターゲットモード */
-export type TargetMode = 'weapon' | 'player';
+export type TargetMode = "weapon" | "player";
 
 /** 表示モード */
-export type DisplayMode = 'icon' | 'text' | 'both';
+export type DisplayMode = "icon" | "text" | "both";

@@ -1,4 +1,4 @@
-import { MIN_HAZARD_LEVEL, MAX_HAZARD_LEVEL } from '@/constants';
+import { MAX_HAZARD_LEVEL, MIN_HAZARD_LEVEL } from "@/constants";
 
 interface HazardLevelInputProps {
   value: number;

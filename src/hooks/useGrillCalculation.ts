@@ -1,7 +1,7 @@
-import { useMemo } from 'react';
-import type { ScenarioData, HazardConfigData, InterpolatedHazardConfig, SpawnPoint, DirectionStats } from '@/types';
-import { getHazardConfig, calculateSpawns } from '@/utils/calculations';
-import { calculateDirectionStats } from '@/utils/statistics';
+import { useMemo } from "react";
+import type { DirectionStats, HazardConfigData, InterpolatedHazardConfig, ScenarioData, SpawnPoint } from "@/types";
+import { calculateSpawns, getHazardConfig } from "@/utils/calculations";
+import { calculateDirectionStats } from "@/utils/statistics";
 
 export interface GrillCalculationResult {
   hazardConfig: InterpolatedHazardConfig;

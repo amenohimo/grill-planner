@@ -1,4 +1,4 @@
-import type { FrameTime, GrillSlot, DirectionId } from './base';
+import type { DirectionId, FrameTime, GrillSlot } from "./base";
 
 /** 撃破点 — ユーザーが配置する */
 export interface DefeatPoint {

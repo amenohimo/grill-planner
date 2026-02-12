@@ -1,14 +1,14 @@
-import { useMemo } from 'react';
-import type { WeaponMaster } from '@/types';
-import { PLAYER_IDS, getWeaponIconPath } from '@/constants';
-import { ButtonGroup } from '@/components/ButtonGroup';
+import { useMemo } from "react";
+import { ButtonGroup } from "@/components/ButtonGroup";
+import { getWeaponIconPath, PLAYER_IDS } from "@/constants";
+import type { WeaponMaster } from "@/types";
 
 interface TargetOrderTableProps {
   order: readonly string[];
   weapons: readonly string[];
   weaponMaster: readonly WeaponMaster[];
   onSetEntry: (index: number, value: string) => void;
-  onShift: (direction: 'up' | 'down') => void;
+  onShift: (direction: "up" | "down") => void;
 }
 
 const ROWS = 25;
@@ -33,7 +33,7 @@ export function TargetOrderTable({ order, weapons, weaponMaster, onSetEntry, onS
         label: pid,
         icon: weaponIconMap.get(pid) ?? null,
       })),
-      { value: '-' as string, label: '-' },
+      { value: "-" as string, label: "-" },
     ];
   }, [weapons, weaponMaster]);
 
@@ -44,14 +44,14 @@ export function TargetOrderTable({ order, weapons, weaponMaster, onSetEntry, onS
         <button
           type="button"
           className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs text-text hover:bg-bg"
-          onClick={() => onShift('down')}
+          onClick={() => onShift("down")}
         >
           ▽1つ下にずらす
         </button>
         <button
           type="button"
           className="rounded-sm border border-border bg-surface px-2 py-0.5 text-xs text-text hover:bg-bg"
-          onClick={() => onShift('up')}
+          onClick={() => onShift("up")}
         >
           △1つ上にずらす
         </button>
@@ -60,11 +60,7 @@ export function TargetOrderTable({ order, weapons, weaponMaster, onSetEntry, onS
         {Array.from({ length: ROWS }, (_, i) => (
           <div key={i} className="flex items-center gap-1">
             <span className="w-6 text-right text-xs text-text-muted">{i + 1}</span>
-            <ButtonGroup
-              options={options}
-              selected={order[i] ?? '-'}
-              onChange={(v) => onSetEntry(i, v)}
-            />
+            <ButtonGroup options={options} selected={order[i] ?? "-"} onChange={(v) => onSetEntry(i, v)} />
           </div>
         ))}
       </div>

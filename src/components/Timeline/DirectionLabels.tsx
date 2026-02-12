@@ -1,7 +1,7 @@
-import { useState, useCallback, useMemo, useRef, type MouseEvent } from 'react';
-import type { DirectionId, DirectionSetting } from '@/types';
-import { ButtonGroup } from '@/components/ButtonGroup';
-import { frameToPixelY, TIMELINE_HEIGHT, DIRECTION_LABEL_WIDTH, getDirectionColor } from './coordinates';
+import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
+import { ButtonGroup } from "@/components/ButtonGroup";
+import type { DirectionId, DirectionSetting } from "@/types";
+import { DIRECTION_LABEL_WIDTH, frameToPixelY, getDirectionColor, TIMELINE_HEIGHT } from "./coordinates";
 
 interface DirectionLabelsProps {
   directions: readonly DirectionSetting[];
@@ -14,10 +14,7 @@ export function DirectionLabels({ directions, presetNames, onUpdateDirection }: 
     .map((dir, originalIndex) => ({ ...dir, originalIndex }))
     .sort((a, b) => b.frameTime - a.frameTime);
   return (
-    <div
-      className="relative"
-      style={{ width: DIRECTION_LABEL_WIDTH, height: TIMELINE_HEIGHT }}
-    >
+    <div className="relative" style={{ width: DIRECTION_LABEL_WIDTH, height: TIMELINE_HEIGHT }}>
       {sortedDirs.map((dir, index) => {
         const top = frameToPixelY(dir.frameTime);
         const nextDir = sortedDirs[index + 1];
@@ -55,7 +52,16 @@ interface DirectionLabelProps {
   onUpdateDirection?: (index: number, directionId: DirectionId) => void;
 }
 
-function DirectionLabel({ top, height, bgColor, directionId, displayName, originalIndex, presetNames, onUpdateDirection }: DirectionLabelProps) {
+function DirectionLabel({
+  top,
+  height,
+  bgColor,
+  directionId,
+  displayName,
+  originalIndex,
+  presetNames,
+  onUpdateDirection,
+}: DirectionLabelProps) {
   const [hovered, setHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -76,10 +82,7 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
     setHovered(false);
   }, []);
 
-  const options = useMemo(
-    () => presetNames.map((preset, i) => ({ value: String(i), label: preset })),
-    [presetNames],
-  );
+  const options = useMemo(() => presetNames.map((preset, i) => ({ value: String(i), label: preset })), [presetNames]);
 
   return (
     <div
@@ -95,10 +98,7 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
       onMouseEnter={() => onUpdateDirection && setHovered(true)}
       onMouseLeave={handleMouseLeave}
     >
-      <span
-        className="select-none truncate px-1 text-sm font-medium text-text"
-        title={displayName}
-      >
+      <span className="select-none truncate px-1 text-sm font-medium text-text" title={displayName}>
         {displayName}
       </span>
 
@@ -108,17 +108,13 @@ function DirectionLabel({ top, height, bgColor, directionId, displayName, origin
           className="absolute"
           style={{
             left: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
+            top: "50%",
+            transform: "translateY(-50%)",
             zIndex: 20,
-            whiteSpace: 'nowrap',
+            whiteSpace: "nowrap",
           }}
         >
-          <ButtonGroup
-            options={options}
-            selected={String(directionId)}
-            onChange={handleSelect}
-          />
+          <ButtonGroup options={options} selected={String(directionId)} onChange={handleSelect} />
         </div>
       )}
     </div>

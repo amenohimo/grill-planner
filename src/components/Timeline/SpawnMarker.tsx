@@ -1,6 +1,6 @@
-import type { SpawnPoint } from '@/types';
-import { framesToSeconds } from '@/utils/calculations';
-import { frameToPixelY, MARKER_SIZE } from './coordinates';
+import type { SpawnPoint } from "@/types";
+import { framesToSeconds } from "@/utils/calculations";
+import { frameToPixelY, MARKER_SIZE } from "./coordinates";
 
 interface SpawnMarkerProps {
   spawn: SpawnPoint;
@@ -8,7 +8,7 @@ interface SpawnMarkerProps {
 
 export function SpawnMarker({ spawn }: SpawnMarkerProps) {
   const pixelY = frameToPixelY(spawn.frameTime);
-  const borderColor = spawn.slot === 'A' ? 'var(--color-slot-a)' : 'var(--color-slot-b)';
+  const borderColor = spawn.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const seconds = framesToSeconds(spawn.frameTime);
 
   return (
@@ -16,10 +16,10 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
       className="absolute flex items-center"
       style={{
         top: pixelY,
-        left: '50%',
+        left: "50%",
         transform: `translateX(-${MARKER_SIZE / 2}px) translateY(-50%)`,
         zIndex: 3,
-        animation: 'marker-in 150ms ease-out',
+        animation: "marker-in 150ms ease-out",
       }}
     >
       {/* マーカー円 */}
@@ -28,7 +28,7 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         style={{
           width: MARKER_SIZE,
           height: MARKER_SIZE,
-          backgroundColor: 'var(--color-spawn)',
+          backgroundColor: "var(--color-spawn)",
           border: `2px solid ${borderColor}`,
         }}
       />
@@ -39,9 +39,9 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         style={{
           marginLeft: 4,
           fontSize: 11,
-          color: 'var(--color-text-muted)',
-          backgroundColor: 'rgba(255,255,255,0.85)',
-          padding: '1px 4px',
+          color: "var(--color-text-muted)",
+          backgroundColor: "rgba(255,255,255,0.85)",
+          padding: "1px 4px",
           borderRadius: 2,
           lineHeight: 1.3,
         }}

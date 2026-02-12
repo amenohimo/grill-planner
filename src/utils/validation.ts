@@ -1,12 +1,6 @@
-import type {
-  FrameTime,
-  DefeatPoint,
-  SpawnPoint,
-  DirectionSetting,
-  InterpolatedHazardConfig,
-} from '@/types';
-import { RESPAWN_FRAMES } from '@/constants';
-import { calculateSpawns } from './calculations';
+import { RESPAWN_FRAMES } from "@/constants";
+import type { DefeatPoint, DirectionSetting, FrameTime, InterpolatedHazardConfig, SpawnPoint } from "@/types";
+import { calculateSpawns } from "./calculations";
 
 // ============================================================
 // 撃破可能条件バリデーション（02_GAME_MECHANICS §8）
@@ -42,9 +36,7 @@ export function validateMoveDefeat(
   hazardConfig: InterpolatedHazardConfig,
   directions: readonly DirectionSetting[],
 ): ValidationResult {
-  const testDefeats = existingDefeats.map((d) =>
-    d.id === defeatId ? { ...d, frameTime: newFrameTime } : d,
-  );
+  const testDefeats = existingDefeats.map((d) => (d.id === defeatId ? { ...d, frameTime: newFrameTime } : d));
   return validateAllDefeats(testDefeats, hazardConfig, directions);
 }
 
@@ -59,13 +51,9 @@ function validateAllDefeats(
 ): ValidationResult {
   const testSpawns = calculateSpawns(hazardConfig, directions, defeats);
 
-  for (const slot of ['A', 'B'] as const) {
-    const slotSpawns = testSpawns
-      .filter((s) => s.slot === slot)
-      .sort((a, b) => b.frameTime - a.frameTime); // 降順
-    const slotDefeats = defeats
-      .filter((d) => d.slot === slot)
-      .sort((a, b) => b.frameTime - a.frameTime); // 降順
+  for (const slot of ["A", "B"] as const) {
+    const slotSpawns = testSpawns.filter((s) => s.slot === slot).sort((a, b) => b.frameTime - a.frameTime); // 降順
+    const slotDefeats = defeats.filter((d) => d.slot === slot).sort((a, b) => b.frameTime - a.frameTime); // 降順
 
     if (!validateSlotChain(slotSpawns, slotDefeats)) {
       return {
@@ -84,18 +72,12 @@ function validateAllDefeats(
  * @param sortedSpawns 降順ソート済み（大きい frameTime = ゲーム開始寄り が先頭）
  * @param sortedDefeats 降順ソート済み（大きい frameTime = ゲーム開始寄り が先頭）
  */
-function validateSlotChain(
-  sortedSpawns: readonly SpawnPoint[],
-  sortedDefeats: readonly DefeatPoint[],
-): boolean {
+function validateSlotChain(sortedSpawns: readonly SpawnPoint[], sortedDefeats: readonly DefeatPoint[]): boolean {
   let spawnIdx = 0;
 
   for (const defeat of sortedDefeats) {
     // この撃破に対応する湧きを探す（defeat.frameTime 以上の湧き）
-    while (
-      spawnIdx < sortedSpawns.length &&
-      sortedSpawns[spawnIdx]!.frameTime < defeat.frameTime
-    ) {
+    while (spawnIdx < sortedSpawns.length && sortedSpawns[spawnIdx]!.frameTime < defeat.frameTime) {
       spawnIdx++;
     }
 
@@ -142,10 +124,7 @@ function findInvalidDefeatsInChain(
   let spawnIdx = 0;
 
   for (const defeat of sortedDefeats) {
-    while (
-      spawnIdx < sortedSpawns.length &&
-      sortedSpawns[spawnIdx]!.frameTime < defeat.frameTime
-    ) {
+    while (spawnIdx < sortedSpawns.length && sortedSpawns[spawnIdx]!.frameTime < defeat.frameTime) {
       spawnIdx++;
     }
 
@@ -182,13 +161,9 @@ export function findAllInvalidDefeats(
     changed = false;
     const spawns = calculateSpawns(hazardConfig, directions, remaining);
 
-    for (const slot of ['A', 'B'] as const) {
-      const slotSpawns = spawns
-        .filter((s) => s.slot === slot)
-        .sort((a, b) => b.frameTime - a.frameTime);
-      const slotDefeats = remaining
-        .filter((d) => d.slot === slot)
-        .sort((a, b) => b.frameTime - a.frameTime);
+    for (const slot of ["A", "B"] as const) {
+      const slotSpawns = spawns.filter((s) => s.slot === slot).sort((a, b) => b.frameTime - a.frameTime);
+      const slotDefeats = remaining.filter((d) => d.slot === slot).sort((a, b) => b.frameTime - a.frameTime);
 
       const invalidIds = findInvalidDefeatsInChain(slotSpawns, slotDefeats);
       if (invalidIds.length > 0) {
