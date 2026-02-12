@@ -1,17 +1,20 @@
 import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
 import { useTimelineDrag } from "@/hooks/useTimelineDrag";
-import type { DefeatPoint, FrameTime, GrillSlot, SpawnPoint } from "@/types";
+import type { DefeatPoint, DisplayMode, FrameTime, GrillSlot, SpawnPoint } from "@/types";
 import { secondsToFrames } from "@/utils/calculations";
 import { ActivePeriod } from "./ActivePeriod";
 import { frameToPixelY, LANE_WIDTH, pixelYToFrame, TIMELINE_HEIGHT } from "./coordinates";
 import { DefeatMarker } from "./DefeatMarker";
 import { RespawnConnector } from "./RespawnConnector";
+import type { SpawnDisplayInfo } from "./SpawnMarker";
 import { SpawnMarker } from "./SpawnMarker";
 
 interface GrillSlotLaneProps {
   slot: GrillSlot;
   spawns: readonly SpawnPoint[];
   defeats: readonly DefeatPoint[];
+  spawnDisplayMap: ReadonlyMap<string, SpawnDisplayInfo>;
+  displayMode: DisplayMode;
   inactiveAboveFrame?: FrameTime;
   onAddDefeat?: (slot: GrillSlot, frameTime: number) => boolean;
   onMoveDefeat?: (defeatId: string, frameTime: FrameTime) => void;
@@ -23,6 +26,8 @@ export function GrillSlotLane({
   slot,
   spawns,
   defeats,
+  spawnDisplayMap,
+  displayMode,
   inactiveAboveFrame,
   onAddDefeat,
   onMoveDefeat,
@@ -164,7 +169,12 @@ export function GrillSlotLane({
       {slotSpawns
         .filter((spawn) => spawn.frameTime > 0)
         .map((spawn) => (
-          <SpawnMarker key={spawn.id} spawn={spawn} />
+          <SpawnMarker
+            key={spawn.id}
+            spawn={spawn}
+            displayInfo={spawnDisplayMap.get(spawn.id)}
+            displayMode={displayMode}
+          />
         ))}
 
       {/* 撃破マーカー */}

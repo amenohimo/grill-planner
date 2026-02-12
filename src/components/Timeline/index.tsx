@@ -1,20 +1,24 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
+import { getWeaponIconPath } from "@/constants";
 import { useScenario } from "@/hooks/ScenarioContext";
 import { useValidation } from "@/hooks/useValidation";
 import type {
   DefeatPoint,
   DirectionId,
   DirectionSetting,
+  DisplayMode,
   FrameTime,
   GrillSlot,
   InterpolatedHazardConfig,
   SpawnPoint,
+  WeaponMaster,
 } from "@/types";
 import { findCascadeRemovals, getAffectedDefeats } from "@/utils/validation";
 import { LANE_SPACING, LANE_WIDTH, TIMELINE_PADDING } from "./coordinates";
 import { DirectionBands } from "./DirectionBands";
 import { DirectionLabels } from "./DirectionLabels";
 import { GrillSlotLane } from "./GrillSlotLane";
+import type { SpawnDisplayInfo } from "./SpawnMarker";
 import { TimeAxis } from "./TimeAxis";
 
 interface TimelineProps {
@@ -23,15 +27,56 @@ interface TimelineProps {
   directions: readonly DirectionSetting[];
   hazardConfig: InterpolatedHazardConfig;
   directionPresets: readonly [string, string, string];
+  targetOrder: readonly string[];
+  weapons: readonly string[];
+  weaponMaster: readonly WeaponMaster[];
+  displayMode: DisplayMode;
 }
 
-export function Timeline({ spawns, defeats, directions, hazardConfig, directionPresets }: TimelineProps) {
+export function Timeline({
+  spawns,
+  defeats,
+  directions,
+  hazardConfig,
+  directionPresets,
+  targetOrder,
+  weapons,
+  weaponMaster,
+  displayMode,
+}: TimelineProps) {
   const { dispatch } = useScenario();
   const { canAddDefeat, canMoveDefeat } = useValidation(defeats, hazardConfig, directions);
   const defeatCounterRef = useRef(0);
 
   const showBSlot = hazardConfig.bSlotOpenFrame >= 0;
   const lanesWidth = showBSlot ? LANE_WIDTH * 2 + LANE_SPACING : LANE_WIDTH;
+
+  // 湧きの通し番号（A枠+B枠合わせてframeTime降順）
+  const spawnDisplayMap: ReadonlyMap<string, SpawnDisplayInfo> = useMemo(() => {
+    const allSpawns = [...spawns].filter((s) => s.frameTime > 0).sort((a, b) => b.frameTime - a.frameTime);
+
+    const map = new Map<string, SpawnDisplayInfo>();
+    for (let i = 0; i < allSpawns.length; i++) {
+      const spawn = allSpawns[i]!;
+      const directionName = directionPresets[spawn.direction] ?? `方面${spawn.direction + 1}`;
+
+      let targetLabel: string | null = null;
+      let targetIcon: string | null = null;
+      const targetEntry = targetOrder[i];
+      if (targetEntry && targetEntry !== "-") {
+        targetLabel = targetEntry;
+        const playerIndex = Number.parseInt(targetEntry[0]!, 10) - 1;
+        const weaponRowId = weapons[playerIndex];
+        if (weaponRowId) {
+          const weapon = weaponMaster.find((w) => w.rowId === weaponRowId);
+          targetIcon = weapon ? getWeaponIconPath(weapon.id) : null;
+        }
+      }
+
+      map.set(spawn.id, { directionName, targetLabel, targetIcon });
+    }
+    return map;
+  }, [spawns, directionPresets, targetOrder, weapons, weaponMaster]);
 
   const handleAddDefeat = useCallback(
     (slot: GrillSlot, frameTime: number): boolean => {
@@ -49,7 +94,6 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
 
   const handleMoveDefeat = useCallback(
     (defeatId: string, frameTime: FrameTime) => {
-      // 影響を受ける撃破点を取得してカスケード削除
       const affected = getAffectedDefeats(defeatId, frameTime, defeats);
       if (affected.length > 0) {
         dispatch({ type: "REMOVE_DEFEATS", payload: affected.map((d) => d.id) });
@@ -110,7 +154,7 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
           <div
             className="pointer-events-none absolute select-none"
             style={{
-              right: -140,
+              right: -160,
               top: 8,
               zIndex: 0,
             }}
@@ -139,6 +183,8 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
               slot="A"
               spawns={spawns}
               defeats={defeats}
+              spawnDisplayMap={spawnDisplayMap}
+              displayMode={displayMode}
               onAddDefeat={handleAddDefeat}
               onMoveDefeat={handleMoveDefeat}
               onRemoveDefeat={handleRemoveDefeat}
@@ -151,6 +197,8 @@ export function Timeline({ spawns, defeats, directions, hazardConfig, directionP
                   slot="B"
                   spawns={spawns}
                   defeats={defeats}
+                  spawnDisplayMap={spawnDisplayMap}
+                  displayMode={displayMode}
                   inactiveAboveFrame={hazardConfig.bSlotOpenFrame}
                   onAddDefeat={handleAddDefeat}
                   onMoveDefeat={handleMoveDefeat}

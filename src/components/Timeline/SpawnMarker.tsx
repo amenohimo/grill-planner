@@ -1,15 +1,27 @@
-import type { SpawnPoint } from "@/types";
+import type { DisplayMode, SpawnPoint } from "@/types";
 import { framesToSeconds } from "@/utils/calculations";
 import { frameToPixelY, MARKER_SIZE } from "./coordinates";
 
-interface SpawnMarkerProps {
-  spawn: SpawnPoint;
+export interface SpawnDisplayInfo {
+  directionName: string;
+  targetLabel: string | null;
+  targetIcon: string | null;
 }
 
-export function SpawnMarker({ spawn }: SpawnMarkerProps) {
+interface SpawnMarkerProps {
+  spawn: SpawnPoint;
+  displayInfo?: SpawnDisplayInfo;
+  displayMode: DisplayMode;
+}
+
+export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProps) {
   const pixelY = frameToPixelY(spawn.frameTime);
   const borderColor = spawn.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const seconds = framesToSeconds(spawn.frameTime);
+
+  const dirName = displayInfo?.directionName ?? String(spawn.direction);
+  const targetLabel = displayInfo?.targetLabel;
+  const targetIcon = displayInfo?.targetIcon;
 
   return (
     <div
@@ -33,9 +45,9 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
         }}
       />
 
-      {/* 右側ラベル（時刻+方面） */}
+      {/* 右側ラベル（時刻+方面+ターゲット） */}
       <span
-        className="select-none whitespace-nowrap"
+        className="inline-flex items-center select-none whitespace-nowrap"
         style={{
           marginLeft: 4,
           fontSize: 11,
@@ -46,7 +58,16 @@ export function SpawnMarker({ spawn }: SpawnMarkerProps) {
           lineHeight: 1.3,
         }}
       >
-        {seconds}s {spawn.direction}
+        {seconds}s {dirName}
+        {targetLabel && displayMode !== "icon" && <> {targetLabel}</>}
+        {targetIcon && displayMode !== "text" && (
+          <img
+            src={targetIcon}
+            alt=""
+            className="inline-block"
+            style={{ width: 14, height: 14, marginLeft: 2, verticalAlign: "middle" }}
+          />
+        )}
       </span>
     </div>
   );

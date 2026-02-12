@@ -209,6 +209,10 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               directions={state.directions}
               hazardConfig={hazardConfig}
               directionPresets={state.directionPresets}
+              targetOrder={state.memo.targetOrder.order}
+              weapons={state.memo.weapons}
+              weaponMaster={weapons}
+              displayMode={state.displayMode}
             />
           </div>
         </div>
