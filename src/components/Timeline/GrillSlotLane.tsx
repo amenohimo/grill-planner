@@ -198,7 +198,7 @@ export function GrillSlotLane({
           style={{
             height: frameToPixelY(inactiveAboveFrame),
             backgroundColor: "rgba(128, 128, 128, 0.3)",
-            zIndex: 5,
+            zIndex: 2,
           }}
         />
       )}
