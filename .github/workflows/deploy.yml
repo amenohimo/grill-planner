@@ -27,6 +27,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npx @biomejs/biome ci .
+
       - run: npm run build
 
       - run: npx vitest run
