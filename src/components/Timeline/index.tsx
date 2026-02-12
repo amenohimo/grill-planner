@@ -166,6 +166,7 @@ export function Timeline({
                 color: "var(--color-text-muted)",
                 lineHeight: 1.6,
                 backgroundColor: "var(--color-bg)",
+                whiteSpace: "nowrap",
               }}
             >
               <div className="mb-1 text-xs font-medium" style={{ color: "var(--color-text-muted)" }}>
