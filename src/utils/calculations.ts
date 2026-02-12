@@ -123,9 +123,9 @@ export function getDirectionSwitchTimes(directionInterval: number): FrameTime[] 
 /** デフォルトの方面設定を生成 */
 export function generateDefaultDirections(directionInterval: number): readonly DirectionSetting[] {
   const times = getDirectionSwitchTimes(directionInterval);
-  return times.map((frameTime) => ({
+  return times.map((frameTime, i) => ({
     frameTime,
-    direction: 1 as DirectionId,
+    direction: (i % 3) as DirectionId,
   }));
 }
 
