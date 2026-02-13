@@ -4,6 +4,7 @@ export const RESPAWN_FRAMES = 214 as const; // SPAWNER_DECISION_FRAMES + SPAWN_W
 export const FPS = 60 as const;
 export const GAME_DURATION_SECONDS = 100 as const;
 export const GAME_DURATION_FRAMES = 6000 as const; // GAME_DURATION_SECONDS * FPS
+export const SPAWN_SUPPRESSION_FRAMES = 184 as const;
 export const DIRECTION_SWITCH_BASE = 72 as const;
 
 export const GRILL_SLOTS = ["A", "B"] as const;

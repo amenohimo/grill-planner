@@ -17,6 +17,7 @@ interface SpawnMarkerProps {
 export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProps) {
   const pixelY = frameToPixelY(spawn.frameTime);
   const borderColor = spawn.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
+  const isSuppressed = spawn.isSuppressed === true;
   const seconds = framesToSeconds(spawn.frameTime);
 
   const dirName = displayInfo?.directionName ?? String(spawn.direction);
@@ -41,7 +42,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode }: SpawnMarkerProp
           width: MARKER_SIZE,
           height: MARKER_SIZE,
           backgroundColor: "var(--color-spawn)",
-          border: `2px solid ${borderColor}`,
+          border: `2px ${isSuppressed ? "dashed" : "solid"} ${borderColor}`,
         }}
       />
 

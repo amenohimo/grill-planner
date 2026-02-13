@@ -4,6 +4,7 @@ import {
   GAME_DURATION_FRAMES,
   GAME_DURATION_SECONDS,
   RESPAWN_FRAMES,
+  SPAWN_SUPPRESSION_FRAMES,
   SPAWN_WAIT_FRAMES,
   SPAWNER_DECISION_FRAMES,
 } from "@/constants";
@@ -161,51 +162,88 @@ export function getDirectionAtTime(
 // 6. 湧き点の計算（02_GAME_MECHANICS §7.1）
 // ============================================================
 
-/** 全湧き点を計算する純粋関数 */
+interface PendingSpawn {
+  id: string;
+  slot: "A" | "B";
+  rawFrameTime: FrameTime;
+  direction: DirectionId;
+  isAuto: boolean;
+  defeatId?: string;
+}
+
+/** 全湧き点を計算する純粋関数（グローバル湧き抑制適用） */
 export function calculateSpawns(
   hazardConfig: InterpolatedHazardConfig,
   directions: readonly DirectionSetting[],
   defeats: readonly DefeatPoint[],
 ): readonly SpawnPoint[] {
-  const result: SpawnPoint[] = [];
   const sortedDirections = [...directions].sort((a, b) => b.frameTime - a.frameTime);
 
-  // A枠 自動湧き (6000F)
-  // スポナー決定時刻 = 6000 + 30 = 6030F（ゲーム開始前）→ 最初の区間
+  // === Phase 1: 全湧きの rawFrameTime を計算 ===
+  const pending: PendingSpawn[] = [];
+
+  // A枠 自動湧き
   const firstDirection: DirectionId = sortedDirections[0]?.direction ?? 1;
-  result.push({
+  pending.push({
     id: "auto-a",
     slot: "A",
-    frameTime: GAME_DURATION_FRAMES,
+    rawFrameTime: GAME_DURATION_FRAMES,
     direction: firstDirection,
     isAuto: true,
   });
 
-  // B枠 自動湧き（存在する場合）
+  // B枠 自動湧き
   if (hazardConfig.bSlotOpenFrame >= 0) {
-    // B枠のスポナー決定時刻 = 出現フレーム + SPAWN_WAIT_FRAMES
     const bSlotSpawnerDecision = hazardConfig.bSlotOpenFrame + SPAWN_WAIT_FRAMES;
-    result.push({
+    pending.push({
       id: "auto-b",
       slot: "B",
-      frameTime: hazardConfig.bSlotOpenFrame,
+      rawFrameTime: hazardConfig.bSlotOpenFrame,
       direction: getDirectionAtTime(bSlotSpawnerDecision, sortedDirections),
       isAuto: true,
     });
   }
 
-  // 撃破点から湧き点を生成
+  // 撃破由来の湧き
   for (const defeat of defeats) {
     const spawnerDecisionTime = calculateSpawnerDecisionTime(defeat.frameTime);
-    const spawnTime = calculateSpawnTime(defeat.frameTime);
-    result.push({
+    const rawSpawnTime = calculateSpawnTime(defeat.frameTime);
+    pending.push({
       id: `spawn-${defeat.id}`,
       slot: defeat.slot,
-      frameTime: spawnTime,
+      rawFrameTime: rawSpawnTime,
       direction: getDirectionAtTime(spawnerDecisionTime, sortedDirections),
       isAuto: false,
       defeatId: defeat.id,
     });
+  }
+
+  // === Phase 2: 降順ソート → 抑制適用 ===
+  pending.sort((a, b) => {
+    if (b.rawFrameTime !== a.rawFrameTime) return b.rawFrameTime - a.rawFrameTime;
+    if (a.slot !== b.slot) return a.slot === "A" ? -1 : 1;
+    return 0;
+  });
+
+  const result: SpawnPoint[] = [];
+  let lastSpawnFrame = Number.POSITIVE_INFINITY;
+
+  for (const p of pending) {
+    const suppressionLimit = lastSpawnFrame - SPAWN_SUPPRESSION_FRAMES;
+    const isSuppressed = p.rawFrameTime > suppressionLimit;
+    const actualFrameTime = isSuppressed ? suppressionLimit : p.rawFrameTime;
+
+    result.push({
+      id: p.id,
+      slot: p.slot,
+      frameTime: actualFrameTime,
+      direction: p.direction,
+      isAuto: p.isAuto,
+      defeatId: p.defeatId,
+      ...(isSuppressed ? { isSuppressed: true, rawFrameTime: p.rawFrameTime } : {}),
+    });
+
+    lastSpawnFrame = actualFrameTime;
   }
 
   return result;

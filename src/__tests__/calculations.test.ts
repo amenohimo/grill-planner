@@ -139,3 +139,132 @@ describe("calculateSpawns", () => {
     expect(spawns[0]).toMatchObject({ slot: "A", isAuto: true });
   });
 });
+
+// ============================================================
+// 湧き抑制テスト（グローバル湧き抑制）
+// ============================================================
+
+describe("calculateSpawns — spawn suppression", () => {
+  const hazardConfig: InterpolatedHazardConfig = {
+    dozerIncrSecond: 30,
+    waveChangeNum: 5,
+    directionInterval: 14.4,
+    bSlotOpenFrame: 3786,
+  };
+  const directions = generateDefaultDirections(14.4);
+
+  it("通常: 抑制が発生しない場合はrawFrameTimeと同じ", () => {
+    const defeats: DefeatPoint[] = [{ id: "d1", slot: "A", frameTime: 5400 }];
+    const spawns = calculateSpawns(hazardConfig, directions, defeats);
+    const d1Spawn = spawns.find((s) => s.defeatId === "d1");
+    expect(d1Spawn?.frameTime).toBe(5186);
+    expect(d1Spawn?.isSuppressed).toBeUndefined();
+  });
+
+  it("抑制: A枠B枠の同時撃破で後発の湧きが遅延する（ケース1再現）", () => {
+    const defeats: DefeatPoint[] = [
+      { id: "d1", slot: "A", frameTime: 3734 },
+      { id: "d2", slot: "B", frameTime: 3734 },
+    ];
+    const spawns = calculateSpawns(hazardConfig, directions, defeats);
+
+    const d1Spawn = spawns.find((s) => s.defeatId === "d1");
+    const d2Spawn = spawns.find((s) => s.defeatId === "d2");
+
+    // A枠（優先）: 抑制なし
+    expect(d1Spawn?.frameTime).toBe(3520);
+    expect(d1Spawn?.isSuppressed).toBeUndefined();
+
+    // B枠: 抑制あり、3520 - 184 = 3336F
+    expect(d2Spawn?.frameTime).toBe(3336);
+    expect(d2Spawn?.isSuppressed).toBe(true);
+    expect(d2Spawn?.rawFrameTime).toBe(3520);
+  });
+
+  it("抑制: B枠自動湧きがA枠撃破由来の湧きに抑制される（ケース2類似）", () => {
+    const defeats: DefeatPoint[] = [{ id: "d1", slot: "A", frameTime: 4114 }];
+    const spawns = calculateSpawns(hazardConfig, directions, defeats);
+
+    const d1Spawn = spawns.find((s) => s.defeatId === "d1");
+    const autoB = spawns.find((s) => s.id === "auto-b");
+
+    // A枠撃破由来: 抑制なし
+    expect(d1Spawn?.frameTime).toBe(3900);
+    expect(d1Spawn?.isSuppressed).toBeUndefined();
+
+    // B枠自動湧き: 抑制あり、3900 - 184 = 3716F
+    expect(autoB?.frameTime).toBe(3716);
+    expect(autoB?.isSuppressed).toBe(true);
+    expect(autoB?.rawFrameTime).toBe(3786);
+  });
+
+  it("境界値: ちょうど184F後の湧きは抑制されない", () => {
+    const boundaryConfig: InterpolatedHazardConfig = {
+      ...hazardConfig,
+      bSlotOpenFrame: 6000 - 184, // = 5816F
+    };
+    const spawns = calculateSpawns(boundaryConfig, directions, []);
+
+    const autoA = spawns.find((s) => s.id === "auto-a");
+    const autoB = spawns.find((s) => s.id === "auto-b");
+
+    expect(autoA?.frameTime).toBe(6000);
+    expect(autoB?.frameTime).toBe(5816);
+    expect(autoB?.isSuppressed).toBeUndefined();
+  });
+
+  it("境界値: 184F未満（183F後）の湧きは抑制される", () => {
+    const boundaryConfig: InterpolatedHazardConfig = {
+      ...hazardConfig,
+      bSlotOpenFrame: 6000 - 183, // = 5817F
+    };
+    const spawns = calculateSpawns(boundaryConfig, directions, []);
+
+    const autoB = spawns.find((s) => s.id === "auto-b");
+
+    expect(autoB?.frameTime).toBe(5816);
+    expect(autoB?.isSuppressed).toBe(true);
+    expect(autoB?.rawFrameTime).toBe(5817);
+  });
+
+  it("同一枠の連続撃破では抑制が発生しない（214F > 184F）", () => {
+    const defeats: DefeatPoint[] = [
+      { id: "d1", slot: "A", frameTime: 6000 },
+      { id: "d2", slot: "A", frameTime: 5786 },
+      { id: "d3", slot: "A", frameTime: 5572 },
+    ];
+    const spawns = calculateSpawns(hazardConfig, directions, defeats);
+
+    const d1Spawn = spawns.find((s) => s.defeatId === "d1");
+    const d2Spawn = spawns.find((s) => s.defeatId === "d2");
+    const d3Spawn = spawns.find((s) => s.defeatId === "d3");
+
+    expect(d1Spawn?.frameTime).toBe(5786);
+    expect(d1Spawn?.isSuppressed).toBeUndefined();
+    expect(d2Spawn?.frameTime).toBe(5572);
+    expect(d2Spawn?.isSuppressed).toBeUndefined();
+    expect(d3Spawn?.frameTime).toBe(5358);
+    expect(d3Spawn?.isSuppressed).toBeUndefined();
+  });
+
+  it("抑制なし: 異なる枠でも十分間隔が空いている場合", () => {
+    const defeats: DefeatPoint[] = [
+      { id: "d1", slot: "A", frameTime: 5400 },
+      { id: "d2", slot: "B", frameTime: 3700 },
+    ];
+    const spawns = calculateSpawns(hazardConfig, directions, defeats);
+
+    const d1Spawn = spawns.find((s) => s.defeatId === "d1");
+    const d2Spawn = spawns.find((s) => s.defeatId === "d2");
+    expect(d1Spawn?.isSuppressed).toBeUndefined();
+    expect(d2Spawn?.isSuppressed).toBeUndefined();
+  });
+
+  it("A枠自動湧きとB枠自動湧きの間に抑制が発生しない（十分な間隔）", () => {
+    const spawns = calculateSpawns(hazardConfig, directions, []);
+    const autoA = spawns.find((s) => s.id === "auto-a");
+    const autoB = spawns.find((s) => s.id === "auto-b");
+    expect(autoA?.isSuppressed).toBeUndefined();
+    expect(autoB?.isSuppressed).toBeUndefined();
+  });
+});

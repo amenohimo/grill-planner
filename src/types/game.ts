@@ -15,6 +15,8 @@ export interface SpawnPoint {
   readonly direction: DirectionId;
   readonly isAuto: boolean;
   readonly defeatId?: string;
+  readonly isSuppressed?: boolean;
+  readonly rawFrameTime?: FrameTime;
 }
 
 /** 方面設定 — 1つの方面切替区間 */
