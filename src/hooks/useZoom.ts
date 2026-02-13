@@ -30,3 +30,35 @@ export function useZoom() {
 
   return { zoomX, zoomY, scaleX, scaleY, setZoomX, setZoomY };
 }
+
+// ============================================================
+// カラーテーマ
+// ============================================================
+
+const STORAGE_KEY_COLOR_THEME = "grill-planner-color-theme";
+
+export type ColorThemeKey = "flower" | "pastel" | "kasumi";
+
+export const COLOR_THEMES: Record<ColorThemeKey, { label: string; colors: [string, string, string] }> = {
+  flower: { label: "花", colors: ["#fce4ec", "#e3f2fd", "#e8f5e9"] },
+  pastel: { label: "パステル", colors: ["#fee2e2", "#dbeafe", "#dcfce7"] },
+  kasumi: { label: "霞", colors: ["#fdf4f4", "#f4f8fd", "#f4faf5"] },
+};
+
+const DEFAULT_COLOR_THEME: ColorThemeKey = "flower";
+
+export function useColorTheme() {
+  const [themeKey, setThemeKeyState] = useState<ColorThemeKey>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_COLOR_THEME);
+    return saved && saved in COLOR_THEMES ? (saved as ColorThemeKey) : DEFAULT_COLOR_THEME;
+  });
+
+  const setThemeKey = useCallback((key: ColorThemeKey) => {
+    setThemeKeyState(key);
+    localStorage.setItem(STORAGE_KEY_COLOR_THEME, key);
+  }, []);
+
+  const theme = COLOR_THEMES[themeKey];
+
+  return { themeKey, setThemeKey, theme };
+}

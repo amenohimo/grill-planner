@@ -8,7 +8,7 @@ import { TargetOrderTable } from "@/components/Statistics/TargetOrderTable";
 import { Timeline } from "@/components/Timeline";
 import { useScenario } from "@/hooks/ScenarioContext";
 import { useGrillCalculation } from "@/hooks/useGrillCalculation";
-import { useZoom, ZOOM_OPTIONS } from "@/hooks/useZoom";
+import { COLOR_THEMES, type ColorThemeKey, useColorTheme, useZoom, ZOOM_OPTIONS } from "@/hooks/useZoom";
 import type { DisplayMode, HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 import { exportScenario, importScenarioFromFile } from "@/utils/fileIO";
@@ -23,6 +23,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
   const { state, dispatch } = useScenario();
   const { hazardConfig, spawns, directionStats, totalGrillCount } = useGrillCalculation(state, hazardConfigData);
   const { zoomX, zoomY, scaleX, scaleY, setZoomX, setZoomY } = useZoom();
+  const { themeKey, setThemeKey, theme } = useColorTheme();
   const prevDirCountRef = useRef(state.directions.length);
 
   const handleHazardChange = useCallback(
@@ -136,7 +137,16 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
   }, [dispatch, hazardConfigData, weapons, specials]);
 
   return (
-    <div className="flex h-screen flex-col bg-bg">
+    <div
+      className="flex h-screen flex-col bg-bg"
+      style={
+        {
+          "--color-dir-0": theme.colors[0],
+          "--color-dir-1": theme.colors[1],
+          "--color-dir-2": theme.colors[2],
+        } as React.CSSProperties
+      }
+    >
       {/* ヘッダー — 固定 */}
       <Header onExport={handleExport} onImport={handleImport} />
 
@@ -162,7 +172,21 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
 
-              <div className="ml-auto flex items-center gap-2 text-xs text-text-muted">
+              <div className="ml-auto flex items-center gap-4 text-xs text-text-muted">
+                <label className="flex items-center gap-1">
+                  方面カラー
+                  <select
+                    value={themeKey}
+                    onChange={(e) => setThemeKey(e.target.value as ColorThemeKey)}
+                    className="rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                  >
+                    {Object.entries(COLOR_THEMES).map(([key, { label }]) => (
+                      <option key={key} value={key}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
+                </label>
                 <span>ズーム:</span>
                 <label className="flex items-center gap-1">
                   横
