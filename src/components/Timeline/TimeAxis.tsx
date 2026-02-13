@@ -1,10 +1,6 @@
-import { type MouseEvent, useCallback, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
 import { GAME_DURATION_SECONDS } from "@/constants";
 import { PIXELS_PER_SECOND, TIME_AXIS_WIDTH, TIMELINE_HEIGHT } from "./coordinates";
-
-// ============================================================
-// 時間軸の目盛り（静的データ、毎レンダーで再計算不要）
-// ============================================================
 
 interface Tick {
   second: number;
@@ -12,30 +8,46 @@ interface Tick {
   type: "major" | "minor" | "micro";
 }
 
-const ticks: Tick[] = [];
-for (let s = 0; s <= GAME_DURATION_SECONDS; s++) {
-  const pixelY = (GAME_DURATION_SECONDS - s) * PIXELS_PER_SECOND;
-  let type: Tick["type"] = "micro";
-  if (s % 10 === 0) type = "major";
-  else if (s % 5 === 0) type = "minor";
-  ticks.push({ second: s, pixelY, type });
+interface TimeAxisProps {
+  scaleX: number;
+  scaleY: number;
 }
 
-export function TimeAxis() {
+export function TimeAxis({ scaleX, scaleY }: TimeAxisProps) {
   const axisRef = useRef<HTMLDivElement>(null);
   const [hoverInfo, setHoverInfo] = useState<{ y: number; seconds: string } | null>(null);
 
-  const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!axisRef.current) return;
-    const rect = axisRef.current.getBoundingClientRect();
-    const pixelY = e.clientY - rect.top;
-    const seconds = GAME_DURATION_SECONDS - pixelY / PIXELS_PER_SECOND;
-    if (seconds < 0 || seconds > GAME_DURATION_SECONDS) {
-      setHoverInfo(null);
-      return;
+  const scaledTicks = useMemo(() => {
+    const result: Tick[] = [];
+    for (let s = 0; s <= GAME_DURATION_SECONDS; s++) {
+      const pixelY = (GAME_DURATION_SECONDS - s) * PIXELS_PER_SECOND * scaleY;
+      let type: Tick["type"] = "micro";
+      if (s % 10 === 0) type = "major";
+      else if (s % 5 === 0) type = "minor";
+      result.push({ second: s, pixelY, type });
     }
-    setHoverInfo({ y: pixelY, seconds: seconds.toFixed(1) });
-  }, []);
+    return result;
+  }, [scaleY]);
+
+  const scaledWidth = Math.max(TIME_AXIS_WIDTH * scaleX, 20);
+  const scaledHeight = TIMELINE_HEIGHT * scaleY;
+  const minScale = Math.min(scaleX, scaleY);
+  const fontSize = Math.max(12 * minScale, 9);
+
+  const handleMouseMove = useCallback(
+    (e: MouseEvent) => {
+      if (!axisRef.current) return;
+      const rect = axisRef.current.getBoundingClientRect();
+      const pixelY = e.clientY - rect.top;
+      const seconds = GAME_DURATION_SECONDS - pixelY / (PIXELS_PER_SECOND * scaleY);
+      if (seconds < 0 || seconds > GAME_DURATION_SECONDS) {
+        setHoverInfo(null);
+        return;
+      }
+      setHoverInfo({ y: pixelY, seconds: seconds.toFixed(1) });
+    },
+    [scaleY],
+  );
 
   const handleMouseLeave = useCallback(() => {
     setHoverInfo(null);
@@ -45,18 +57,18 @@ export function TimeAxis() {
     <div
       ref={axisRef}
       className="relative border-r border-border"
-      style={{ width: TIME_AXIS_WIDTH, height: TIMELINE_HEIGHT }}
+      style={{ width: scaledWidth, height: scaledHeight }}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
     >
-      {ticks.map((tick) => (
+      {scaledTicks.map((tick) => (
         <div key={tick.second} className="absolute left-0" style={{ top: tick.pixelY, width: "100%" }}>
           {tick.type === "major" && (
             <>
               <div className="absolute right-0 bg-text" style={{ width: 12, height: 1 }} />
               <span
                 className="absolute select-none text-text-muted"
-                style={{ right: 14, top: -7, fontSize: 12, whiteSpace: "nowrap" }}
+                style={{ right: 14, top: -7, fontSize, whiteSpace: "nowrap" }}
               >
                 {tick.second}s
               </span>

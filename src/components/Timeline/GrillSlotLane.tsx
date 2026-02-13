@@ -3,7 +3,7 @@ import { useTimelineDrag } from "@/hooks/useTimelineDrag";
 import type { DefeatPoint, DisplayMode, FrameTime, GrillSlot, SpawnPoint } from "@/types";
 import { secondsToFrames } from "@/utils/calculations";
 import { ActivePeriod } from "./ActivePeriod";
-import { frameToPixelY, LANE_WIDTH, pixelYToFrame, TIMELINE_HEIGHT } from "./coordinates";
+import { LANE_WIDTH, scaledFrameToPixelY, scaledPixelYToFrame, TIMELINE_HEIGHT } from "./coordinates";
 import { DefeatMarker } from "./DefeatMarker";
 import { RespawnConnector } from "./RespawnConnector";
 import type { SpawnDisplayInfo } from "./SpawnMarker";
@@ -15,6 +15,8 @@ interface GrillSlotLaneProps {
   defeats: readonly DefeatPoint[];
   spawnDisplayMap: ReadonlyMap<string, SpawnDisplayInfo>;
   displayMode: DisplayMode;
+  scaleX: number;
+  scaleY: number;
   inactiveAboveFrame?: FrameTime;
   onAddDefeat?: (slot: GrillSlot, frameTime: number) => boolean;
   onMoveDefeat?: (defeatId: string, frameTime: FrameTime) => void;
@@ -28,6 +30,8 @@ export function GrillSlotLane({
   defeats,
   spawnDisplayMap,
   displayMode,
+  scaleX,
+  scaleY,
   inactiveAboveFrame,
   onAddDefeat,
   onMoveDefeat,
@@ -63,8 +67,10 @@ export function GrillSlotLane({
     [onMoveDefeat],
   );
 
+  const scaledPixelYToFrameFn = useCallback((pixelY: number) => scaledPixelYToFrame(pixelY, scaleY), [scaleY]);
+
   const { dragState, startDragCandidate, justFinishedDragRef } = useTimelineDrag(
-    pixelYToFrame,
+    scaledPixelYToFrameFn,
     validatePosition,
     handleDragEnd,
     laneRef,
@@ -78,7 +84,7 @@ export function GrillSlotLane({
 
       const rect = laneRef.current.getBoundingClientRect();
       const pixelY = e.clientY - rect.top;
-      const frameTime = pixelYToFrame(pixelY);
+      const frameTime = scaledPixelYToFrame(pixelY, scaleY);
 
       const success = onAddDefeat(slot, frameTime);
       if (!success) {
@@ -86,7 +92,7 @@ export function GrillSlotLane({
         setTimeout(() => setInvalidClick(null), 500);
       }
     },
-    [slot, onAddDefeat, justFinishedDragRef],
+    [slot, scaleY, onAddDefeat, justFinishedDragRef],
   );
 
   const handleDefeatMouseDown = useCallback(
@@ -127,13 +133,16 @@ export function GrillSlotLane({
   // 撃破由来の湧き（RespawnConnector 用）
   const respawnSpawns = useMemo(() => slotSpawns.filter((s) => !s.isAuto && s.defeatId), [slotSpawns]);
 
+  const scaledLaneWidth = LANE_WIDTH * scaleX;
+  const scaledTimelineHeight = TIMELINE_HEIGHT * scaleY;
+
   return (
     <div
       ref={laneRef}
       className="relative cursor-crosshair overflow-visible"
       style={{
-        width: LANE_WIDTH,
-        height: TIMELINE_HEIGHT,
+        width: scaledLaneWidth,
+        height: scaledTimelineHeight,
         borderTop: `3px solid ${slotColor}`,
       }}
       onClick={handleClick}
@@ -147,6 +156,8 @@ export function GrillSlotLane({
             spawnFrame={spawn.frameTime}
             defeatFrame={defeat?.frameTime ?? null}
             slot={slot}
+            scaleX={scaleX}
+            scaleY={scaleY}
           />
         ))}
 
@@ -161,6 +172,8 @@ export function GrillSlotLane({
               key={`connector-${spawn.id}`}
               defeatFrame={defeat.frameTime}
               spawnFrame={spawn.frameTime}
+              scaleX={scaleX}
+              scaleY={scaleY}
             />
           );
         })}
@@ -174,6 +187,8 @@ export function GrillSlotLane({
             spawn={spawn}
             displayInfo={spawnDisplayMap.get(spawn.id)}
             displayMode={displayMode}
+            scaleX={scaleX}
+            scaleY={scaleY}
           />
         ))}
 
@@ -185,6 +200,8 @@ export function GrillSlotLane({
           isDragging={dragState.isDragging && dragState.dragDefeatId === defeat.id}
           dragFrameTime={dragState.dragDefeatId === defeat.id ? dragState.dragFrameTime : null}
           isValidPosition={dragState.dragDefeatId === defeat.id ? dragState.isValidPosition : true}
+          scaleX={scaleX}
+          scaleY={scaleY}
           onMouseDown={handleDefeatMouseDown}
           onContextMenu={handleDefeatContextMenu}
           onTimeEdit={handleDefeatTimeEdit}
@@ -196,7 +213,7 @@ export function GrillSlotLane({
         <div
           className="pointer-events-none absolute inset-x-0 top-0"
           style={{
-            height: frameToPixelY(inactiveAboveFrame),
+            height: scaledFrameToPixelY(inactiveAboveFrame, scaleY),
             backgroundColor: "rgba(128, 128, 128, 0.3)",
             zIndex: 2,
           }}

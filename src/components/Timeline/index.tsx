@@ -31,6 +31,8 @@ interface TimelineProps {
   weapons: readonly string[];
   weaponMaster: readonly WeaponMaster[];
   displayMode: DisplayMode;
+  scaleX: number;
+  scaleY: number;
 }
 
 export function Timeline({
@@ -43,13 +45,18 @@ export function Timeline({
   weapons,
   weaponMaster,
   displayMode,
+  scaleX,
+  scaleY,
 }: TimelineProps) {
   const { dispatch } = useScenario();
   const { canAddDefeat, canMoveDefeat } = useValidation(defeats, hazardConfig, directions);
   const defeatCounterRef = useRef(0);
 
   const showBSlot = hazardConfig.bSlotOpenFrame >= 0;
-  const lanesWidth = showBSlot ? LANE_WIDTH * 2 + LANE_SPACING : LANE_WIDTH;
+  const scaledLaneWidth = LANE_WIDTH * scaleX;
+  const scaledLaneSpacing = Math.max(LANE_SPACING * scaleX, 2);
+  const scaledPadding = Math.max(TIMELINE_PADDING * scaleY, 8);
+  const lanesWidth = showBSlot ? scaledLaneWidth * 2 + scaledLaneSpacing : scaledLaneWidth;
 
   // 湧きの通し番号（A枠+B枠合わせてframeTime降順）
   const spawnDisplayMap: ReadonlyMap<string, SpawnDisplayInfo> = useMemo(() => {
@@ -131,8 +138,8 @@ export function Timeline({
       <div
         className="flex"
         style={{
-          paddingTop: TIMELINE_PADDING,
-          paddingBottom: TIMELINE_PADDING,
+          paddingTop: scaledPadding,
+          paddingBottom: scaledPadding,
         }}
       >
         {/* 方面ラベル */}
@@ -140,15 +147,17 @@ export function Timeline({
           directions={directions}
           presetNames={directionPresets}
           onUpdateDirection={handleUpdateDirection}
+          scaleX={scaleX}
+          scaleY={scaleY}
         />
 
         {/* 時間軸 */}
-        <TimeAxis />
+        <TimeAxis scaleX={scaleX} scaleY={scaleY} />
 
         {/* レーン領域（方面バンド背景付き） */}
         <div className="relative" style={{ width: lanesWidth }}>
           {/* 方面バンド（背景） */}
-          <DirectionBands directions={directions} />
+          <DirectionBands directions={directions} scaleY={scaleY} />
 
           {/* 操作説明（レーン右側） */}
           <div
@@ -216,6 +225,8 @@ export function Timeline({
               defeats={defeats}
               spawnDisplayMap={spawnDisplayMap}
               displayMode={displayMode}
+              scaleX={scaleX}
+              scaleY={scaleY}
               onAddDefeat={handleAddDefeat}
               onMoveDefeat={handleMoveDefeat}
               onRemoveDefeat={handleRemoveDefeat}
@@ -223,13 +234,15 @@ export function Timeline({
             />
             {showBSlot && (
               <>
-                <div style={{ width: LANE_SPACING }} />
+                <div style={{ width: scaledLaneSpacing }} />
                 <GrillSlotLane
                   slot="B"
                   spawns={spawns}
                   defeats={defeats}
                   spawnDisplayMap={spawnDisplayMap}
                   displayMode={displayMode}
+                  scaleX={scaleX}
+                  scaleY={scaleY}
                   inactiveAboveFrame={hazardConfig.bSlotOpenFrame}
                   onAddDefeat={handleAddDefeat}
                   onMoveDefeat={handleMoveDefeat}

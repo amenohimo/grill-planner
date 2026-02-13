@@ -1,24 +1,30 @@
 import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
 import { ButtonGroup } from "@/components/ButtonGroup";
 import type { DirectionId, DirectionSetting } from "@/types";
-import { DIRECTION_LABEL_WIDTH, frameToPixelY, getDirectionColor, TIMELINE_HEIGHT } from "./coordinates";
+import { DIRECTION_LABEL_WIDTH, getDirectionColor, scaledFrameToPixelY, TIMELINE_HEIGHT } from "./coordinates";
 
 interface DirectionLabelsProps {
   directions: readonly DirectionSetting[];
   presetNames: readonly [string, string, string];
   onUpdateDirection?: (index: number, directionId: DirectionId) => void;
+  scaleX: number;
+  scaleY: number;
 }
 
-export function DirectionLabels({ directions, presetNames, onUpdateDirection }: DirectionLabelsProps) {
+export function DirectionLabels({ directions, presetNames, onUpdateDirection, scaleX, scaleY }: DirectionLabelsProps) {
   const sortedDirs = directions
     .map((dir, originalIndex) => ({ ...dir, originalIndex }))
     .sort((a, b) => b.frameTime - a.frameTime);
+  const scaledWidth = Math.max(DIRECTION_LABEL_WIDTH * scaleX, 40);
+  const scaledHeight = TIMELINE_HEIGHT * scaleY;
+  const minScale = Math.min(scaleX, scaleY);
+  const fontSize = Math.max(14 * minScale, 9);
   return (
-    <div className="relative" style={{ width: DIRECTION_LABEL_WIDTH, height: TIMELINE_HEIGHT }}>
+    <div className="relative" style={{ width: scaledWidth, height: scaledHeight }}>
       {sortedDirs.map((dir, index) => {
-        const top = frameToPixelY(dir.frameTime);
+        const top = scaledFrameToPixelY(dir.frameTime, scaleY);
         const nextDir = sortedDirs[index + 1];
-        const bottom = nextDir ? frameToPixelY(nextDir.frameTime) : TIMELINE_HEIGHT;
+        const bottom = nextDir ? scaledFrameToPixelY(nextDir.frameTime, scaleY) : scaledHeight;
         const height = bottom - top;
         const color = getDirectionColor(dir.direction);
         const displayName = presetNames[dir.direction] ?? `方面${dir.direction + 1}`;
@@ -28,6 +34,8 @@ export function DirectionLabels({ directions, presetNames, onUpdateDirection }: 
             key={index}
             top={top}
             height={height}
+            width={scaledWidth}
+            fontSize={fontSize}
             bgColor={color}
             directionId={dir.direction}
             displayName={displayName}
@@ -44,6 +52,8 @@ export function DirectionLabels({ directions, presetNames, onUpdateDirection }: 
 interface DirectionLabelProps {
   top: number;
   height: number;
+  width: number;
+  fontSize: number;
   bgColor: string;
   directionId: DirectionId;
   displayName: string;
@@ -55,6 +65,8 @@ interface DirectionLabelProps {
 function DirectionLabel({
   top,
   height,
+  width,
+  fontSize,
   bgColor,
   directionId,
   displayName,
@@ -91,14 +103,14 @@ function DirectionLabel({
       style={{
         top,
         height,
-        width: DIRECTION_LABEL_WIDTH,
+        width,
         backgroundColor: bgColor,
         left: 0,
       }}
       onMouseEnter={() => onUpdateDirection && setHovered(true)}
       onMouseLeave={handleMouseLeave}
     >
-      <span className="select-none truncate px-1 text-sm font-medium text-text" title={displayName}>
+      <span className="select-none truncate px-1 font-medium text-text" style={{ fontSize }} title={displayName}>
         {displayName}
       </span>
 

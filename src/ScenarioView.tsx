@@ -8,6 +8,7 @@ import { TargetOrderTable } from "@/components/Statistics/TargetOrderTable";
 import { Timeline } from "@/components/Timeline";
 import { useScenario } from "@/hooks/ScenarioContext";
 import { useGrillCalculation } from "@/hooks/useGrillCalculation";
+import { useZoom, ZOOM_OPTIONS } from "@/hooks/useZoom";
 import type { DisplayMode, HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 import { exportScenario, importScenarioFromFile } from "@/utils/fileIO";
@@ -21,6 +22,7 @@ interface ScenarioViewProps {
 export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioViewProps) {
   const { state, dispatch } = useScenario();
   const { hazardConfig, spawns, directionStats, totalGrillCount } = useGrillCalculation(state, hazardConfigData);
+  const { zoomX, zoomY, scaleX, scaleY, setZoomX, setZoomY } = useZoom();
   const prevDirCountRef = useRef(state.directions.length);
 
   const handleHazardChange = useCallback(
@@ -159,6 +161,38 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
             <div className="flex flex-wrap items-center gap-6">
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
               <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
+
+              <div className="ml-auto flex items-center gap-2 text-xs text-text-muted">
+                <span>ズーム:</span>
+                <label className="flex items-center gap-1">
+                  横
+                  <select
+                    value={zoomX}
+                    onChange={(e) => setZoomX(Number(e.target.value))}
+                    className="rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                  >
+                    {ZOOM_OPTIONS.map((v) => (
+                      <option key={v} value={v}>
+                        {v}%
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="flex items-center gap-1">
+                  縦
+                  <select
+                    value={zoomY}
+                    onChange={(e) => setZoomY(Number(e.target.value))}
+                    className="rounded-sm border border-border bg-surface px-1 py-0.5 text-xs text-text"
+                  >
+                    {ZOOM_OPTIONS.map((v) => (
+                      <option key={v} value={v}>
+                        {v}%
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
             </div>
             <MemoSection
               memo={state.memo}
@@ -186,6 +220,8 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               weapons={state.memo.weapons}
               weaponMaster={weapons}
               displayMode={state.displayMode}
+              scaleX={scaleX}
+              scaleY={scaleY}
             />
           </div>
         </div>

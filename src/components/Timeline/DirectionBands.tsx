@@ -1,19 +1,21 @@
 import type { DirectionSetting } from "@/types";
-import { frameToPixelY, getDirectionColor, TIMELINE_HEIGHT } from "./coordinates";
+import { getDirectionColor, scaledFrameToPixelY, TIMELINE_HEIGHT } from "./coordinates";
 
 interface DirectionBandsProps {
   directions: readonly DirectionSetting[];
+  scaleY: number;
 }
 
-export function DirectionBands({ directions }: DirectionBandsProps) {
+export function DirectionBands({ directions, scaleY }: DirectionBandsProps) {
   const sortedDirs = [...directions].sort((a, b) => b.frameTime - a.frameTime);
+  const scaledHeight = TIMELINE_HEIGHT * scaleY;
 
   return (
     <>
       {sortedDirs.map((dir, index) => {
-        const top = frameToPixelY(dir.frameTime);
+        const top = scaledFrameToPixelY(dir.frameTime, scaleY);
         const nextDir = sortedDirs[index + 1];
-        const bottom = nextDir ? frameToPixelY(nextDir.frameTime) : TIMELINE_HEIGHT;
+        const bottom = nextDir ? scaledFrameToPixelY(nextDir.frameTime, scaleY) : scaledHeight;
         const height = bottom - top;
 
         return (

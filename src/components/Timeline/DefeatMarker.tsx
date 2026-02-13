@@ -1,13 +1,15 @@
 import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { DefeatPoint, FrameTime } from "@/types";
 import { framesToSeconds } from "@/utils/calculations";
-import { frameToPixelY, MARKER_CENTER_RATIO, MARKER_SIZE } from "./coordinates";
+import { MARKER_CENTER_RATIO, MARKER_SIZE, scaledFrameToPixelY } from "./coordinates";
 
 interface DefeatMarkerProps {
   defeat: DefeatPoint;
   isDragging?: boolean;
   dragFrameTime?: FrameTime | null;
   isValidPosition?: boolean;
+  scaleX: number;
+  scaleY: number;
   onMouseDown?: (defeatId: string, startY: number) => void;
   onContextMenu?: (defeatId: string) => void;
   onTimeEdit?: (defeatId: string, newSeconds: number) => boolean;
@@ -18,6 +20,8 @@ export function DefeatMarker({
   isDragging = false,
   dragFrameTime,
   isValidPosition = true,
+  scaleX,
+  scaleY,
   onMouseDown,
   onContextMenu,
   onTimeEdit,
@@ -27,9 +31,13 @@ export function DefeatMarker({
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const displayFrame = isDragging && dragFrameTime != null ? dragFrameTime : defeat.frameTime;
-  const pixelY = frameToPixelY(displayFrame);
+  const pixelY = scaledFrameToPixelY(displayFrame, scaleY);
   const borderColor = defeat.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const seconds = framesToSeconds(displayFrame);
+
+  const markerSize = Math.max(MARKER_SIZE * scaleX, 8);
+  const minScale = Math.min(scaleX, scaleY);
+  const fontSize = Math.max(11 * minScale, 9);
 
   // 色の決定
   let bgColor = isHovered && !isDragging ? "var(--color-defeat-hover)" : "var(--color-defeat)";
@@ -120,7 +128,7 @@ export function DefeatMarker({
       style={{
         top: pixelY,
         left: `${MARKER_CENTER_RATIO * 100}%`,
-        transform: `translateX(-${MARKER_SIZE / 2}px) translateY(-50%)`,
+        transform: `translateX(-${markerSize / 2}px) translateY(-50%)`,
         zIndex: isDragging ? 10 : 4,
         cursor,
         animation: "marker-in 150ms ease-out",
@@ -135,8 +143,8 @@ export function DefeatMarker({
       <div
         className="shrink-0"
         style={{
-          width: MARKER_SIZE,
-          height: MARKER_SIZE,
+          width: markerSize,
+          height: markerSize,
           backgroundColor: bgColor,
           border: `2px ${borderStyle} ${borderColor}`,
           borderRadius: 3,
@@ -160,14 +168,14 @@ export function DefeatMarker({
           onBlur={confirmEdit}
           onMouseDown={handleInputMouseDown}
           className="w-14 rounded-sm border border-border bg-surface px-1 text-center text-text"
-          style={{ marginLeft: 4, fontSize: 11 }}
+          style={{ marginLeft: 4, fontSize }}
         />
       ) : (
         <span
           className="cursor-text select-none whitespace-nowrap"
           style={{
             marginLeft: 4,
-            fontSize: 11,
+            fontSize,
             color: "var(--color-text-muted)",
             backgroundColor: "rgba(255,255,255,0.85)",
             padding: "1px 4px",

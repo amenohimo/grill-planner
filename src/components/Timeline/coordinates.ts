@@ -30,6 +30,16 @@ export function pixelYToFrame(pixelY: number): FrameTime {
   return secondsToFrames(seconds);
 }
 
+/** ズーム対応: フレーム→ピクセルY（scaleY適用） */
+export function scaledFrameToPixelY(frameTime: FrameTime, scaleY: number): number {
+  return frameToPixelY(frameTime) * scaleY;
+}
+
+/** ズーム対応: ピクセルY→フレーム（scaleY適用） */
+export function scaledPixelYToFrame(pixelY: number, scaleY: number): FrameTime {
+  return pixelYToFrame(pixelY / scaleY);
+}
+
 /** 方面ID固定色 */
 const DIRECTION_ID_COLORS: Record<DirectionId, string> = {
   0: "var(--color-dir-0)",
