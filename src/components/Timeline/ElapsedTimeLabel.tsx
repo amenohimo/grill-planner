@@ -33,7 +33,7 @@ export function ElapsedTimeLabel({
   const elapsed = Math.round((spawnSeconds - defeatSeconds) * 10) / 10;
 
   const minScale = Math.min(scaleX, scaleY);
-  const fontSize = Math.max(11 * minScale, 9);
+  const fontSize = Math.max(14 * minScale, 9);
 
   const startEdit = useCallback(
     (e: MouseEvent) => {

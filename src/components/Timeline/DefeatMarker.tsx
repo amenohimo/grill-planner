@@ -50,7 +50,7 @@ export function DefeatMarker({
 
   const markerSize = Math.max(MARKER_SIZE * scaleX, 8);
   const minScale = Math.min(scaleX, scaleY);
-  const fontSize = Math.max(11 * minScale, 9);
+  const fontSize = Math.max(14 * minScale, 9);
 
   // 色の決定
   let bgColor = isHovered && !isDragging ? "var(--color-defeat-hover)" : "var(--color-defeat)";

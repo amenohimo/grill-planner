@@ -32,7 +32,7 @@ export function TimeAxis({ scaleX, scaleY }: TimeAxisProps) {
   const scaledWidth = Math.max(TIME_AXIS_WIDTH * scaleX, 20);
   const scaledHeight = TIMELINE_HEIGHT * scaleY;
   const minScale = Math.min(scaleX, scaleY);
-  const fontSize = Math.max(12 * minScale, 9);
+  const fontSize = Math.max(14 * minScale, 9);
 
   const handleMouseMove = useCallback(
     (e: MouseEvent) => {
