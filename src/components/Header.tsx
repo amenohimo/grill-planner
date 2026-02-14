@@ -30,7 +30,7 @@ export function Header({ onExport, onImport }: HeaderProps) {
             type="button"
             onClick={handleExport}
             disabled={exportState === "exporting"}
-            className="rounded-sm border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-bg disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-sm border border-border bg-surface px-3 py-1 text-sm text-text transition-transform duration-100 hover:bg-bg active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {exportState === "exporting" ? "エクスポート中..." : "エクスポート"}
           </button>
@@ -46,7 +46,7 @@ export function Header({ onExport, onImport }: HeaderProps) {
         <button
           type="button"
           onClick={onImport}
-          className="rounded-sm border border-border bg-surface px-3 py-1 text-sm text-text hover:bg-bg"
+          className="rounded-sm border border-border bg-surface px-3 py-1 text-sm text-text transition-transform duration-100 hover:bg-bg active:scale-95"
         >
           インポート
         </button>
