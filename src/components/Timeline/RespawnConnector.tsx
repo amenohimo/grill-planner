@@ -17,7 +17,7 @@ export function RespawnConnector({ defeatFrame, spawnFrame, scaleX, scaleY }: Re
   const spawnY = scaledFrameToPixelY(spawnFrame, scaleY);
 
   const x = LANE_WIDTH * scaleX * MARKER_CENTER_RATIO;
-  const strokeW = Math.max(2 * scaleX, 1);
+  const strokeW = Math.max(1 * scaleX, 0.5);
   const markerSize = Math.max(MARKER_SIZE * scaleX, 8);
 
   return (
@@ -35,7 +35,7 @@ export function RespawnConnector({ defeatFrame, spawnFrame, scaleX, scaleY }: Re
         r={markerSize * 0.25}
         fill="var(--color-spawner-decision)"
         stroke="var(--color-respawn-line)"
-        strokeWidth={Math.max(1 * scaleX, 0.5)}
+        strokeWidth={Math.max(0.5 * scaleX, 0.5)}
       />
 
       {/* スポナー決定 → 湧き（破線） */}
