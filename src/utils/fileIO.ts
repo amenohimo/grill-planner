@@ -56,6 +56,38 @@ export interface ImportResult {
   warnings?: string[];
 }
 
+/**
+ * File オブジェクトからシナリオをインポートする
+ * （ドラッグ&ドロップ、または直接ファイル参照時に使用）
+ */
+export function importScenarioFromFileObject(
+  file: File,
+  hazardConfigData: HazardConfigData,
+  weapons: readonly WeaponMaster[],
+  specials: readonly SpecialMaster[],
+): Promise<ImportResult> {
+  return new Promise((resolve) => {
+    if (!file.name.endsWith(".json")) {
+      resolve({ success: false, error: "JSONファイルのみ対応しています" });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      const text = reader.result;
+      if (typeof text !== "string") {
+        resolve({ success: false, error: "ファイルの読み込みに失敗しました" });
+        return;
+      }
+      resolve(parseAndValidate(text, hazardConfigData, weapons, specials));
+    };
+    reader.onerror = () => {
+      resolve({ success: false, error: "ファイルの読み込みに失敗しました" });
+    };
+    reader.readAsText(file);
+  });
+}
+
 export function importScenarioFromFile(
   hazardConfigData: HazardConfigData,
   weapons: readonly WeaponMaster[],
@@ -66,26 +98,13 @@ export function importScenarioFromFile(
     input.type = "file";
     input.accept = ".json";
 
-    input.onchange = () => {
+    input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) {
         resolve({ success: false, error: "ファイルが選択されませんでした" });
         return;
       }
-
-      const reader = new FileReader();
-      reader.onload = () => {
-        const text = reader.result;
-        if (typeof text !== "string") {
-          resolve({ success: false, error: "ファイルの読み込みに失敗しました" });
-          return;
-        }
-        resolve(parseAndValidate(text, hazardConfigData, weapons, specials));
-      };
-      reader.onerror = () => {
-        resolve({ success: false, error: "ファイルの読み込みに失敗しました" });
-      };
-      reader.readAsText(file);
+      resolve(await importScenarioFromFileObject(file, hazardConfigData, weapons, specials));
     };
 
     input.click();

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { getWeaponIconPath } from "@/constants";
 import { useScenario } from "@/hooks/ScenarioContext";
 import { useValidation } from "@/hooks/useValidation";
@@ -33,6 +33,7 @@ interface TimelineProps {
   displayMode: DisplayMode;
   scaleX: number;
   scaleY: number;
+  onFileDrop?: (file: File) => void;
 }
 
 export function Timeline({
@@ -47,6 +48,7 @@ export function Timeline({
   displayMode,
   scaleX,
   scaleY,
+  onFileDrop,
 }: TimelineProps) {
   const { dispatch } = useScenario();
   const { canAddDefeat, canMoveDefeat } = useValidation(defeats, hazardConfig, directions);
@@ -133,8 +135,58 @@ export function Timeline({
     [canMoveDefeat],
   );
 
+  // ドラッグ&ドロップ
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.types.includes("Files")) {
+      setIsDragOver(true);
+    }
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragOver(false);
+
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        onFileDrop?.(file);
+      }
+    },
+    [onFileDrop],
+  );
+
   return (
-    <div className="rounded-sm border border-border bg-surface">
+    <div
+      className="relative rounded-sm border border-border bg-surface"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
+      {/* ドラッグオーバー時のオーバーレイ */}
+      {isDragOver && (
+        <div
+          className="pointer-events-none absolute inset-0 z-50 flex items-center justify-center rounded-sm"
+          style={{
+            backgroundColor: "rgba(59, 130, 246, 0.1)",
+            border: "2px dashed var(--color-primary)",
+          }}
+        >
+          <span className="rounded-md bg-surface px-4 py-2 text-sm font-medium text-primary shadow-sm">
+            ドロップしてインポート
+          </span>
+        </div>
+      )}
       <div
         className="flex"
         style={{

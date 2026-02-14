@@ -11,7 +11,7 @@ import { useGrillCalculation } from "@/hooks/useGrillCalculation";
 import { COLOR_THEMES, type ColorThemeKey, useColorTheme, useZoom, ZOOM_OPTIONS } from "@/hooks/useZoom";
 import type { DisplayMode, HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
-import { exportScenario, importScenarioFromFile } from "@/utils/fileIO";
+import { exportScenario, importScenarioFromFile, importScenarioFromFileObject } from "@/utils/fileIO";
 
 interface ScenarioViewProps {
   hazardConfigData: HazardConfigData;
@@ -119,22 +119,37 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     exportScenario(state);
   }, [state]);
 
+  const handleImportResult = useCallback(
+    (result: { success: boolean; scenario?: import("@/types").ScenarioData; error?: string; warnings?: string[] }) => {
+      if (result.success && result.scenario) {
+        dispatch({ type: "LOAD_SCENARIO", payload: result.scenario });
+        setIoError(null);
+        if (result.warnings && result.warnings.length > 0) {
+          setIoWarnings(result.warnings);
+          setTimeout(() => setIoWarnings([]), 5000);
+        } else {
+          setIoWarnings([]);
+        }
+      } else {
+        setIoError(result.error ?? "インポートに失敗しました");
+        setTimeout(() => setIoError(null), 3000);
+      }
+    },
+    [dispatch],
+  );
+
   const handleImport = useCallback(async () => {
     const result = await importScenarioFromFile(hazardConfigData, weapons, specials);
-    if (result.success && result.scenario) {
-      dispatch({ type: "LOAD_SCENARIO", payload: result.scenario });
-      setIoError(null);
-      if (result.warnings && result.warnings.length > 0) {
-        setIoWarnings(result.warnings);
-        setTimeout(() => setIoWarnings([]), 5000);
-      } else {
-        setIoWarnings([]);
-      }
-    } else {
-      setIoError(result.error ?? "インポートに失敗しました");
-      setTimeout(() => setIoError(null), 3000);
-    }
-  }, [dispatch, hazardConfigData, weapons, specials]);
+    handleImportResult(result);
+  }, [hazardConfigData, weapons, specials, handleImportResult]);
+
+  const handleFileDrop = useCallback(
+    async (file: File) => {
+      const result = await importScenarioFromFileObject(file, hazardConfigData, weapons, specials);
+      handleImportResult(result);
+    },
+    [hazardConfigData, weapons, specials, handleImportResult],
+  );
 
   return (
     <div
@@ -246,6 +261,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               displayMode={state.displayMode}
               scaleX={scaleX}
               scaleY={scaleY}
+              onFileDrop={handleFileDrop}
             />
           </div>
         </div>
