@@ -135,6 +135,23 @@ export function Timeline({
     [canMoveDefeat],
   );
 
+  const validateLinkedMove = useCallback(
+    (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>): boolean => {
+      return moves.every((m) => m.frameTime > 0 && m.frameTime < 6000 && canMoveDefeat(m.defeatId, m.frameTime).valid);
+    },
+    [canMoveDefeat],
+  );
+
+  const handleLinkedMoveDefeats = useCallback(
+    (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => {
+      dispatch({
+        type: "MOVE_DEFEATS_BATCH",
+        payload: moves.map((m) => ({ id: m.defeatId, frameTime: m.frameTime })),
+      });
+    },
+    [dispatch],
+  );
+
   // ドラッグ&ドロップ
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -235,6 +252,7 @@ export function Timeline({
               </div>
               <div>クリック: 撃破追加</div>
               <div>ドラッグ: 撃破移動</div>
+              <div>Shift+ドラッグ: 後続撃破も連動移動</div>
               <div>右クリック: 撃破削除</div>
 
               {/* 凡例 */}
@@ -317,8 +335,10 @@ export function Timeline({
               scaleY={scaleY}
               onAddDefeat={handleAddDefeat}
               onMoveDefeat={handleMoveDefeat}
+              onLinkedMoveDefeats={handleLinkedMoveDefeats}
               onRemoveDefeat={handleRemoveDefeat}
               validateMoveDefeat={validateMoveDefeat}
+              validateLinkedMove={validateLinkedMove}
             />
             {showBSlot && (
               <>
@@ -334,8 +354,10 @@ export function Timeline({
                   inactiveAboveFrame={hazardConfig.bSlotOpenFrame}
                   onAddDefeat={handleAddDefeat}
                   onMoveDefeat={handleMoveDefeat}
+                  onLinkedMoveDefeats={handleLinkedMoveDefeats}
                   onRemoveDefeat={handleRemoveDefeat}
                   validateMoveDefeat={validateMoveDefeat}
+                  validateLinkedMove={validateLinkedMove}
                 />
               </>
             )}

@@ -21,8 +21,10 @@ interface GrillSlotLaneProps {
   inactiveAboveFrame?: FrameTime;
   onAddDefeat?: (slot: GrillSlot, frameTime: number) => boolean;
   onMoveDefeat?: (defeatId: string, frameTime: FrameTime) => void;
+  onLinkedMoveDefeats?: (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => void;
   onRemoveDefeat?: (defeatId: string) => void;
   validateMoveDefeat?: (defeatId: string, frameTime: FrameTime) => boolean;
+  validateLinkedMove?: (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => boolean;
 }
 
 export function GrillSlotLane({
@@ -36,8 +38,10 @@ export function GrillSlotLane({
   inactiveAboveFrame,
   onAddDefeat,
   onMoveDefeat,
+  onLinkedMoveDefeats,
   onRemoveDefeat,
   validateMoveDefeat,
+  validateLinkedMove,
 }: GrillSlotLaneProps) {
   const slotSpawns = useMemo(
     () => [...spawns.filter((s) => s.slot === slot)].sort((a, b) => b.frameTime - a.frameTime),
@@ -61,6 +65,13 @@ export function GrillSlotLane({
     [validateMoveDefeat],
   );
 
+  const validateLinkedPosition = useCallback(
+    (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => {
+      return validateLinkedMove?.(moves) ?? true;
+    },
+    [validateLinkedMove],
+  );
+
   const handleDragEnd = useCallback(
     (defeatId: string, frameTime: FrameTime) => {
       onMoveDefeat?.(defeatId, frameTime);
@@ -68,12 +79,31 @@ export function GrillSlotLane({
     [onMoveDefeat],
   );
 
+  const handleLinkedDragEnd = useCallback(
+    (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => {
+      onLinkedMoveDefeats?.(moves);
+    },
+    [onLinkedMoveDefeats],
+  );
+
+  const getLinkedDefeats = useCallback(
+    (defeatId: string) => {
+      const target = slotDefeats.find((d) => d.id === defeatId);
+      if (!target) return [];
+      return slotDefeats.filter((d) => d.id !== defeatId && d.frameTime < target.frameTime);
+    },
+    [slotDefeats],
+  );
+
   const scaledPixelYToFrameFn = useCallback((pixelY: number) => scaledPixelYToFrame(pixelY, scaleY), [scaleY]);
 
   const { dragState, startDragCandidate, justFinishedDragRef } = useTimelineDrag(
     scaledPixelYToFrameFn,
     validatePosition,
+    validateLinkedPosition,
     handleDragEnd,
+    handleLinkedDragEnd,
+    getLinkedDefeats,
     laneRef,
   );
 
@@ -97,8 +127,8 @@ export function GrillSlotLane({
   );
 
   const handleDefeatMouseDown = useCallback(
-    (defeatId: string, startY: number) => {
-      startDragCandidate(defeatId, startY);
+    (defeatId: string, startY: number, shiftKey: boolean) => {
+      startDragCandidate(defeatId, startY, shiftKey);
     },
     [startDragCandidate],
   );
@@ -210,20 +240,31 @@ export function GrillSlotLane({
       })}
 
       {/* 撃破マーカー */}
-      {slotDefeats.map((defeat) => (
-        <DefeatMarker
-          key={defeat.id}
-          defeat={defeat}
-          isDragging={dragState.isDragging && dragState.dragDefeatId === defeat.id}
-          dragFrameTime={dragState.dragDefeatId === defeat.id ? dragState.dragFrameTime : null}
-          isValidPosition={dragState.dragDefeatId === defeat.id ? dragState.isValidPosition : true}
-          scaleX={scaleX}
-          scaleY={scaleY}
-          onMouseDown={handleDefeatMouseDown}
-          onContextMenu={handleDefeatContextMenu}
-          onTimeEdit={handleDefeatTimeEdit}
-        />
-      ))}
+      {slotDefeats.map((defeat) => {
+        const linkedPreview = dragState.isLinkedMode
+          ? dragState.linkedDefeats.find((lp) => lp.defeatId === defeat.id)
+          : undefined;
+        return (
+          <DefeatMarker
+            key={defeat.id}
+            defeat={defeat}
+            isDragging={dragState.isDragging && (dragState.dragDefeatId === defeat.id || !!linkedPreview)}
+            dragFrameTime={
+              dragState.dragDefeatId === defeat.id
+                ? dragState.dragFrameTime
+                : linkedPreview
+                  ? linkedPreview.newFrameTime
+                  : null
+            }
+            isValidPosition={dragState.dragDefeatId === defeat.id || linkedPreview ? dragState.isValidPosition : true}
+            scaleX={scaleX}
+            scaleY={scaleY}
+            onMouseDown={handleDefeatMouseDown}
+            onContextMenu={handleDefeatContextMenu}
+            onTimeEdit={handleDefeatTimeEdit}
+          />
+        );
+      })}
 
       {/* B枠の無効エリア（自動湧きより前） */}
       {inactiveAboveFrame != null && (

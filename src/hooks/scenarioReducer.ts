@@ -27,6 +27,7 @@ export type ScenarioAction =
   | { type: "MOVE_DEFEAT"; payload: { id: string; frameTime: FrameTime } }
   | { type: "REMOVE_DEFEAT"; payload: string }
   | { type: "REMOVE_DEFEATS"; payload: readonly string[] }
+  | { type: "MOVE_DEFEATS_BATCH"; payload: ReadonlyArray<{ id: string; frameTime: FrameTime }> }
 
   // メモ
   | { type: "SET_SCENARIO_CODE"; payload: string }
@@ -116,6 +117,17 @@ export function scenarioReducer(state: ScenarioData, action: ScenarioAction): Sc
         ...state,
         defeats: state.defeats.filter((d) => !action.payload.includes(d.id)),
       };
+
+    case "MOVE_DEFEATS_BATCH": {
+      const moves = new Map(action.payload.map((m) => [m.id, m.frameTime]));
+      return {
+        ...state,
+        defeats: state.defeats.map((d) => {
+          const newFrame = moves.get(d.id);
+          return newFrame !== undefined ? { ...d, frameTime: newFrame } : d;
+        }),
+      };
+    }
 
     case "SET_SCENARIO_CODE":
       return { ...state, memo: { ...state.memo, scenarioCode: action.payload } };

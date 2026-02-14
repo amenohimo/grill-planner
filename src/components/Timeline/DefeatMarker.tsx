@@ -10,7 +10,7 @@ interface DefeatMarkerProps {
   isValidPosition?: boolean;
   scaleX: number;
   scaleY: number;
-  onMouseDown?: (defeatId: string, startY: number) => void;
+  onMouseDown?: (defeatId: string, startY: number, shiftKey: boolean) => void;
   onContextMenu?: (defeatId: string) => void;
   onTimeEdit?: (defeatId: string, newSeconds: number) => boolean;
 }
@@ -61,7 +61,7 @@ export function DefeatMarker({
       if (editing) return;
       if (e.button !== 0) return; // 左クリックのみ
       e.stopPropagation(); // レーンのクリックハンドラを抑止
-      onMouseDown?.(defeat.id, e.clientY);
+      onMouseDown?.(defeat.id, e.clientY, e.shiftKey);
     },
     [defeat.id, onMouseDown, editing],
   );

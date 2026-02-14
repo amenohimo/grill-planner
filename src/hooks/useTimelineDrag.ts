@@ -1,18 +1,26 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { FrameTime } from "@/types";
+import type { DefeatPoint, FrameTime } from "@/types";
 
 const DRAG_THRESHOLD = 5; // ドラッグ開始閾値（ピクセル）
+
+export interface LinkedDefeatPreview {
+  defeatId: string;
+  originalFrameTime: FrameTime;
+  newFrameTime: FrameTime;
+}
 
 export interface DragState {
   isDragging: boolean;
   dragDefeatId: string | null;
   dragFrameTime: FrameTime | null;
   isValidPosition: boolean;
+  isLinkedMode: boolean;
+  linkedDefeats: readonly LinkedDefeatPreview[];
 }
 
 export interface UseTimelineDragReturn {
   dragState: DragState;
-  startDragCandidate: (defeatId: string, startY: number) => void;
+  startDragCandidate: (defeatId: string, startY: number, shiftKey: boolean) => void;
   cancelDrag: () => void;
   justFinishedDragRef: React.RefObject<boolean>;
 }
@@ -22,12 +30,17 @@ const INITIAL_STATE: DragState = {
   dragDefeatId: null,
   dragFrameTime: null,
   isValidPosition: true,
+  isLinkedMode: false,
+  linkedDefeats: [],
 };
 
 export function useTimelineDrag(
   pixelYToFrame: (pixelY: number) => FrameTime,
   validatePosition: (defeatId: string, frameTime: FrameTime) => boolean,
+  validateLinkedMove: (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => boolean,
   onDragEnd: (defeatId: string, frameTime: FrameTime) => void,
+  onLinkedDragEnd: (moves: ReadonlyArray<{ defeatId: string; frameTime: FrameTime }>) => void,
+  getLinkedDefeats: (defeatId: string) => DefeatPoint[],
   laneRef: React.RefObject<HTMLDivElement | null>,
 ) {
   const [dragState, setDragState] = useState<DragState>(INITIAL_STATE);
@@ -42,18 +55,33 @@ export function useTimelineDrag(
   const validatePositionRef = useRef(validatePosition);
   validatePositionRef.current = validatePosition;
 
+  const validateLinkedMoveRef = useRef(validateLinkedMove);
+  validateLinkedMoveRef.current = validateLinkedMove;
+
   const onDragEndRef = useRef(onDragEnd);
   onDragEndRef.current = onDragEnd;
 
-  const candidateRef = useRef<{ defeatId: string; startY: number } | null>(null);
+  const onLinkedDragEndRef = useRef(onLinkedDragEnd);
+  onLinkedDragEndRef.current = onLinkedDragEnd;
+
+  const getLinkedDefeatsRef = useRef(getLinkedDefeats);
+  getLinkedDefeatsRef.current = getLinkedDefeats;
+
+  const candidateRef = useRef<{ defeatId: string; startY: number; shiftKey: boolean } | null>(null);
+  const originalFrameTimeRef = useRef<FrameTime | null>(null);
+  const linkedDefeatsSnapshotRef = useRef<DefeatPoint[]>([]);
   const justFinishedDragRef = useRef(false);
 
-  const startDragCandidate = useCallback((defeatId: string, startY: number) => {
-    candidateRef.current = { defeatId, startY };
+  const startDragCandidate = useCallback((defeatId: string, startY: number, shiftKey: boolean) => {
+    candidateRef.current = { defeatId, startY, shiftKey };
+    originalFrameTimeRef.current = null;
+    linkedDefeatsSnapshotRef.current = [];
   }, []);
 
   const cancelDrag = useCallback(() => {
     candidateRef.current = null;
+    originalFrameTimeRef.current = null;
+    linkedDefeatsSnapshotRef.current = [];
     setDragState(INITIAL_STATE);
   }, []);
 
@@ -71,14 +99,53 @@ export function useTimelineDrag(
       const rect = laneRef.current.getBoundingClientRect();
       const pixelY = Math.max(0, e.clientY - rect.top);
       const frameTime = pixelYToFrameRef.current(pixelY);
-      const isValid = validatePositionRef.current(candidate.defeatId, frameTime);
 
-      setDragState({
-        isDragging: true,
-        dragDefeatId: candidate.defeatId,
-        dragFrameTime: frameTime,
-        isValidPosition: isValid,
-      });
+      if (candidate.shiftKey) {
+        // 連動モード
+        // 初回のみ: 元のframeTimeと連動撃破スナップショットを保存
+        if (originalFrameTimeRef.current === null) {
+          // ドラッグ開始時のframeTimeを計算
+          const startRect = laneRef.current.getBoundingClientRect();
+          const startPixelY = Math.max(0, candidate.startY - startRect.top);
+          originalFrameTimeRef.current = pixelYToFrameRef.current(startPixelY);
+          linkedDefeatsSnapshotRef.current = getLinkedDefeatsRef.current(candidate.defeatId);
+        }
+
+        const delta = frameTime - originalFrameTimeRef.current;
+        const linkedPreviews: LinkedDefeatPreview[] = linkedDefeatsSnapshotRef.current.map((d) => ({
+          defeatId: d.id,
+          originalFrameTime: d.frameTime,
+          newFrameTime: d.frameTime + delta,
+        }));
+
+        // 全体バリデーション
+        const allMoves = [
+          { defeatId: candidate.defeatId, frameTime },
+          ...linkedPreviews.map((lp) => ({ defeatId: lp.defeatId, frameTime: lp.newFrameTime })),
+        ];
+        const isValid = validateLinkedMoveRef.current(allMoves);
+
+        setDragState({
+          isDragging: true,
+          dragDefeatId: candidate.defeatId,
+          dragFrameTime: frameTime,
+          isValidPosition: isValid,
+          isLinkedMode: true,
+          linkedDefeats: linkedPreviews,
+        });
+      } else {
+        // 個別モード（従来）
+        const isValid = validatePositionRef.current(candidate.defeatId, frameTime);
+
+        setDragState({
+          isDragging: true,
+          dragDefeatId: candidate.defeatId,
+          dragFrameTime: frameTime,
+          isValidPosition: isValid,
+          isLinkedMode: false,
+          linkedDefeats: [],
+        });
+      }
     };
 
     const handleMouseUp = () => {
@@ -87,7 +154,15 @@ export function useTimelineDrag(
 
       const state = dragStateRef.current;
       if (state.isDragging && state.dragFrameTime !== null && state.isValidPosition) {
-        onDragEndRef.current(candidate.defeatId, state.dragFrameTime);
+        if (state.isLinkedMode && state.linkedDefeats.length > 0) {
+          const allMoves = [
+            { defeatId: candidate.defeatId, frameTime: state.dragFrameTime },
+            ...state.linkedDefeats.map((lp) => ({ defeatId: lp.defeatId, frameTime: lp.newFrameTime })),
+          ];
+          onLinkedDragEndRef.current(allMoves);
+        } else {
+          onDragEndRef.current(candidate.defeatId, state.dragFrameTime);
+        }
       }
 
       // ドラッグ操作（候補含む）の直後の click イベントを抑止するフラグ
@@ -97,12 +172,16 @@ export function useTimelineDrag(
       });
 
       candidateRef.current = null;
+      originalFrameTimeRef.current = null;
+      linkedDefeatsSnapshotRef.current = [];
       setDragState(INITIAL_STATE);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         candidateRef.current = null;
+        originalFrameTimeRef.current = null;
+        linkedDefeatsSnapshotRef.current = [];
         setDragState(INITIAL_STATE);
       }
     };
