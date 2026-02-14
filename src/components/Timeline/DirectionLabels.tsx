@@ -1,4 +1,4 @@
-import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ButtonGroup } from "@/components/ButtonGroup";
 import type { DirectionId, DirectionSetting } from "@/types";
 import { DIRECTION_LABEL_WIDTH, getDirectionColor, scaledFrameToPixelY, TIMELINE_HEIGHT } from "./coordinates";
@@ -76,6 +76,37 @@ function DirectionLabel({
 }: DirectionLabelProps) {
   const [hovered, setHovered] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const floatRef = useRef<HTMLDivElement>(null);
+
+  // フロート表示中のみ document.mousemove を監視して要素外を検出
+  useEffect(() => {
+    if (!hovered) return;
+
+    const handleDocumentMouseMove = (e: globalThis.MouseEvent) => {
+      const margin = 8;
+      const { clientX, clientY } = e;
+
+      const isInsideRect = (el: HTMLElement | null) => {
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        return (
+          clientX >= rect.left - margin &&
+          clientX <= rect.right + margin &&
+          clientY >= rect.top - margin &&
+          clientY <= rect.bottom + margin
+        );
+      };
+
+      if (!isInsideRect(containerRef.current) && !isInsideRect(floatRef.current)) {
+        setHovered(false);
+      }
+    };
+
+    document.addEventListener("mousemove", handleDocumentMouseMove);
+    return () => {
+      document.removeEventListener("mousemove", handleDocumentMouseMove);
+    };
+  }, [hovered]);
 
   const handleSelect = useCallback(
     (value: string) => {
@@ -117,6 +148,7 @@ function DirectionLabel({
       {/* ホバー時フロート */}
       {hovered && (
         <div
+          ref={floatRef}
           className="absolute"
           style={{
             left: 0,
