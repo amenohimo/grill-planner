@@ -1,6 +1,6 @@
 import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useRef, useState } from "react";
 import type { FrameTime } from "@/types";
-import { framesToSeconds, secondsToFrames } from "@/utils/calculations";
+import { framesToSeconds } from "@/utils/calculations";
 import { MARKER_CENTER_RATIO, scaledFrameToPixelY } from "./coordinates";
 
 interface ElapsedTimeLabelProps {
