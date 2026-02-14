@@ -7,7 +7,6 @@ interface ElapsedTimeLabelProps {
   spawnFrame: FrameTime;
   defeatFrame: FrameTime;
   defeatId: string;
-  directionColor: string;
   scaleX: number;
   scaleY: number;
   onTimeEdit?: (defeatId: string, newSeconds: number) => boolean;
@@ -17,7 +16,6 @@ export function ElapsedTimeLabel({
   spawnFrame,
   defeatFrame,
   defeatId,
-  directionColor,
   scaleX,
   scaleY,
   onTimeEdit,
@@ -105,7 +103,7 @@ export function ElapsedTimeLabel({
             marginRight: 4,
             fontSize,
             textAlign: "center",
-            border: `1px solid ${directionColor}`,
+            border: "1px solid var(--color-border)",
             borderRadius: 2,
             padding: "1px 2px",
             backgroundColor: "white",
@@ -121,7 +119,7 @@ export function ElapsedTimeLabel({
             backgroundColor: "rgba(255,255,255,0.85)",
             padding: "1px 4px",
             borderRadius: 2,
-            border: `1px solid ${directionColor}`,
+            border: "1px solid var(--color-border)",
           }}
           onClick={startEdit}
         >
