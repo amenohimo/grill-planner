@@ -213,6 +213,42 @@ export function Timeline({
                   />
                   <span>撃破</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: "50%",
+                        backgroundColor: "var(--color-spawner-decision)",
+                        border: "1px solid var(--color-respawn-line)",
+                      }}
+                    />
+                  </div>
+                  <span>スポナー確定</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div
+                    style={{
+                      width: 10,
+                      height: 10,
+                      borderRadius: "50%",
+                      backgroundColor: "var(--color-spawn)",
+                      border: "1.5px dashed var(--color-slot-a)",
+                      flexShrink: 0,
+                    }}
+                  />
+                  <span>湧き（抑制）</span>
+                </div>
               </div>
             </div>
           </div>
