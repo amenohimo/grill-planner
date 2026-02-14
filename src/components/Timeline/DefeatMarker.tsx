@@ -45,7 +45,6 @@ export function DefeatMarker({
         ? dragFrameTime
         : defeat.frameTime;
   const pixelY = scaledFrameToPixelY(displayFrame, scaleY);
-  const borderColor = defeat.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const seconds = framesToSeconds(displayFrame);
 
   const markerSize = Math.max(MARKER_SIZE * scaleX, 8);
@@ -177,7 +176,7 @@ export function DefeatMarker({
           width: markerSize,
           height: markerSize,
           backgroundColor: bgColor,
-          border: `2px ${borderStyle} ${borderColor}`,
+          border: `1px ${borderStyle} var(--color-border)`,
           borderRadius: 3,
           transform: "rotate(45deg)",
           boxShadow: markerShadow,

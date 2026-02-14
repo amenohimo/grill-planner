@@ -18,7 +18,6 @@ interface SpawnMarkerProps {
 
 export function SpawnMarker({ spawn, displayInfo, displayMode, scaleX, scaleY }: SpawnMarkerProps) {
   const pixelY = scaledFrameToPixelY(spawn.frameTime, scaleY);
-  const borderColor = spawn.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const isSuppressed = spawn.isSuppressed === true;
   const seconds = framesToSeconds(spawn.frameTime);
 
@@ -42,15 +41,33 @@ export function SpawnMarker({ spawn, displayInfo, displayMode, scaleX, scaleY }:
       }}
     >
       {/* マーカー円 */}
-      <div
-        className="shrink-0 rounded-full"
-        style={{
-          width: markerSize,
-          height: markerSize,
-          backgroundColor: "var(--color-spawn)",
-          border: `2px ${isSuppressed ? "dashed" : "solid"} ${borderColor}`,
-        }}
-      />
+      {isSuppressed ? (
+        <div
+          className="shrink-0 rounded-full"
+          style={{
+            width: markerSize,
+            height: markerSize,
+            border: "1px solid var(--color-border)",
+            background: `repeating-linear-gradient(
+              -45deg,
+              var(--color-spawn),
+              var(--color-spawn) 2px,
+              rgba(255,255,255,0.6) 2px,
+              rgba(255,255,255,0.6) 4px
+            )`,
+          }}
+        />
+      ) : (
+        <div
+          className="shrink-0 rounded-full"
+          style={{
+            width: markerSize,
+            height: markerSize,
+            backgroundColor: "var(--color-spawn)",
+            border: "1px solid var(--color-border)",
+          }}
+        />
+      )}
 
       {/* フキダシ（時刻+方面+ターゲットテキスト）— アイコンは含まない */}
       <span

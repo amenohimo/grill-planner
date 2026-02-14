@@ -266,7 +266,7 @@ export function Timeline({
                       height: 10,
                       borderRadius: "50%",
                       backgroundColor: "var(--color-spawn)",
-                      border: "1.5px solid var(--color-slot-a)",
+                      border: "1px solid var(--color-border)",
                       flexShrink: 0,
                     }}
                   />
@@ -313,8 +313,12 @@ export function Timeline({
                       width: 10,
                       height: 10,
                       borderRadius: "50%",
-                      backgroundColor: "var(--color-spawn)",
-                      border: "1.5px dashed var(--color-slot-a)",
+                      border: "1px solid var(--color-border)",
+                      background: `repeating-linear-gradient(
+                        -45deg,
+                        var(--color-spawn), var(--color-spawn) 2px,
+                        rgba(255,255,255,0.6) 2px, rgba(255,255,255,0.6) 4px
+                      )`,
                       flexShrink: 0,
                     }}
                   />
