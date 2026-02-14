@@ -3,8 +3,15 @@ import { useTimelineDrag } from "@/hooks/useTimelineDrag";
 import type { DefeatPoint, DisplayMode, FrameTime, GrillSlot, SpawnPoint } from "@/types";
 import { secondsToFrames } from "@/utils/calculations";
 import { ActivePeriod } from "./ActivePeriod";
-import { LANE_WIDTH, scaledFrameToPixelY, scaledPixelYToFrame, TIMELINE_HEIGHT } from "./coordinates";
+import {
+  getDirectionColor,
+  LANE_WIDTH,
+  scaledFrameToPixelY,
+  scaledPixelYToFrame,
+  TIMELINE_HEIGHT,
+} from "./coordinates";
 import { DefeatMarker } from "./DefeatMarker";
+import { ElapsedTimeLabel } from "./ElapsedTimeLabel";
 import { RespawnConnector } from "./RespawnConnector";
 import type { SpawnDisplayInfo } from "./SpawnMarker";
 import { SpawnMarker } from "./SpawnMarker";
@@ -191,6 +198,23 @@ export function GrillSlotLane({
             scaleY={scaleY}
           />
         ))}
+
+      {/* 経過時間ラベル */}
+      {spawnDefeatPairs.map(({ spawn, defeat }) => {
+        if (spawn.frameTime <= 0 || !defeat) return null;
+        return (
+          <ElapsedTimeLabel
+            key={`elapsed-${spawn.id}`}
+            spawnFrame={spawn.frameTime}
+            defeatFrame={defeat.frameTime}
+            defeatId={defeat.id}
+            directionColor={getDirectionColor(spawn.direction)}
+            scaleX={scaleX}
+            scaleY={scaleY}
+            onTimeEdit={handleDefeatTimeEdit}
+          />
+        );
+      })}
 
       {/* 撃破マーカー */}
       {slotDefeats.map((defeat) => (
