@@ -1,4 +1,4 @@
-import { type MouseEvent, useCallback, useMemo, useRef, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTimelineDrag } from "@/hooks/useTimelineDrag";
 import type { DefeatPoint, DisplayMode, FrameTime, GrillSlot, SpawnPoint } from "@/types";
 import { secondsToFrames } from "@/utils/calculations";
@@ -56,6 +56,34 @@ export function GrillSlotLane({
 
   // バリデーション失敗時のフィードバック
   const [invalidClick, setInvalidClick] = useState<{ x: number; y: number } | null>(null);
+
+  // Shift ホバーハイライト
+  const [shiftHeld, setShiftHeld] = useState(false);
+  const [hoveredDefeatId, setHoveredDefeatId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Shift") setShiftHeld(true);
+    };
+    const onKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "Shift") setShiftHeld(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    window.addEventListener("keyup", onKeyUp);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      window.removeEventListener("keyup", onKeyUp);
+    };
+  }, []);
+
+  const linkedHighlightIds = useMemo(() => {
+    if (!shiftHeld || !hoveredDefeatId) return new Set<string>();
+    const target = slotDefeats.find((d) => d.id === hoveredDefeatId);
+    if (!target) return new Set<string>();
+    return new Set(
+      slotDefeats.filter((d) => d.id !== hoveredDefeatId && d.frameTime < target.frameTime).map((d) => d.id),
+    );
+  }, [shiftHeld, hoveredDefeatId, slotDefeats]);
 
   // ドラッグ
   const validatePosition = useCallback(
@@ -128,9 +156,10 @@ export function GrillSlotLane({
 
   const handleDefeatMouseDown = useCallback(
     (defeatId: string, startY: number, shiftKey: boolean) => {
-      startDragCandidate(defeatId, startY, shiftKey);
+      const defeat = slotDefeats.find((d) => d.id === defeatId);
+      startDragCandidate(defeatId, startY, shiftKey, defeat?.frameTime ?? 0);
     },
-    [startDragCandidate],
+    [startDragCandidate, slotDefeats],
   );
 
   const handleDefeatContextMenu = useCallback(
@@ -141,16 +170,32 @@ export function GrillSlotLane({
   );
 
   const handleDefeatTimeEdit = useCallback(
-    (defeatId: string, newSeconds: number) => {
+    (defeatId: string, newSeconds: number, isLinked: boolean): boolean => {
       const frameTime = secondsToFrames(newSeconds);
       const valid = validateMoveDefeat?.(defeatId, frameTime) ?? true;
-      if (valid) {
+      if (!valid) return false;
+
+      if (isLinked) {
+        const target = slotDefeats.find((d) => d.id === defeatId);
+        if (!target) return false;
+        const delta = frameTime - target.frameTime;
+        const linked = slotDefeats.filter((d) => d.id !== defeatId && d.frameTime < target.frameTime);
+        const allMoves = [
+          { defeatId, frameTime },
+          ...linked.map((d) => ({ defeatId: d.id, frameTime: d.frameTime + delta })),
+        ];
+        const allValid = allMoves.every((m) => {
+          if (m.frameTime <= 0 || m.frameTime >= 6000) return false;
+          return validateMoveDefeat?.(m.defeatId, m.frameTime) ?? true;
+        });
+        if (!allValid) return false;
+        onLinkedMoveDefeats?.(allMoves);
+      } else {
         onMoveDefeat?.(defeatId, frameTime);
-        return true;
       }
-      return false;
+      return true;
     },
-    [validateMoveDefeat, onMoveDefeat],
+    [validateMoveDefeat, onMoveDefeat, onLinkedMoveDefeats, slotDefeats],
   );
 
   // 湧き-撃破ペアリング
@@ -241,27 +286,28 @@ export function GrillSlotLane({
 
       {/* 撃破マーカー */}
       {slotDefeats.map((defeat) => {
-        const linkedPreview = dragState.isLinkedMode
-          ? dragState.linkedDefeats.find((lp) => lp.defeatId === defeat.id)
-          : undefined;
+        const isLinkedPreview =
+          dragState.isLinkedMode && dragState.linkedDefeats.some((lp) => lp.defeatId === defeat.id);
+        const linkedPreviewFrame = isLinkedPreview
+          ? (dragState.linkedDefeats.find((lp) => lp.defeatId === defeat.id)?.newFrameTime ?? null)
+          : null;
+
         return (
           <DefeatMarker
             key={defeat.id}
             defeat={defeat}
-            isDragging={dragState.isDragging && (dragState.dragDefeatId === defeat.id || !!linkedPreview)}
-            dragFrameTime={
-              dragState.dragDefeatId === defeat.id
-                ? dragState.dragFrameTime
-                : linkedPreview
-                  ? linkedPreview.newFrameTime
-                  : null
-            }
-            isValidPosition={dragState.dragDefeatId === defeat.id || linkedPreview ? dragState.isValidPosition : true}
+            isDragging={dragState.isDragging && dragState.dragDefeatId === defeat.id}
+            dragFrameTime={dragState.dragDefeatId === defeat.id ? dragState.dragFrameTime : null}
+            isValidPosition={dragState.dragDefeatId === defeat.id ? dragState.isValidPosition : true}
+            isLinkedPreview={isLinkedPreview}
+            linkedPreviewFrameTime={linkedPreviewFrame}
+            isLinkedHighlight={linkedHighlightIds.has(defeat.id)}
             scaleX={scaleX}
             scaleY={scaleY}
             onMouseDown={handleDefeatMouseDown}
             onContextMenu={handleDefeatContextMenu}
             onTimeEdit={handleDefeatTimeEdit}
+            onHoverChange={(hovered) => setHoveredDefeatId(hovered ? defeat.id : null)}
           />
         );
       })}

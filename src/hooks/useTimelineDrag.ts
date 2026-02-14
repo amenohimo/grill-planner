@@ -20,7 +20,7 @@ export interface DragState {
 
 export interface UseTimelineDragReturn {
   dragState: DragState;
-  startDragCandidate: (defeatId: string, startY: number, shiftKey: boolean) => void;
+  startDragCandidate: (defeatId: string, startY: number, shiftKey: boolean, originalFrameTime: FrameTime) => void;
   cancelDrag: () => void;
   justFinishedDragRef: React.RefObject<boolean>;
 }
@@ -67,20 +67,25 @@ export function useTimelineDrag(
   const getLinkedDefeatsRef = useRef(getLinkedDefeats);
   getLinkedDefeatsRef.current = getLinkedDefeats;
 
-  const candidateRef = useRef<{ defeatId: string; startY: number; shiftKey: boolean } | null>(null);
-  const originalFrameTimeRef = useRef<FrameTime | null>(null);
+  const candidateRef = useRef<{
+    defeatId: string;
+    startY: number;
+    shiftKey: boolean;
+    originalFrameTime: FrameTime;
+  } | null>(null);
   const linkedDefeatsSnapshotRef = useRef<DefeatPoint[]>([]);
   const justFinishedDragRef = useRef(false);
 
-  const startDragCandidate = useCallback((defeatId: string, startY: number, shiftKey: boolean) => {
-    candidateRef.current = { defeatId, startY, shiftKey };
-    originalFrameTimeRef.current = null;
-    linkedDefeatsSnapshotRef.current = [];
-  }, []);
+  const startDragCandidate = useCallback(
+    (defeatId: string, startY: number, shiftKey: boolean, originalFrameTime: FrameTime) => {
+      candidateRef.current = { defeatId, startY, shiftKey, originalFrameTime };
+      linkedDefeatsSnapshotRef.current = shiftKey ? getLinkedDefeatsRef.current(defeatId) : [];
+    },
+    [],
+  );
 
   const cancelDrag = useCallback(() => {
     candidateRef.current = null;
-    originalFrameTimeRef.current = null;
     linkedDefeatsSnapshotRef.current = [];
     setDragState(INITIAL_STATE);
   }, []);
@@ -102,16 +107,7 @@ export function useTimelineDrag(
 
       if (candidate.shiftKey) {
         // 連動モード
-        // 初回のみ: 元のframeTimeと連動撃破スナップショットを保存
-        if (originalFrameTimeRef.current === null) {
-          // ドラッグ開始時のframeTimeを計算
-          const startRect = laneRef.current.getBoundingClientRect();
-          const startPixelY = Math.max(0, candidate.startY - startRect.top);
-          originalFrameTimeRef.current = pixelYToFrameRef.current(startPixelY);
-          linkedDefeatsSnapshotRef.current = getLinkedDefeatsRef.current(candidate.defeatId);
-        }
-
-        const delta = frameTime - originalFrameTimeRef.current;
+        const delta = frameTime - candidate.originalFrameTime;
         const linkedPreviews: LinkedDefeatPreview[] = linkedDefeatsSnapshotRef.current.map((d) => ({
           defeatId: d.id,
           originalFrameTime: d.frameTime,
@@ -172,7 +168,6 @@ export function useTimelineDrag(
       });
 
       candidateRef.current = null;
-      originalFrameTimeRef.current = null;
       linkedDefeatsSnapshotRef.current = [];
       setDragState(INITIAL_STATE);
     };
@@ -180,7 +175,6 @@ export function useTimelineDrag(
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         candidateRef.current = null;
-        originalFrameTimeRef.current = null;
         linkedDefeatsSnapshotRef.current = [];
         setDragState(INITIAL_STATE);
       }

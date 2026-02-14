@@ -9,7 +9,7 @@ interface ElapsedTimeLabelProps {
   defeatId: string;
   scaleX: number;
   scaleY: number;
-  onTimeEdit?: (defeatId: string, newSeconds: number) => boolean;
+  onTimeEdit?: (defeatId: string, newSeconds: number, isLinked: boolean) => boolean;
 }
 
 export function ElapsedTimeLabel({
@@ -52,20 +52,23 @@ export function ElapsedTimeLabel({
     }
   }, [editing]);
 
-  const confirmEdit = useCallback(() => {
-    setEditing(false);
-    const inputSeconds = Number.parseFloat(editValue);
-    if (Number.isNaN(inputSeconds) || inputSeconds < 0) return;
-    const newDefeatSeconds = spawnSeconds - inputSeconds;
-    if (newDefeatSeconds < 0 || newDefeatSeconds > 100) return;
-    onTimeEdit?.(defeatId, newDefeatSeconds);
-  }, [editValue, spawnSeconds, defeatId, onTimeEdit]);
+  const confirmEdit = useCallback(
+    (isLinked = false) => {
+      setEditing(false);
+      const inputSeconds = Number.parseFloat(editValue);
+      if (Number.isNaN(inputSeconds) || inputSeconds < 0) return;
+      const newDefeatSeconds = spawnSeconds - inputSeconds;
+      if (newDefeatSeconds < 0 || newDefeatSeconds > 100) return;
+      onTimeEdit?.(defeatId, newDefeatSeconds, isLinked);
+    },
+    [editValue, spawnSeconds, defeatId, onTimeEdit],
+  );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       e.stopPropagation();
       if (e.key === "Enter") {
-        confirmEdit();
+        confirmEdit(e.shiftKey);
       } else if (e.key === "Escape") {
         setEditing(false);
       }
@@ -96,7 +99,7 @@ export function ElapsedTimeLabel({
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={confirmEdit}
+          onBlur={() => confirmEdit(false)}
           onMouseDown={handleInputMouseDown}
           style={{
             width: 48,

@@ -253,6 +253,7 @@ export function Timeline({
               <div>クリック: 撃破追加</div>
               <div>ドラッグ: 撃破移動</div>
               <div>Shift+ドラッグ: 後続撃破も連動移動</div>
+              <div>Shift+Enter: 時間入力でも連動移動</div>
               <div>右クリック: 撃破削除</div>
 
               {/* 凡例 */}

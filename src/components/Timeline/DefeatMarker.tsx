@@ -8,11 +8,15 @@ interface DefeatMarkerProps {
   isDragging?: boolean;
   dragFrameTime?: FrameTime | null;
   isValidPosition?: boolean;
+  isLinkedPreview?: boolean;
+  linkedPreviewFrameTime?: FrameTime | null;
+  isLinkedHighlight?: boolean;
   scaleX: number;
   scaleY: number;
   onMouseDown?: (defeatId: string, startY: number, shiftKey: boolean) => void;
   onContextMenu?: (defeatId: string) => void;
-  onTimeEdit?: (defeatId: string, newSeconds: number) => boolean;
+  onTimeEdit?: (defeatId: string, newSeconds: number, isLinked: boolean) => boolean;
+  onHoverChange?: (hovered: boolean) => void;
 }
 
 export function DefeatMarker({
@@ -20,17 +24,26 @@ export function DefeatMarker({
   isDragging = false,
   dragFrameTime,
   isValidPosition = true,
+  isLinkedPreview = false,
+  linkedPreviewFrameTime,
+  isLinkedHighlight = false,
   scaleX,
   scaleY,
   onMouseDown,
   onContextMenu,
   onTimeEdit,
+  onHoverChange,
 }: DefeatMarkerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
-  const displayFrame = isDragging && dragFrameTime != null ? dragFrameTime : defeat.frameTime;
+  const displayFrame =
+    isLinkedPreview && linkedPreviewFrameTime != null
+      ? linkedPreviewFrameTime
+      : isDragging && dragFrameTime != null
+        ? dragFrameTime
+        : defeat.frameTime;
   const pixelY = scaledFrameToPixelY(displayFrame, scaleY);
   const borderColor = defeat.slot === "A" ? "var(--color-slot-a)" : "var(--color-slot-b)";
   const seconds = framesToSeconds(displayFrame);
@@ -42,19 +55,27 @@ export function DefeatMarker({
   // 色の決定
   let bgColor = isHovered && !isDragging ? "var(--color-defeat-hover)" : "var(--color-defeat)";
   let cursor = "grab";
-  let shadow = "";
+  let markerShadow = "";
   let borderStyle = "solid";
   if (isDragging) {
     if (isValidPosition) {
       bgColor = "var(--color-defeat-drag)";
       cursor = "grabbing";
-      shadow = "0 2px 8px rgba(0,0,0,0.3)";
+      markerShadow = "0 2px 8px rgba(0,0,0,0.3)";
     } else {
       bgColor = "var(--color-defeat-invalid)";
       cursor = "grabbing";
       borderStyle = "dashed";
     }
   }
+
+  // 連動ハイライト（Shift+ホバー時）
+  if (isLinkedHighlight) {
+    markerShadow = "0 0 0 2px rgba(59, 130, 246, 0.4)";
+  }
+
+  // 連動プレビュー半透明
+  const opacity = isLinkedPreview ? 0.5 : 1;
 
   const handleMouseDown = useCallback(
     (e: MouseEvent) => {
@@ -98,19 +119,22 @@ export function DefeatMarker({
   }, [editing]);
 
   // 確定処理
-  const confirmEdit = useCallback(() => {
-    setEditing(false);
-    const newSeconds = parseFloat(editValue);
-    if (Number.isNaN(newSeconds) || newSeconds < 0 || newSeconds > 100) return;
-    if (newSeconds === seconds) return;
-    onTimeEdit?.(defeat.id, newSeconds);
-  }, [editValue, seconds, defeat.id, onTimeEdit]);
+  const confirmEdit = useCallback(
+    (isLinked = false) => {
+      setEditing(false);
+      const newSeconds = parseFloat(editValue);
+      if (Number.isNaN(newSeconds) || newSeconds < 0 || newSeconds > 100) return;
+      if (newSeconds === seconds) return;
+      onTimeEdit?.(defeat.id, newSeconds, isLinked);
+    },
+    [editValue, seconds, defeat.id, onTimeEdit],
+  );
 
   const handleKeyDown = useCallback(
     (e: KeyboardEvent<HTMLInputElement>) => {
       e.stopPropagation();
       if (e.key === "Enter") {
-        confirmEdit();
+        confirmEdit(e.shiftKey);
       } else if (e.key === "Escape") {
         setEditing(false);
       }
@@ -131,13 +155,20 @@ export function DefeatMarker({
         transform: `translateX(-${markerSize / 2}px) translateY(-50%)`,
         zIndex: isDragging ? 10 : 4,
         cursor,
+        opacity,
         animation: "marker-in 150ms ease-out",
       }}
       onMouseDown={handleMouseDown}
       onClick={handleClick}
       onContextMenu={handleContextMenu}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseEnter={() => {
+        setIsHovered(true);
+        onHoverChange?.(true);
+      }}
+      onMouseLeave={() => {
+        setIsHovered(false);
+        onHoverChange?.(false);
+      }}
     >
       {/* マーカー（ダイヤモンド形） */}
       <div
@@ -149,7 +180,7 @@ export function DefeatMarker({
           border: `2px ${borderStyle} ${borderColor}`,
           borderRadius: 3,
           transform: "rotate(45deg)",
-          boxShadow: shadow,
+          boxShadow: markerShadow,
           transition: isDragging ? "none" : "background-color 0.15s",
         }}
       />
@@ -165,7 +196,7 @@ export function DefeatMarker({
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
           onKeyDown={handleKeyDown}
-          onBlur={confirmEdit}
+          onBlur={() => confirmEdit(false)}
           onMouseDown={handleInputMouseDown}
           className="w-14 rounded-sm border border-border bg-surface px-1 text-center text-text"
           style={{ marginLeft: 4, fontSize }}
