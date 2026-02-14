@@ -1,13 +1,5 @@
-import { DEFAULT_DISPLAY_MODE, DEFAULT_HAZARD_LEVEL } from "@/constants";
-import type {
-  DefeatPoint,
-  DirectionId,
-  DirectionSetting,
-  DisplayMode,
-  FrameTime,
-  HazardConfigData,
-  ScenarioData,
-} from "@/types";
+import { DEFAULT_HAZARD_LEVEL } from "@/constants";
+import type { DefeatPoint, DirectionId, DirectionSetting, FrameTime, HazardConfigData, ScenarioData } from "@/types";
 import { generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 
 // ============================================================
@@ -40,7 +32,6 @@ export type ScenarioAction =
   | { type: "SET_FREE_NOTE"; payload: string }
 
   // UI
-  | { type: "SET_DISPLAY_MODE"; payload: DisplayMode }
   | { type: "SET_DIRECTION_PRESET"; payload: { index: 0 | 1 | 2; name: string } }
 
   // 全体
@@ -70,7 +61,6 @@ export function createInitialScenario(hazardConfigData?: HazardConfigData): Scen
       snatchers: "",
       freeNote: "",
     },
-    displayMode: DEFAULT_DISPLAY_MODE,
     directionPresets: ["左", "正面", "右"],
   };
 }
@@ -182,9 +172,6 @@ export function scenarioReducer(state: ScenarioData, action: ScenarioAction): Sc
 
     case "SET_FREE_NOTE":
       return { ...state, memo: { ...state.memo, freeNote: action.payload } };
-
-    case "SET_DISPLAY_MODE":
-      return { ...state, displayMode: action.payload };
 
     case "SET_DIRECTION_PRESET": {
       const presets = [...state.directionPresets] as [string, string, string];

@@ -8,8 +8,15 @@ import { TargetOrderTable } from "@/components/Statistics/TargetOrderTable";
 import { Timeline } from "@/components/Timeline";
 import { useScenario } from "@/hooks/ScenarioContext";
 import { useGrillCalculation } from "@/hooks/useGrillCalculation";
-import { COLOR_THEMES, type ColorThemeKey, useColorTheme, useZoom, ZOOM_OPTIONS } from "@/hooks/useZoom";
-import type { DisplayMode, HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
+import {
+  COLOR_THEMES,
+  type ColorThemeKey,
+  useColorTheme,
+  useDisplayMode,
+  useZoom,
+  ZOOM_OPTIONS,
+} from "@/hooks/useZoom";
+import type { HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 import { exportScenario, importScenarioFromFile, importScenarioFromFileObject } from "@/utils/fileIO";
 
@@ -24,6 +31,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
   const { hazardConfig, spawns, directionStats, totalGrillCount } = useGrillCalculation(state, hazardConfigData);
   const { zoomX, zoomY, scaleX, scaleY, setZoomX, setZoomY } = useZoom();
   const { themeKey, setThemeKey, theme } = useColorTheme();
+  const { displayMode, setDisplayMode } = useDisplayMode();
   const prevDirCountRef = useRef(state.directions.length);
 
   const handleHazardChange = useCallback(
@@ -69,13 +77,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
       }
     },
     [dispatch, hazardConfigData, state.directions, state.defeats],
-  );
-
-  const handleDisplayModeChange = useCallback(
-    (mode: DisplayMode) => {
-      dispatch({ type: "SET_DISPLAY_MODE", payload: mode });
-    },
-    [dispatch],
   );
 
   const handleSetScenarioCode = useCallback(
@@ -185,9 +186,9 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
           <div className="border-b border-border bg-surface px-4 py-3">
             <div className="flex flex-wrap items-center gap-6">
               <HazardLevelInput value={state.hazardLevel} onChange={handleHazardChange} />
-              <DisplayModeToggle value={state.displayMode} onChange={handleDisplayModeChange} />
 
               <div className="ml-auto flex items-center gap-4 text-xs text-text-muted">
+                <DisplayModeToggle value={displayMode} onChange={setDisplayMode} />
                 <label className="flex items-center gap-1">
                   方面カラー
                   <select
@@ -258,7 +259,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               targetOrder={state.memo.targetOrder}
               weapons={state.memo.weapons}
               weaponMaster={weapons}
-              displayMode={state.displayMode}
+              displayMode={displayMode}
               scaleX={scaleX}
               scaleY={scaleY}
               onFileDrop={handleFileDrop}

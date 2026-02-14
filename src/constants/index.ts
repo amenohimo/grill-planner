@@ -13,8 +13,6 @@ export const PLAYER_IDS = ["1P", "2P", "3P", "4P"] as const;
 export const MIN_HAZARD_LEVEL = 20 as const;
 export const MAX_HAZARD_LEVEL = 333 as const;
 export const DEFAULT_HAZARD_LEVEL = 100 as const;
-export const DEFAULT_DISPLAY_MODE = "both" as const;
-
 /** アイコンパス生成 */
 export const getWeaponIconPath = (id: number): string => `${import.meta.env.BASE_URL}img/weapon/${id}.png`;
 

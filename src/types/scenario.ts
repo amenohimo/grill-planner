@@ -1,4 +1,3 @@
-import type { DisplayMode } from "./base";
 import type { DefeatPoint, DirectionSetting } from "./game";
 
 /** メモ情報（計算には無関係） */
@@ -17,6 +16,5 @@ export interface ScenarioData {
   readonly directions: readonly DirectionSetting[];
   readonly defeats: readonly DefeatPoint[];
   readonly memo: ScenarioMemo;
-  readonly displayMode: DisplayMode;
   readonly directionPresets: readonly [string, string, string];
 }

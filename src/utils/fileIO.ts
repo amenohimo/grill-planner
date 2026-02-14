@@ -260,11 +260,6 @@ function parseAndValidate(
     scenario.directionPresets = ["左", "正面", "右"];
   }
 
-  // displayMode の補完
-  if (scenario.displayMode !== "icon" && scenario.displayMode !== "text" && scenario.displayMode !== "both") {
-    scenario.displayMode = "both";
-  }
-
   // スキーマチェック通過 → 撃破点の整合性チェック
   const parsed = scenario as unknown as ScenarioData;
   const hazardConfig = getHazardConfig(parsed.hazardLevel, hazardConfigData);

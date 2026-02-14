@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import type { DisplayMode } from "@/types";
 
 const STORAGE_KEY_X = "grill-planner-zoom-x";
 const STORAGE_KEY_Y = "grill-planner-zoom-y";
@@ -61,4 +62,26 @@ export function useColorTheme() {
   const theme = COLOR_THEMES[themeKey];
 
   return { themeKey, setThemeKey, theme };
+}
+
+// ============================================================
+// 表示モード
+// ============================================================
+
+const STORAGE_KEY_DISPLAY_MODE = "grill-planner-display-mode";
+const VALID_DISPLAY_MODES: readonly DisplayMode[] = ["icon", "text", "both"];
+const DEFAULT_DISPLAY_MODE: DisplayMode = "both";
+
+export function useDisplayMode() {
+  const [displayMode, setDisplayModeState] = useState<DisplayMode>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_DISPLAY_MODE);
+    return saved && VALID_DISPLAY_MODES.includes(saved as DisplayMode) ? (saved as DisplayMode) : DEFAULT_DISPLAY_MODE;
+  });
+
+  const setDisplayMode = useCallback((mode: DisplayMode) => {
+    setDisplayModeState(mode);
+    localStorage.setItem(STORAGE_KEY_DISPLAY_MODE, mode);
+  }, []);
+
+  return { displayMode, setDisplayMode };
 }
