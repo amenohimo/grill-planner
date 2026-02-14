@@ -101,6 +101,7 @@ export function ElapsedTimeLabel({
           onKeyDown={handleKeyDown}
           onBlur={() => confirmEdit(false)}
           onMouseDown={handleInputMouseDown}
+          onClick={(e) => e.stopPropagation()}
           style={{
             width: 48,
             marginRight: 4,

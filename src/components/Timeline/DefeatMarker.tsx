@@ -197,6 +197,7 @@ export function DefeatMarker({
           onKeyDown={handleKeyDown}
           onBlur={() => confirmEdit(false)}
           onMouseDown={handleInputMouseDown}
+          onClick={(e) => e.stopPropagation()}
           className="w-14 rounded-sm border border-border bg-surface px-1 text-center text-text"
           style={{ marginLeft: 4, fontSize }}
         />
