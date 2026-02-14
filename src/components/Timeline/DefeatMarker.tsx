@@ -13,6 +13,7 @@ interface DefeatMarkerProps {
   onMouseDown?: (defeatId: string, startY: number) => void;
   onContextMenu?: (defeatId: string) => void;
   onTimeEdit?: (defeatId: string, newSeconds: number) => boolean;
+  directionColor?: string;
 }
 
 export function DefeatMarker({
@@ -25,6 +26,7 @@ export function DefeatMarker({
   onMouseDown,
   onContextMenu,
   onTimeEdit,
+  directionColor,
 }: DefeatMarkerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -167,8 +169,12 @@ export function DefeatMarker({
           onKeyDown={handleKeyDown}
           onBlur={confirmEdit}
           onMouseDown={handleInputMouseDown}
-          className="w-14 rounded-sm border border-border bg-surface px-1 text-center text-text"
-          style={{ marginLeft: 4, fontSize }}
+          className="w-14 rounded-sm bg-surface px-1 text-center text-text"
+          style={{
+            marginLeft: 4,
+            fontSize,
+            border: directionColor ? `1px solid ${directionColor}` : "1px solid var(--color-border)",
+          }}
         />
       ) : (
         <span
@@ -180,6 +186,7 @@ export function DefeatMarker({
             backgroundColor: "rgba(255,255,255,0.85)",
             padding: "1px 4px",
             borderRadius: 2,
+            border: directionColor ? `1px solid ${directionColor}` : undefined,
           }}
           onClick={startEdit}
         >

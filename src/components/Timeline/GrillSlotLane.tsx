@@ -137,6 +137,17 @@ export function GrillSlotLane({
     }));
   }, [slotSpawns, slotDefeats]);
 
+  // 撃破→方面色マップ（DefeatMarker 用）
+  const defeatDirectionMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const { spawn, defeat } of spawnDefeatPairs) {
+      if (defeat) {
+        map.set(defeat.id, getDirectionColor(spawn.direction));
+      }
+    }
+    return map;
+  }, [spawnDefeatPairs]);
+
   // 撃破由来の湧き（RespawnConnector 用）
   const respawnSpawns = useMemo(() => slotSpawns.filter((s) => !s.isAuto && s.defeatId), [slotSpawns]);
 
@@ -229,6 +240,7 @@ export function GrillSlotLane({
           onMouseDown={handleDefeatMouseDown}
           onContextMenu={handleDefeatContextMenu}
           onTimeEdit={handleDefeatTimeEdit}
+          directionColor={defeatDirectionMap.get(defeat.id)}
         />
       ))}
 

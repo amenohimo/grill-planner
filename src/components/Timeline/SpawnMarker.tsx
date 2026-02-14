@@ -1,6 +1,6 @@
 import type { DisplayMode, SpawnPoint } from "@/types";
 import { framesToSeconds } from "@/utils/calculations";
-import { MARKER_CENTER_RATIO, MARKER_SIZE, scaledFrameToPixelY } from "./coordinates";
+import { getDirectionColor, MARKER_CENTER_RATIO, MARKER_SIZE, scaledFrameToPixelY } from "./coordinates";
 
 export interface SpawnDisplayInfo {
   directionName: string;
@@ -30,6 +30,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode, scaleX, scaleY }:
   const dirName = displayInfo?.directionName ?? String(spawn.direction);
   const targetLabel = displayInfo?.targetLabel;
   const targetIcon = displayInfo?.targetIcon;
+  const directionColor = getDirectionColor(spawn.direction);
 
   return (
     <div
@@ -63,6 +64,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode, scaleX, scaleY }:
           backgroundColor: "rgba(255,255,255,0.85)",
           padding: "1px 4px",
           borderRadius: 2,
+          border: `1px solid ${directionColor}`,
           lineHeight: 1.3,
         }}
       >
@@ -77,7 +79,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode, scaleX, scaleY }:
             marginLeft: 3,
             padding: 2,
             backgroundColor: "rgba(255,255,255,0.85)",
-            border: "1px solid var(--color-border)",
+            border: `1px solid ${directionColor}`,
             borderRadius: 4,
             lineHeight: 0,
           }}
