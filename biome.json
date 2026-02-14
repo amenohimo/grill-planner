@@ -34,8 +34,8 @@
       "recommended": true,
       "correctness": {
         "useExhaustiveDependencies": "warn",
-        "noUnusedImports": "warn",
-        "noUnusedVariables": "warn"
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
       },
       "style": {
         "useImportType": "error",
