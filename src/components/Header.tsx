@@ -5,9 +5,10 @@ type ExportState = "idle" | "exporting" | "done";
 interface HeaderProps {
   onExport?: () => void;
   onImport?: () => void;
+  onImageExport?: () => void;
 }
 
-export function Header({ onExport, onImport }: HeaderProps) {
+export function Header({ onExport, onImport, onImageExport }: HeaderProps) {
   const [exportState, setExportState] = useState<ExportState>("idle");
 
   const handleExport = useCallback(async () => {
@@ -49,6 +50,13 @@ export function Header({ onExport, onImport }: HeaderProps) {
           className="rounded-sm border border-border bg-surface px-3 py-1 text-sm text-text transition-transform duration-100 hover:bg-bg active:scale-95"
         >
           インポート
+        </button>
+        <button
+          type="button"
+          onClick={onImageExport}
+          className="rounded-sm border border-border bg-surface px-3 py-1 text-sm text-text transition-transform duration-100 hover:bg-bg active:scale-95"
+        >
+          画像出力
         </button>
       </div>
     </header>
