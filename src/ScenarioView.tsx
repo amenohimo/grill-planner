@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import { Header } from "@/components/Header";
-import { ExportRenderer } from "@/components/ImageExport/ExportRenderer";
 import { DisplayModeToggle } from "@/components/Settings/DisplayModeToggle";
 import { HazardLevelInput } from "@/components/Settings/HazardLevelInput";
 import { MemoSection } from "@/components/Settings/MemoSection";
@@ -20,7 +19,6 @@ import {
 import type { HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 import { exportScenario, importScenarioFromFile, importScenarioFromFileObject } from "@/utils/fileIO";
-import { exportAsImage } from "@/utils/imageExport";
 
 interface ScenarioViewProps {
   hazardConfigData: HazardConfigData;
@@ -154,19 +152,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     [hazardConfigData, weapons, specials, handleImportResult],
   );
 
-  // 画像出力
-  const exportContainerRef = useRef<HTMLDivElement>(null);
-  const [isImageExporting, setIsImageExporting] = useState(false);
-
-  const handleImageExport = useCallback(async () => {
-    setIsImageExporting(true);
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    if (exportContainerRef.current) {
-      await exportAsImage(exportContainerRef.current);
-    }
-    setIsImageExporting(false);
-  }, []);
-
   return (
     <div
       className="flex h-screen flex-col bg-bg"
@@ -179,7 +164,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
       }
     >
       {/* ヘッダー — 固定 */}
-      <Header onExport={handleExport} onImport={handleImport} onImageExport={handleImageExport} />
+      <Header onExport={handleExport} onImport={handleImport} />
 
       {/* I/O エラー表示 */}
       {ioError && <div className="shrink-0 bg-danger px-4 py-2 text-sm text-white">{ioError}</div>}
@@ -300,29 +285,6 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
           </div>
         </div>
       </div>
-
-      {/* 画像出力用の非表示レンダリング */}
-      {isImageExporting && (
-        <div ref={exportContainerRef} style={{ position: "absolute", left: "-9999px", top: 0 }}>
-          <ExportRenderer
-            hazardLevel={state.hazardLevel}
-            spawns={spawns}
-            defeats={state.defeats}
-            directions={state.directions}
-            hazardConfig={hazardConfig}
-            directionPresets={state.directionPresets}
-            directionStats={directionStats}
-            totalGrillCount={totalGrillCount}
-            memo={state.memo}
-            weapons={weapons}
-            specials={specials}
-            targetOrder={state.memo.targetOrder}
-            weaponRowIds={state.memo.weapons}
-            displayMode={displayMode}
-            colorThemeColors={theme.colors}
-          />
-        </div>
-      )}
     </div>
   );
 }
