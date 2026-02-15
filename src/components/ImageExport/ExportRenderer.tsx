@@ -1,3 +1,4 @@
+import { Fragment } from "react";
 import { GAME_DURATION_SECONDS, getSpecialIconPath, getWeaponIconPath } from "@/constants";
 import type {
   DefeatPoint,
@@ -135,15 +136,11 @@ export function ExportRenderer({
       {/* Header */}
       <div
         style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
           padding: "12px 16px",
           borderBottom: "2px solid #e2e8f0",
         }}
       >
         <span style={{ fontSize: 20, fontWeight: "bold" }}>Grill Planner</span>
-        <span style={{ fontSize: 16 }}>キケン度: {hazardLevel}%</span>
       </div>
 
       {/* Main body */}
@@ -206,6 +203,8 @@ export function ExportRenderer({
             fontSize: 12,
           }}
         >
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>キケン度: {hazardLevel}%</div>
+
           <ExportDetails memo={memo} weapons={weapons} specials={specials} weaponRowIds={weaponRowIds} />
 
           <ExportStats stats={directionStats} totalGrillCount={totalGrillCount} presetNames={directionPresets} />
@@ -219,7 +218,7 @@ export function ExportRenderer({
           padding: "8px 16px",
           fontSize: 11,
           color: "#64748b",
-          textAlign: "right",
+          textAlign: "center",
         }}
       >
         {dateStr} 生成
@@ -602,7 +601,14 @@ function ExportLane({
           }}
         >
           {showLegend && (
-            <div style={{ padding: "8px 12px" }}>
+            <div
+              style={{
+                position: "absolute",
+                bottom: 8,
+                left: 8,
+                right: 8,
+              }}
+            >
               <ExportLegend />
             </div>
           )}
@@ -618,7 +624,16 @@ function ExportLane({
 
 function ExportLegend() {
   return (
-    <div style={{ fontSize: 11, lineHeight: 1.8 }}>
+    <div
+      style={{
+        fontSize: 11,
+        lineHeight: 1.8,
+        backgroundColor: "rgba(255, 255, 255, 0.95)",
+        padding: "4px 8px",
+        borderRadius: 4,
+        border: "1px solid #e2e8f0",
+      }}
+    >
       <div style={{ fontWeight: 600, marginBottom: 2 }}>凡例</div>
       <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
         <div
@@ -702,11 +717,10 @@ function ExportDetails({
   weaponRowIds: readonly string[];
 }) {
   const hasCode = memo.scenarioCode.length > 0;
-  const hasWeapons = memo.weapons.some((w) => w.length > 0);
-  const hasSpecials = memo.specials.some((s) => s.length > 0);
+  const hasAnyWeaponOrSpecial = weaponRowIds.some((id) => id !== "") || memo.specials.some((id) => id !== "");
   const hasSnatchers = memo.snatchers.length > 0;
   const hasFreeNote = memo.freeNote.length > 0;
-  const hasAny = hasCode || hasWeapons || hasSpecials || hasSnatchers || hasFreeNote;
+  const hasAny = hasCode || hasAnyWeaponOrSpecial || hasSnatchers || hasFreeNote;
 
   if (!hasAny) return null;
 
@@ -721,63 +735,71 @@ function ExportDetails({
     return s ? getSpecialIconPath(s.id) : null;
   };
 
+  const PLAYER_IDS = ["1P", "2P", "3P", "4P"] as const;
+  const cellBorder = "1px solid #e2e8f0";
+
   return (
     <div style={{ marginBottom: 16 }}>
       <h3 style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>詳細</h3>
 
       {hasCode && (
-        <div style={{ marginBottom: 4 }}>
+        <div style={{ marginBottom: 8 }}>
           <span style={{ color: "#64748b" }}>コード: </span>
           {memo.scenarioCode}
         </div>
       )}
 
-      {hasWeapons && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ color: "#64748b" }}>ブキ: </span>
-          {[0, 1, 2, 3].map((i) => {
-            const rowId = weaponRowIds[i] ?? "";
-            const label = rowId ? resolveWeaponLabel(rowId) : "-";
-            const icon = rowId ? resolveWeaponIcon(rowId) : null;
-            return (
-              <span key={i} style={{ marginRight: 8 }}>
-                {i + 1}P{" "}
-                {icon && (
-                  <img
-                    src={icon}
-                    alt=""
-                    style={{ width: 18, height: 18, verticalAlign: "middle", display: "inline" }}
-                  />
-                )}{" "}
-                {label}
-              </span>
-            );
-          })}
-        </div>
-      )}
-
-      {hasSpecials && (
-        <div style={{ marginBottom: 4 }}>
-          <span style={{ color: "#64748b" }}>SP: </span>
-          {[0, 1, 2, 3].map((i) => {
-            const rowId = memo.specials[i] ?? "";
-            const label = rowId ? resolveSpecialLabel(rowId) : "-";
-            const icon = rowId ? resolveSpecialIcon(rowId) : null;
-            return (
-              <span key={i} style={{ marginRight: 8 }}>
-                {i + 1}P{" "}
-                {icon && (
-                  <img
-                    src={icon}
-                    alt=""
-                    style={{ width: 18, height: 18, verticalAlign: "middle", display: "inline" }}
-                  />
-                )}{" "}
-                {label}
-              </span>
-            );
-          })}
-        </div>
+      {hasAnyWeaponOrSpecial && (
+        <table style={{ fontSize: 12, borderCollapse: "collapse", width: "100%", marginBottom: 8 }}>
+          <tbody>
+            {PLAYER_IDS.map((pid, i) => {
+              const weaponRowId = weaponRowIds[i] ?? "";
+              const weaponLabel = weaponRowId ? resolveWeaponLabel(weaponRowId) : "-";
+              const weaponIcon = weaponRowId ? resolveWeaponIcon(weaponRowId) : null;
+              const specialRowId = memo.specials[i] ?? "";
+              const specialLabel = specialRowId ? resolveSpecialLabel(specialRowId) : "-";
+              const specialIcon = specialRowId ? resolveSpecialIcon(specialRowId) : null;
+              return (
+                <Fragment key={pid}>
+                  <tr>
+                    <td
+                      rowSpan={2}
+                      style={{
+                        padding: "2px 6px",
+                        borderBottom: cellBorder,
+                        verticalAlign: "top",
+                        fontWeight: "bold",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {pid}
+                    </td>
+                    <td style={{ padding: "2px 4px", color: "#64748b", whiteSpace: "nowrap" }}>ブキ</td>
+                    <td style={{ padding: "2px 4px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        {weaponIcon && <img src={weaponIcon} alt="" style={{ width: 20, height: 20 }} />}
+                        {weaponLabel}
+                      </div>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td
+                      style={{ padding: "2px 4px", borderBottom: cellBorder, color: "#64748b", whiteSpace: "nowrap" }}
+                    >
+                      SP
+                    </td>
+                    <td style={{ padding: "2px 4px", borderBottom: cellBorder }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                        {specialIcon && <img src={specialIcon} alt="" style={{ width: 20, height: 20 }} />}
+                        {specialLabel}
+                      </div>
+                    </td>
+                  </tr>
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
       )}
 
       {hasSnatchers && (
@@ -823,7 +845,7 @@ function ExportStats({
   const hasDuplicateIds = idAgg.size < stats.length;
   const totalDefeatCount = stats.reduce((sum, s) => sum + s.defeatCount, 0);
 
-  const cellStyle = { padding: "3px 6px", borderBottom: "1px solid #e2e8f0" };
+  const cellStyle = { padding: "3px 6px", borderBottom: "1px solid #e2e8f0", whiteSpace: "nowrap" as const };
   const rightCell = { ...cellStyle, textAlign: "right" as const };
 
   return (
