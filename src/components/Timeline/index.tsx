@@ -64,17 +64,21 @@ export function Timeline({
   const spawnDisplayMap: ReadonlyMap<string, SpawnDisplayInfo> = useMemo(() => {
     const allSpawns = [...spawns].filter((s) => s.frameTime > 0).sort((a, b) => b.frameTime - a.frameTime);
 
-    // 方面別カウンター（DirectionId → 現在のカウント）
-    const directionCounters = new Map<number, number>();
+    let prevDirection: number | null = null;
+    let directionCounter = 0;
 
     const map = new Map<string, SpawnDisplayInfo>();
     for (let i = 0; i < allSpawns.length; i++) {
       const spawn = allSpawns[i]!;
       const directionName = directionPresets[spawn.direction] ?? `方面${spawn.direction + 1}`;
 
-      // 方面内通し番号（1始まり）
-      const currentCount = (directionCounters.get(spawn.direction) ?? 0) + 1;
-      directionCounters.set(spawn.direction, currentCount);
+      // 方面が前回と異なればカウンターリセット
+      if (spawn.direction !== prevDirection) {
+        directionCounter = 1;
+        prevDirection = spawn.direction;
+      } else {
+        directionCounter++;
+      }
 
       let targetLabel: string | null = null;
       let targetIcon: string | null = null;
@@ -89,7 +93,7 @@ export function Timeline({
         }
       }
 
-      map.set(spawn.id, { directionName, directionIndex: currentCount, targetLabel, targetIcon });
+      map.set(spawn.id, { directionName, directionIndex: directionCounter, targetLabel, targetIcon });
     }
     return map;
   }, [spawns, directionPresets, targetOrder, weapons, weaponMaster]);
