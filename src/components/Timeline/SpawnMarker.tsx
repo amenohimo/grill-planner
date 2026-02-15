@@ -4,6 +4,7 @@ import { MARKER_CENTER_RATIO, MARKER_SIZE, scaledFrameToPixelY } from "./coordin
 
 export interface SpawnDisplayInfo {
   directionName: string;
+  directionIndex: number;
   targetLabel: string | null;
   targetIcon: string | null;
 }
@@ -82,7 +83,7 @@ export function SpawnMarker({ spawn, displayInfo, displayMode, scaleX, scaleY }:
           lineHeight: 1.3,
         }}
       >
-        {seconds}s {dirName}
+        {seconds}s {dirName}({displayInfo?.directionIndex ?? "?"})
         {targetLabel && displayMode !== "icon" && <> {targetLabel}</>}
       </span>
 
