@@ -56,6 +56,7 @@ secondsToFrames(seconds) = round(seconds × 60)     // 整数に四捨五入
 | `SPAWNER_DECISION_FRAMES` | 184 | 3.07 | 撃破→スポナー決定 |
 | `SPAWN_WAIT_FRAMES` | 30 | 0.50 | スポナー決定→実体出現 |
 | `RESPAWN_FRAMES` | 214 | 3.57 | 撃破→実体出現（上2つの合計） |
+| `SPAWN_SUPPRESSION_FRAMES` | 184 | 3.07 | 湧き間隔の最小フレーム（グローバル湧き抑制） |
 | `FPS` | 60 | — | フレームレート |
 | `GAME_DURATION_SECONDS` | — | 100 | Wave制限時間 |
 | `GAME_DURATION_FRAMES` | 6000 | — | = 100 × 60 |
@@ -280,54 +281,90 @@ B枠:
   実体出現:     5160 − 214 = 4946F → 82.4秒
 ```
 
-### 6.4 キケン度の有効範囲
+### 6.4 キケン度の有効範囲と範囲外フォールバック
 
-有効範囲: 20% 〜 333%。範囲外の値は補間不可能でありエラーとする。
+UIで想定する有効範囲は 20% 〜 333%。ただし `getHazardConfig()` は範囲外の値でもエラーを投げず、**最も近い基準値にフォールバック**する。
+
+- **完全一致あり**: その基準値をそのまま使用する。
+- **下限未満（target < 20）**: 上下の基準値が同一（`lower === upper`、ともに先頭の 20% 設定）になるため、下限の基準値（20% 相当）をそのまま使用する。
+- **上限超過（target > 333）**: 同様に `lower === upper`（ともに末尾の 333% 設定）となり、上限の基準値（333% 相当）をそのまま使用する。
+- **基準データが空**: `DozerIncrSecond = 30`, `WaveChangeNum = 5`（キケン度100%相当）にフォールバックする。
+
+範囲内（基準値の中間）の場合のみ §6.2 の線形補間を適用する。
 
 ---
 
 ## 7. 湧き点の計算（calculateSpawns）
 
-すべての撃破点と設定から、全湧き点を計算する純粋関数。
+すべての撃破点と設定から、全湧き点を計算する純粋関数。処理は **Phase 1（各湧きの素の出現時刻 `rawFrameTime` を算出）** と **Phase 2（グローバル湧き抑制を適用して実際の出現時刻 `frameTime` を確定）** の2段構成。
 
 ### 7.1 アルゴリズム
 
 ```
 calculateSpawns(hazardConfig, directions, defeats) → SpawnPoint[]:
-  result = []
   sortedDirections = sort(directions, descending by frameTime)
 
+  // === Phase 1: 全湧きの rawFrameTime を計算 ===
+  pending = []
+
   // A枠 自動湧き
-  result.push({
+  pending.push({
     slot: 'A',
-    frameTime: GAME_DURATION_FRAMES,  // 6000
+    rawFrameTime: GAME_DURATION_FRAMES,  // 6000
     direction: sortedDirections[0].direction,
     isAuto: true
   })
 
   // B枠 自動湧き（存在する場合）
   if hazardConfig.bSlotOpenFrame >= 0:
-    result.push({
+    bSlotSpawnerDecision = hazardConfig.bSlotOpenFrame + SPAWN_WAIT_FRAMES
+    pending.push({
       slot: 'B',
-      frameTime: hazardConfig.bSlotOpenFrame,
-      direction: getDirectionAtTime(hazardConfig.spawnerDecisionFrame, sortedDirections),
+      rawFrameTime: hazardConfig.bSlotOpenFrame,
+      direction: getDirectionAtTime(bSlotSpawnerDecision, sortedDirections),
       isAuto: true
     })
 
   // 撃破点から湧き点を生成
   for each defeat in defeats:
     spawnerDecisionTime = defeat.frameTime − SPAWNER_DECISION_FRAMES
-    spawnTime = defeat.frameTime − RESPAWN_FRAMES
-    result.push({
+    rawSpawnTime = defeat.frameTime − RESPAWN_FRAMES
+    pending.push({
       slot: defeat.slot,
-      frameTime: spawnTime,
+      rawFrameTime: rawSpawnTime,
       direction: getDirectionAtTime(spawnerDecisionTime, sortedDirections),
       isAuto: false,
       defeatId: defeat.id
     })
 
+  // === Phase 2: 降順ソート → グローバル湧き抑制（§7.3） ===
+  pending.sort(descending by rawFrameTime;
+               同フレームなら slot 'A' を先に)
+
+  result = []
+  lastSpawnFrame = +∞
+
+  for p in pending:
+    suppressionLimit = lastSpawnFrame − SPAWN_SUPPRESSION_FRAMES
+    isSuppressed = p.rawFrameTime > suppressionLimit
+    actualFrameTime = isSuppressed ? suppressionLimit : p.rawFrameTime
+
+    result.push({
+      slot: p.slot,
+      frameTime: actualFrameTime,
+      direction: p.direction,
+      isAuto: p.isAuto,
+      defeatId: p.defeatId,
+      // 抑制された湧きのみ付与
+      ...(isSuppressed ? { isSuppressed: true, rawFrameTime: p.rawFrameTime } : {})
+    })
+
+    lastSpawnFrame = actualFrameTime
+
   return result
 ```
+
+**注意**: B枠自動湧きの方面判定には、`hazardConfig` に含まれないため、`bSlotOpenFrame + SPAWN_WAIT_FRAMES`（＝B枠スポナー決定時刻）をその場で算出して使用する。`direction` は内部的には数値の `DirectionId`（`0 | 1 | 2`）であり、UI上の方面名はこの数値に対応付けられる。
 
 ### 7.2 計算の連鎖例
 
@@ -353,6 +390,31 @@ calculateSpawns(hazardConfig, directions, defeats) → SpawnPoint[]:
   → スポナー決定: 3600−184 = 3416F(56.9秒) → 56.8秒区間 → "左"
   → 湧き: 3600−214 = 3386F(56.4秒)
   → B枠 湧き: 3386F(56.4秒) 左
+```
+
+### 7.3 グローバル湧き抑制（SPAWN_SUPPRESSION_FRAMES）
+
+A枠・B枠を**横断して**、湧きの実際の出現は前の湧きから最低 `SPAWN_SUPPRESSION_FRAMES`（184F = 3.07秒）の間隔が空くよう強制される。複数の湧きが互いに `SPAWN_SUPPRESSION_FRAMES` 未満の間隔で発生しようとすると、**時間的に後（より未来＝frameTimeが小さい側）の湧きが強制的に遅延**される。
+
+この抑制は枠ごとではなく、A枠・B枠を合わせた全湧きに対してグローバルに適用される点に注意（Phase 2 で `lastSpawnFrame` を枠を区別せず1本のチェーンとして引き継ぐ）。
+
+**規則（実装どおり）**:
+
+1. 全湧き（A枠自動・B枠自動・撃破由来）を `rawFrameTime` の降順（過去→未来）にソートする。同一 `rawFrameTime` の場合は A枠を先に処理する。
+2. 直前に確定した出現フレームを `lastSpawnFrame`（初期値 +∞）とし、各湧きについて `suppressionLimit = lastSpawnFrame − SPAWN_SUPPRESSION_FRAMES` を求める。
+3. `rawFrameTime > suppressionLimit`（＝直前の湧きに対して184F以内＝過去寄りすぎる）なら**抑制対象**とし、実際の出現フレームを `suppressionLimit` に切り下げる。そうでなければ `rawFrameTime` をそのまま使用する。
+4. 確定した出現フレームを次の `lastSpawnFrame` として引き継ぐ。
+
+**SpawnPoint への記録**: 抑制された湧きには `isSuppressed: true` と、抑制前の素の出現時刻 `rawFrameTime` が付与される。抑制されなかった湧きにはこれらのフィールドは付かない（`frameTime === rawFrameTime`）。
+
+**計算例**: A枠自動湧き 6000F の直後、撃破由来の湧きが素の出現時刻 5900F（=6000−SPAWN_SUPPRESSION_FRAMES の 5816F より過去寄り）に発生しようとした場合:
+
+```
+lastSpawnFrame = 6000
+suppressionLimit = 6000 − 184 = 5816
+rawFrameTime(5900) > 5816 → 抑制対象
+actualFrameTime = 5816   （5900 → 5816 に切り下げ）
+→ SpawnPoint { frameTime: 5816, isSuppressed: true, rawFrameTime: 5900 }
 ```
 
 ---

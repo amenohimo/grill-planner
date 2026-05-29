@@ -170,11 +170,13 @@ import { getWeaponIconPath, getSpecialIconPath } from '@/constants';
 
 - 形式: JSON（UTF-8）
 - 拡張子: `.json`
-- ファイル名: `grill-planner-{YYYYMMDD-HHmmss}.json`（自動生成）
+- ファイル名: `grill-plan-{YYYYMMDD}-{HHmm}.json`（自動生成。秒は含まない）
 
 ### 3.2 スキーマ（version: 1）
 
 ```typescript
+type DirectionId = 0 | 1 | 2;  // directionPresets 配列のインデックス
+
 interface SaveDataV1 {
   version: 1;
   createdAt: string;  // ISO 8601 (例: "2026-02-11T12:00:00.000Z")
@@ -182,7 +184,7 @@ interface SaveDataV1 {
     hazardLevel: number;
     directions: Array<{
       frameTime: number;
-      direction: string;
+      direction: DirectionId;  // 0|1|2（directionPresets のインデックス）
     }>;
     defeats: Array<{
       id: string;
@@ -191,18 +193,22 @@ interface SaveDataV1 {
     }>;
     memo: {
       scenarioCode: string;
-      weapons: number[];
-      specials: number[];
-      targetOrder: {
-        mode: 'weapon' | 'player';
-        order: string[];
-      };
+      weapons: string[];   // RowId の配列（例: "Shooter_Normal"）
+      specials: string[];  // RowId の配列（例: "Sp_NiceBall"）
+      targetOrder: string[];  // フラットな配列。各要素は "1P"|"2P"|"3P"|"4P"|"-"
       snatchers: string;
+      freeNote: string;    // 自由メモ
     };
-    displayMode: 'icon' | 'text' | 'both';
+    directionPresets: [string, string, string];  // 方面名プリセット（例: ["左", "正面", "右"]）
   };
 }
 ```
+
+`direction` は方面名の文字列ではなく、`directionPresets` 配列へのインデックス（`DirectionId = 0 | 1 | 2`）として保存する。実際の方面名は `directionPresets` から解決する。
+
+`memo.weapons` / `memo.specials` は `weapon.json` / `special.json` の `RowId`（文字列）で保存する。旧形式（数値の `Id`）の保存ファイルも、インポート時（`importScenarioFromFileObject`）に `Id → RowId` へ自動変換して読み込む（後方互換）。
+
+`memo.targetOrder` はフラットな `string[]`。旧形式の構造化オブジェクト `{ mode, order }` でインポートされた場合は、`order` 配列のみを抽出してフラットな配列に変換する（後方互換）。
 
 ### 3.3 サンプルデータ
 
@@ -213,13 +219,13 @@ interface SaveDataV1 {
   "scenario": {
     "hazardLevel": 200,
     "directions": [
-      { "frameTime": 6000, "direction": "右" },
-      { "frameTime": 5383, "direction": "左" },
-      { "frameTime": 4766, "direction": "中央" },
-      { "frameTime": 4149, "direction": "右" },
-      { "frameTime": 3531, "direction": "左" },
-      { "frameTime": 2914, "direction": "中央" },
-      { "frameTime": 2297, "direction": "右" }
+      { "frameTime": 6000, "direction": 2 },
+      { "frameTime": 5383, "direction": 0 },
+      { "frameTime": 4766, "direction": 1 },
+      { "frameTime": 4149, "direction": 2 },
+      { "frameTime": 3531, "direction": 0 },
+      { "frameTime": 2914, "direction": 1 },
+      { "frameTime": 2297, "direction": 2 }
     ],
     "defeats": [
       { "id": "d1", "slot": "A", "frameTime": 5820 },
@@ -228,15 +234,13 @@ interface SaveDataV1 {
     ],
     "memo": {
       "scenarioCode": "テスト01",
-      "weapons": [40, 2010, 4010, 1010],
-      "specials": [20006, 20012, 20014, 20018],
-      "targetOrder": {
-        "mode": "weapon",
-        "order": ["40", "2010", "4010", "1010"]
-      },
-      "snatchers": "1体"
+      "weapons": ["Shooter_Normal", "Roller_Normal", "Charger_Normal", "Slosher_Normal"],
+      "specials": ["Sp_NiceBall", "Sp_Chariot", "Sp_TripleTornado", "Sp_Pogo"],
+      "targetOrder": ["1P", "2P", "3P", "4P"],
+      "snatchers": "1体",
+      "freeNote": ""
     },
-    "displayMode": "both"
+    "directionPresets": ["左", "正面", "右"]
   }
 }
 ```
@@ -250,13 +254,15 @@ interface SaveDataV1 {
 | `version` | `=== 1`（将来のバージョンは非対応として拒否） |
 | `createdAt` | 文字列。空でも許容（必須チェックのみ） |
 | `hazardLevel` | 整数、20 以上 333 以下 |
-| `directions` | 配列。各要素に `frameTime`(number) と `direction`(string) が存在 |
+| `directions` | 配列。各要素に `frameTime`(number) と `direction`(number\|string) が存在。`direction` が旧形式の文字列の場合は `directionPresets` のインデックスへ変換（見つからなければ `1`） |
 | `defeats` | 配列。各要素に `id`(string), `slot`('A'\|'B'), `frameTime`(number) が存在 |
 | `defeats[].frameTime` | 0 以上 6000 以下 |
 | `memo` | オブジェクト。省略された場合はデフォルト値で補完 |
-| `memo.weapons` | 配列（空配列を許容） |
-| `memo.specials` | 配列（空配列を許容） |
-| `displayMode` | `'icon'` \| `'text'` \| `'both'` のいずれか。省略時は `'both'` |
+| `memo.weapons` | 配列（空配列を許容）。`string[]`（RowId）。数値要素は `Id → RowId` へ自動変換 |
+| `memo.specials` | 配列（空配列を許容）。`string[]`（RowId）。数値要素は `Id → RowId` へ自動変換 |
+| `memo.targetOrder` | `string[]`。各要素は `"1P"\|"2P"\|"3P"\|"4P"\|"-"`（不正値は `"-"`）。旧形式 `{ mode, order }` は `order` のみ抽出 |
+| `memo.freeNote` | 文字列。省略時は空文字で補完 |
+| `directionPresets` | 長さ 3 の配列。不正・省略時は `["左", "正面", "右"]` で補完 |
 
 バリデーション通過後、さらに `calculateSpawns` + 撃破点の整合性チェックを行い、不整合な撃破点があれば警告メッセージと共にそれらを除外してインポートする（全拒否ではなく部分インポート）。
 

@@ -158,14 +158,16 @@ Reducer + Context による状態管理が動作し、画面から操作でき�
 | ファイル | 内容 |
 |---------|------|
 | `src/components/Timeline/index.tsx` | タイムラインコンテナ |
+| `src/components/Timeline/coordinates.ts` | 座標変換ユーティリティ・寸法定数・方面カラー |
 | `src/components/Timeline/TimeAxis.tsx` | 時間軸目盛り |
 | `src/components/Timeline/DirectionBands.tsx` | 方面区間の背景帯 |
-| `src/components/Timeline/DirectionLabels.tsx` | 方面ラベル（編集可能） |
+| `src/components/Timeline/DirectionLabels.tsx` | 方面ラベル（ホバーでプリセット選択） |
 | `src/components/Timeline/GrillSlotLane.tsx` | A枠/B枠のレーン |
 | `src/components/Timeline/SpawnMarker.tsx` | 湧き点マーカー |
 | `src/components/Timeline/DefeatMarker.tsx` | 撃破点マーカー |
 | `src/components/Timeline/ActivePeriod.tsx` | 活動期間バー |
 | `src/components/Timeline/RespawnConnector.tsx` | 撃破→湧き接続線 |
+| `src/components/Timeline/ElapsedTimeLabel.tsx` | ホバー時の経過時刻ラベル |
 | `src/hooks/useTimelineDrag.ts` | ドラッグ操作フック |
 | `src/hooks/useValidation.ts` | バリデーション呼び出しフック |
 
@@ -201,8 +203,8 @@ Reducer + Context による状態管理が動作し、画面から操作でき�
 1. `DefeatMarker.tsx`: 右クリックハンドラ
 2. 影響を受ける後続撃破点の連動削除
 
-**Step 4-6: 方面ラベル編集**
-1. `DirectionLabels.tsx`: クリック → input 表示 → Enter/Escape/blur で確定
+**Step 4-6: 方面プリセット割当**
+1. `DirectionLabels.tsx`: 区間ホバー → 3プリセット選択UI（`ButtonGroup`）表示 → 選択で区間の `directionId` を更新（`UPDATE_DIRECTION` アクション）。プリセット名自体の編集は Phase 5 のメモ欄で行う
 
 ### 完了条件
 
@@ -216,7 +218,7 @@ Reducer + Context による状態管理が動作し、画面から操作でき�
 ### 落とし穴
 
 - **座標変換**: フレーム↔ピクセルの変換を間違えやすい。時間は上→下（100→0）、ピクセルは上→下（0→1600）。`frameToPixelY` 関数を1つ定義して統一的に使う
-- **ドラッグとクリックの区別**: mousedown → mousemove の移動距離が5px未満ならクリック扱い。旧プロジェクトではこの区別に苦慮した
+- **ドラッグとクリックの区別**: mousedown → mousemove の移動距離が閾値未満ならクリック扱い。旧プロジェクトではこの区別に苦慮した
 - **ドラッグ中のイベント**: mousemove/mouseup は `window` に登録する（マーカーからカーソルが外れてもドラッグ継続のため）
 - **右クリック**: `onContextMenu` で `e.preventDefault()` を忘れるとブラウザのコンテキストメニューが出る
 - **ポインターイベント**: 重なるマーカー（湧き点と撃破点が近い場合）のクリック判定。z-index で撃破点を前面に配置
@@ -234,38 +236,32 @@ Header、SettingsPanel、統計パネルが動作する。
 
 | ファイル | 内容 |
 |---------|------|
-| `src/components/Header/index.tsx` | タイトル + ファイル操作ボタン |
-| `src/components/Settings/index.tsx` | SettingsPanel コンテナ（折りたたみ） |
+| `src/components/Header.tsx` | タイトル + ファイル操作ボタン（エクスポート/インポート） |
+| `src/components/ButtonGroup.tsx` | 汎用トグルボタングループ（表示モード・方面プリセット選択等で共用） |
 | `src/components/Settings/HazardLevelInput.tsx` | キケン度スライダー + 数値入力 |
-| `src/components/Settings/MemoSection.tsx` | メモ情報の折りたたみコンテナ |
-| `src/components/Settings/WeaponSelector.tsx` | ブキ選択ドロップダウン |
-| `src/components/Settings/SpecialSelector.tsx` | SP選択ドロップダウン |
-| `src/components/Settings/TargetOrderEditor.tsx` | ターゲット順設定 |
-| `src/components/Settings/SnatchersInput.tsx` | タマヒロイメモ |
-| `src/components/Settings/ScenarioCodeInput.tsx` | シナリオコードメモ |
+| `src/components/Settings/MemoSection.tsx` | メモ情報の折りたたみコンテナ（シナリオコード・タマヒロイ方向・方面プリセット名・ブキ/SP選択・自由メモを内包） |
 | `src/components/Settings/DisplayModeToggle.tsx` | 表示モード切替 |
-| `src/components/Statistics/index.tsx` | 統計パネルコンテナ |
-| `src/components/Statistics/DirectionStatsTable.tsx` | 統計テーブル |
-| `src/components/shared/Button.tsx` | 汎用ボタン |
-| `src/components/shared/Input.tsx` | 汎用テキスト入力 |
-| `src/components/shared/Select.tsx` | 汎用セレクトボックス |
+| `src/components/Statistics/DirectionStatsTable.tsx` | 方面別統計テーブル |
+| `src/components/Statistics/TargetOrderTable.tsx` | ターゲット順テーブル（シフト操作対応） |
+| `src/hooks/useZoom.ts` | ズーム・方面カラーテーマ・表示モードの各フック（localStorage 永続化） |
+
+> 設定UIは独立した SettingsPanel コンテナを持たず、`ScenarioView.tsx` の設定パネル領域に直接配置している。ブキ/SP/方面プリセット名等は個別コンポーネントに分割せず `MemoSection.tsx` に集約している。汎用 Button/Input/Select は作らず、必要箇所でネイティブ要素または `ButtonGroup` を使う。
 
 ### 実装順序
 
-1. shared コンポーネント（Button, Input, Select）
+1. `ButtonGroup`（共用トグル）
 2. Header（タイトルのみ、ファイル操作は Phase 6）
 3. HazardLevelInput → キケン度変更の動作確認
-4. StatisticsPanel + DirectionStatsTable
-5. MemoSection 内の各コンポーネント
-6. DisplayModeToggle
-7. SettingsPanel の折りたたみ
+4. DirectionStatsTable / TargetOrderTable
+5. MemoSection（シナリオコード・方面プリセット名・ブキ/SP選択・自由メモ）
+6. DisplayModeToggle、ズーム・方面カラーテーマ切替（`useZoom.ts`）
 
 ### 完了条件
 
 - キケン度を変更すると方面区間数が変わり、タイムラインと統計が連動更新される
-- ブキ・SP選択が動作し、アイコンが表示される
+- ブキ・SP選択（rowIdで選択）が動作し、アイコンが表示される
 - 統計テーブルが撃破点の追加・削除に連動して更新される
-- 折りたたみの開閉が動作する
+- メモ欄の折りたたみ、ズーム・方面カラーテーマ・表示モードの切替が動作する
 
 ### 落とし穴
 
@@ -290,12 +286,14 @@ Header、SettingsPanel、統計パネルが動作する。
 ### 実装指示
 
 - `exportScenario`: `ScenarioData` → `SaveData`（version, createdAt 付与）→ JSON文字列 → Blob → ダウンロード
-- `importScenario`: File → JSON.parse → バリデーション → `ScenarioData`
+- `importScenarioFromFile`: ファイル選択ダイアログ → File → JSON.parse → バリデーション → `ScenarioData`
+- `importScenarioFromFileObject`: ドラッグ&ドロップ等で得た File オブジェクトを直接受け取り、同様に検証して `ScenarioData` を返す
 - バリデーション項目:
   - `version` フィールドの存在と値チェック
   - `hazardLevel` が 20〜333 の範囲内
   - `defeats` の各要素が正しい型を持つ
   - `directions` の各要素が正しい型を持つ
+  - メモの `weapons` / `specials` の `rowId` がマスターに存在するか確認（不一致は警告として返す。インポート関数は `weapons` / `specials` マスターを引数に取る）
   - インポート後に `calculateSpawns` + バリデーションを実行し、不整合がないことを確認
 
 ### 完了条件
@@ -307,13 +305,13 @@ Header、SettingsPanel、統計パネルが動作する。
 
 ### Header 更新
 
-Phase 5 で仮実装した Header に保存・読込ボタンを追加。
+Phase 5 で仮実装した Header にエクスポート・インポートボタンを追加。さらに `ScenarioView` 側でファイルのドラッグ&ドロップ読込にも対応する（`importScenarioFromFileObject` を使用）。
 
 ### 落とし穴
 
 - **ファイルダウンロード**: `URL.createObjectURL` で作成した URL は `URL.revokeObjectURL` で解放する
 - **JSON.parse のエラーハンドリング**: try-catch で囲み、SyntaxError を捕捉
-- **型ガード**: `importScenario` の戻り値は型が保証されない。ランタイムで各フィールドの存在と型をチェックする関数を実装
+- **型ガード**: `JSON.parse` の結果は型が保証されない。ランタイムで各フィールドの存在と型をチェックする関数（`parseAndValidate`）を実装し、`ImportResult` で成否・警告を返す
 - **readonly 配列**: `SaveData` → `ScenarioData` の変換時、`readonly` の不一致に注意
 
 ---
@@ -339,16 +337,12 @@ UI の磨き込み、エッジケースの修正、ビルド確認。
 7. **GitHub Actions 設定**: `.github/workflows/deploy.yml` を 04_TECH_STACK §3.3 の通り作成
 8. **README.md**: プロジェクト概要、使い方、開発方法を記述
 
-### テスト（将来用の準備）
+### テスト
 
-Vitest の導入は本フェーズで行うが、テストの網羅的な記述は将来の拡張とする。最低限以下のテストを作成:
+Vitest を導入する（`npm install -D vitest`、`package.json` に `"test": "vitest run"`）。テストの網羅的な記述は将来の拡張とし、最低限以下を `src/__tests__/` に作成:
 
-- `calculations.test.ts`: `framesToSeconds`, `secondsToFrames`, `getHazardConfig`, `calculateSpawns` の基本ケース
-- `validation.test.ts`: 02_GAME_MECHANICS §8.4 の例をテストケース化
-
-```bash
-npm install -D vitest
-```
+- `src/__tests__/calculations.test.ts`: `framesToSeconds`, `secondsToFrames`, `getHazardConfig`, `calculateSpawns` の基本ケース
+- `src/__tests__/validation.test.ts`: 02_GAME_MECHANICS §8.4 の例をテストケース化
 
 ```typescript
 // vite.config.ts に追加
@@ -356,7 +350,7 @@ export default defineConfig({
   // ...
   test: {
     globals: true,
-    environment: 'jsdom',
+    environment: 'node',
   },
 });
 ```

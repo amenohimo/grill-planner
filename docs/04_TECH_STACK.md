@@ -6,11 +6,12 @@
 
 | 技術 | バージョン | 用途 |
 |------|-----------|------|
-| React | 19.x (19.2.3+) | UIライブラリ |
-| TypeScript | 5.9.x | 型安全性 |
-| Vite | 7.x (7.3.1+) | ビルドツール |
-| Tailwind CSS | 4.x (4.1+) | スタイリング |
-| Vitest | 最新安定版 | テストフレームワーク（将来用） |
+| React | 19.x (^19.2.0) | UIライブラリ |
+| TypeScript | 5.9.x (~5.9.3) | 型安全性 |
+| Vite | 7.x (^7.3.1) | ビルドツール |
+| Tailwind CSS | 4.x (^4.1.18) | スタイリング |
+| Vitest | 4.x (^4.0.18) | テストフレームワーク |
+| Biome | 2.3.14 | Linter / Formatter |
 | GitHub Pages | — | ホスティング |
 
 ### 1.1 React 19.x
@@ -109,7 +110,11 @@ v3 → v4 で一部ユーティリティクラス名が変更されている。�
 
 ### 1.5 Vitest
 
-テストフレームワーク。実装フェーズ7（仕上げ）で導入予定。Vite との統合が最良のため選定。
+テストフレームワーク。Vite との統合が最良のため選定。`vite.config.ts` の `test` 設定で `globals: true` / `environment: "node"` を指定している。テスト実行は `npm test`（`vitest run`）。
+
+### 1.6 Biome
+
+Linter と Formatter を兼ねる単一ツール。従来の **ESLint + Prettier を置き換える**。設定は後述（4.2 参照）。
 
 ---
 
@@ -266,6 +271,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -273,7 +279,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: "pages"
+  group: pages
   cancel-in-progress: false
 
 jobs:
@@ -281,22 +287,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: 20
+          cache: npm
+
       - run: npm ci
+
+      - run: npx @biomejs/biome ci .
+
       - run: npm run build
+
+      - run: npx vitest run
+
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
   deploy:
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
@@ -334,27 +348,62 @@ public/img/special/20006.png → ナイスダマ (Id: 20006)
 
 デバッグ・動作確認には **Playwright MCP** を使用し、Claude Code からブラウザ操作による自動テスト・目視確認を実施する。
 
-### 4.2 ESLint
+### 4.2 Biome（Linter / Formatter）
 
-Vite テンプレートに含まれる ESLint 設定をベースに、以下を追加:
+Linter と Formatter を **Biome** に一本化している（従来想定していた ESLint + Prettier を置き換え）。設定は `biome.json` に集約する。
 
-- `@typescript-eslint/no-explicit-any: error`
-- `@typescript-eslint/no-unused-vars: error`
+主要な設定:
 
-### 4.3 Prettier（任意）
-
-コードフォーマッター。Claude Code の出力の一貫性を保つために推奨。
+- Formatter: スペースインデント幅2、行幅120、ダブルクオート、末尾カンマ `all`、セミコロン必須
+- Linter: `recommended` を有効化したうえで以下を追加・調整
+  - `correctness`: `noUnusedImports: error`、`noUnusedVariables: error`、`useExhaustiveDependencies: warn`
+  - `style`: `useImportType: error`、`noNonNullAssertion: warn`
+  - `suspicious`: `noExplicitAny: error`
+- assist: `organizeImports` を有効化（import の自動整理）
+- 対象外: `dist`、`public/data`、`public/img`
 
 ```json
-// .prettierrc
+// biome.json（主要部分）
 {
-  "semi": true,
-  "singleQuote": true,
-  "tabWidth": 2,
-  "trailingComma": "all",
-  "printWidth": 100
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 120
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "double",
+      "trailingCommas": "all",
+      "semicolons": "always"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
+      "style": { "useImportType": "error" },
+      "suspicious": { "noExplicitAny": "error" }
+    }
+  }
 }
 ```
+
+npm スクリプト:
+
+```bash
+npm run lint      # biome check .          （チェックのみ）
+npm run lint:fix  # biome check --write .  （自動修正）
+npm run format    # biome format --write . （フォーマットのみ）
+npm run lint:ci   # biome ci .             （CI 用）
+```
+
+コミット前には `npm run lint:fix`（または `npx @biomejs/biome check --write .`）を実行する。
 
 ---
 
@@ -365,17 +414,24 @@ Vite テンプレートに含まれる ESLint 設定をベースに、以下を�
 ```json
 {
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.0",
-    "vite": "^7.0.0",
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/vite": "^4.0.0",
-    "@vitejs/plugin-react": "^4.0.0"
+    "@biomejs/biome": "2.3.14",
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/node": "^24.10.1",
+    "@types/react": "^19.2.7",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^5.1.1",
+    "tailwindcss": "^4.1.18",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   }
 }
 ```
+
+注: `@biomejs/biome` は意図的に完全固定（キャレットなし）している。`typescript` はパッチ更新のみ許容するチルダ指定。
 
 `package-lock.json` をコミットし、CI/CD では `npm ci` を使用して再現性を確保する。

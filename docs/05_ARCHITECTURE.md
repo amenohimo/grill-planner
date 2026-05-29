@@ -20,22 +20,24 @@ export type SecondTime = number;
 /** グリル枠の識別子 */
 export type GrillSlot = 'A' | 'B';
 
-/** 方面名。ユーザー入力による任意文字列。 */
+/** 方面名。ユーザー入力による任意文字列（プリセット名に使用）。 */
 export type DirectionName = string;
 
-/** ターゲットモード */
-export type TargetMode = 'weapon' | 'player';
+/** 方面の内部ID（プリセット配列 directionPresets のインデックス） */
+export type DirectionId = 0 | 1 | 2;
 
 /** 表示モード */
 export type DisplayMode = 'icon' | 'text' | 'both';
 ```
+
+方面はかつて任意文字列（`DirectionName`）で持っていたが、現在は `directionPresets`（3要素の名前配列）への**インデックス `DirectionId = 0 | 1 | 2`** で保持する。表示時にプリセット名へ解決する。`DirectionName` 型は残っているが、プリセット名（文字列）の用途に限定される。
 
 ### 1.2 ゲームオブジェクト型
 
 ```typescript
 // types/game.ts
 
-import type { FrameTime, GrillSlot, DirectionName } from './base';
+import type { DirectionId, FrameTime, GrillSlot } from './base';
 
 /** 撃破点 — ユーザーが配置する */
 export interface DefeatPoint {
@@ -49,15 +51,17 @@ export interface SpawnPoint {
   readonly id: string;           // 自動湧き: 'auto-a' | 'auto-b', 撃破由来: 撃破点のID
   readonly slot: GrillSlot;
   readonly frameTime: FrameTime;
-  readonly direction: DirectionName;
+  readonly direction: DirectionId;
   readonly isAuto: boolean;
   readonly defeatId?: string;    // 撃破由来の場合、対応する撃破点のID
+  readonly isSuppressed?: boolean; // 抑制された湧きか（湧き抑制フレーム内）
+  readonly rawFrameTime?: FrameTime; // 補正前の生フレーム時刻
 }
 
 /** 方面設定 — 1つの方面切替区間 */
 export interface DirectionSetting {
   readonly frameTime: FrameTime; // この時刻から有効
-  readonly direction: DirectionName;
+  readonly direction: DirectionId;
 }
 ```
 
@@ -99,22 +103,22 @@ export type HazardConfigData = readonly HazardConfigEntry[];
 ```typescript
 // types/computed.ts
 
-import type { FrameTime } from './base';
+import type { DirectionId, FrameTime } from './base';
 
 /** 補間後のキケン度設定 */
 export interface InterpolatedHazardConfig {
   readonly dozerIncrSecond: number;
   readonly waveChangeNum: number;
   readonly directionInterval: number;    // 72 / waveChangeNum
-  readonly bSlotSpawnerDecisionFrame: FrameTime;
-  readonly bSlotOpenFrame: FrameTime;    // B枠の実体出現フレーム
+  readonly bSlotOpenFrame: FrameTime;    // B枠の実体出現フレーム（負値ならB枠なし）
 }
 
 /** 方面別統計 */
 export interface DirectionStats {
   readonly directionIndex: number;       // 何番目の区間か（0始まり）
-  readonly direction: string;
-  readonly count: number;
+  readonly direction: DirectionId;
+  readonly spawnCount: number;           // この区間に属する湧き数
+  readonly defeatCount: number;          // この区間で撃破された数
 }
 ```
 
@@ -123,19 +127,16 @@ export interface DirectionStats {
 ```typescript
 // types/scenario.ts
 
-import type { GrillSlot, FrameTime, DirectionName, TargetMode, DisplayMode } from './base';
 import type { DefeatPoint, DirectionSetting } from './game';
 
 /** メモ情報（計算には無関係） */
 export interface ScenarioMemo {
   readonly scenarioCode: string;
-  readonly weapons: readonly number[];     // WeaponMaster.id の配列（4要素）
-  readonly specials: readonly number[];    // SpecialMaster.id の配列（4要素）
-  readonly targetOrder: {
-    readonly mode: TargetMode;
-    readonly order: readonly string[];
-  };
+  readonly weapons: readonly string[];     // WeaponMaster.rowId の配列
+  readonly specials: readonly string[];    // SpecialMaster.rowId の配列
+  readonly targetOrder: readonly string[]; // フラットなターゲット列（'1P'..'4P' | '-'）
   readonly snatchers: string;
+  readonly freeNote: string;               // 自由記入メモ
 }
 
 /** シナリオデータ（状態管理の中心） */
@@ -144,9 +145,17 @@ export interface ScenarioData {
   readonly directions: readonly DirectionSetting[];
   readonly defeats: readonly DefeatPoint[];
   readonly memo: ScenarioMemo;
-  readonly displayMode: DisplayMode;
+  readonly directionPresets: readonly [string, string, string]; // 方面名プリセット（既定: 左/正面/右）
 }
 ```
+
+**主な変更点（旧設計との差分）**
+
+- `memo.weapons` / `memo.specials` は `number[]`（id）ではなく **`string[]`（rowId）**。
+- `memo.targetOrder` は `{ mode, order }` オブジェクトではなく**フラットな `string[]`**（`TargetMode` 自体が廃止）。値は `'1P'..'4P'` または `'-'`。
+- `memo.freeNote`（自由記入欄）が追加。
+- `directionPresets`（`[string, string, string]`）が `ScenarioData` 直下に追加。`DirectionId` はこの配列のインデックスに解決される。
+- `displayMode` は `ScenarioData` に含まれない。`zoom` / `colorTheme` と同様に**フック側（localStorage 永続化）で管理する UI 状態**であり、保存ファイルには含めない（§3.7 参照）。
 
 ### 1.6 保存データ型
 
@@ -184,10 +193,11 @@ export type * from './save';
 
 export const SPAWNER_DECISION_FRAMES = 184 as const;
 export const SPAWN_WAIT_FRAMES = 30 as const;
-export const RESPAWN_FRAMES = (SPAWNER_DECISION_FRAMES + SPAWN_WAIT_FRAMES) as const; // 214
+export const RESPAWN_FRAMES = 214 as const; // SPAWNER_DECISION_FRAMES + SPAWN_WAIT_FRAMES
 export const FPS = 60 as const;
 export const GAME_DURATION_SECONDS = 100 as const;
-export const GAME_DURATION_FRAMES = (GAME_DURATION_SECONDS * FPS) as const; // 6000
+export const GAME_DURATION_FRAMES = 6000 as const; // GAME_DURATION_SECONDS * FPS
+export const SPAWN_SUPPRESSION_FRAMES = 184 as const; // 湧き抑制フレーム
 export const DIRECTION_SWITCH_BASE = 72 as const;
 
 export const GRILL_SLOTS = ['A', 'B'] as const;
@@ -196,7 +206,6 @@ export const PLAYER_IDS = ['1P', '2P', '3P', '4P'] as const;
 export const MIN_HAZARD_LEVEL = 20 as const;
 export const MAX_HAZARD_LEVEL = 333 as const;
 export const DEFAULT_HAZARD_LEVEL = 100 as const;
-export const DEFAULT_DISPLAY_MODE = 'both' as const;
 
 /** アイコンパス生成 */
 export const getWeaponIconPath = (id: number): string =>
@@ -228,8 +237,8 @@ export const DATA_PATHS = {
 ```typescript
 // hooks/scenarioReducer.ts
 
-import type { ScenarioData, DefeatPoint, DirectionSetting, DirectionName,
-              TargetMode, DisplayMode, FrameTime } from '@/types';
+import type { ScenarioData, DefeatPoint, DirectionSetting, DirectionId,
+              FrameTime } from '@/types';
 
 export type ScenarioAction =
   // キケン度
@@ -237,29 +246,34 @@ export type ScenarioAction =
 
   // 方面
   | { type: 'SET_DIRECTIONS'; payload: readonly DirectionSetting[] }
-  | { type: 'UPDATE_DIRECTION_NAME'; payload: { index: number; name: DirectionName } }
+  | { type: 'UPDATE_DIRECTION'; payload: { index: number; directionId: DirectionId } }
 
   // 撃破点
   | { type: 'ADD_DEFEAT'; payload: DefeatPoint }
   | { type: 'MOVE_DEFEAT'; payload: { id: string; frameTime: FrameTime } }
   | { type: 'REMOVE_DEFEAT'; payload: string }              // id
   | { type: 'REMOVE_DEFEATS'; payload: readonly string[] }  // ids
+  | { type: 'MOVE_DEFEATS_BATCH'; payload: ReadonlyArray<{ id: string; frameTime: FrameTime }> }
 
   // メモ
   | { type: 'SET_SCENARIO_CODE'; payload: string }
-  | { type: 'SET_WEAPON'; payload: { index: number; weaponId: number } }
-  | { type: 'SET_SPECIAL'; payload: { index: number; specialId: number } }
-  | { type: 'SET_TARGET_MODE'; payload: TargetMode }
+  | { type: 'SET_WEAPON'; payload: { index: number; rowId: string } }
+  | { type: 'SET_SPECIAL'; payload: { index: number; rowId: string } }
   | { type: 'SET_TARGET_ORDER'; payload: readonly string[] }
+  | { type: 'SET_TARGET_ORDER_ENTRY'; payload: { index: number; value: string } }
+  | { type: 'SHIFT_TARGET_ORDER'; payload: 'up' | 'down' }
   | { type: 'SET_SNATCHERS'; payload: string }
+  | { type: 'SET_FREE_NOTE'; payload: string }
 
-  // UI
-  | { type: 'SET_DISPLAY_MODE'; payload: DisplayMode }
+  // プリセット
+  | { type: 'SET_DIRECTION_PRESET'; payload: { index: 0 | 1 | 2; name: string } }
 
   // 全体
   | { type: 'LOAD_SCENARIO'; payload: ScenarioData }
   | { type: 'RESET_SCENARIO' };
 ```
+
+**変更点**: `UPDATE_DIRECTION_NAME` は `UPDATE_DIRECTION`（`directionId` を渡す）に変更。`SET_WEAPON`/`SET_SPECIAL` のペイロードは `weaponId`/`specialId`（number）ではなく **`rowId`（string）**。`SET_TARGET_MODE` と `SET_DISPLAY_MODE` は廃止（前者は targetOrder のフラット化、後者はフック管理化による）。撃破の一括移動 `MOVE_DEFEATS_BATCH`、ターゲット列の個別編集 `SET_TARGET_ORDER_ENTRY`・行シフト `SHIFT_TARGET_ORDER`、`SET_FREE_NOTE`、方面プリセット名の更新 `SET_DIRECTION_PRESET` が追加。
 
 ### 3.3 Reducer
 
@@ -275,12 +289,12 @@ export function scenarioReducer(
     case 'SET_DIRECTIONS':
       return { ...state, directions: action.payload };
 
-    case 'UPDATE_DIRECTION_NAME':
+    case 'UPDATE_DIRECTION':
       return {
         ...state,
         directions: state.directions.map((d, i) =>
           i === action.payload.index
-            ? { ...d, direction: action.payload.name }
+            ? { ...d, direction: action.payload.directionId }
             : d
         ),
       };
@@ -310,47 +324,70 @@ export function scenarioReducer(
         defeats: state.defeats.filter((d) => !action.payload.includes(d.id)),
       };
 
+    case 'MOVE_DEFEATS_BATCH': {
+      const moves = new Map(action.payload.map((m) => [m.id, m.frameTime]));
+      return {
+        ...state,
+        defeats: state.defeats.map((d) => {
+          const newFrame = moves.get(d.id);
+          return newFrame !== undefined ? { ...d, frameTime: newFrame } : d;
+        }),
+      };
+    }
+
     case 'SET_SCENARIO_CODE':
       return { ...state, memo: { ...state.memo, scenarioCode: action.payload } };
 
     case 'SET_WEAPON': {
       const weapons = [...state.memo.weapons];
-      weapons[action.payload.index] = action.payload.weaponId;
+      weapons[action.payload.index] = action.payload.rowId;
       return { ...state, memo: { ...state.memo, weapons } };
     }
 
     case 'SET_SPECIAL': {
       const specials = [...state.memo.specials];
-      specials[action.payload.index] = action.payload.specialId;
+      specials[action.payload.index] = action.payload.rowId;
       return { ...state, memo: { ...state.memo, specials } };
     }
-
-    case 'SET_TARGET_MODE':
-      return {
-        ...state,
-        memo: {
-          ...state.memo,
-          targetOrder: { ...state.memo.targetOrder, mode: action.payload },
-        },
-      };
 
     case 'SET_TARGET_ORDER':
       return {
         ...state,
-        memo: {
-          ...state.memo,
-          targetOrder: { ...state.memo.targetOrder, order: action.payload },
-        },
+        memo: { ...state.memo, targetOrder: action.payload },
       };
+
+    case 'SET_TARGET_ORDER_ENTRY': {
+      const order = [...state.memo.targetOrder];
+      while (order.length < 25) order.push('-'); // 25行に拡張
+      order[action.payload.index] = action.payload.value;
+      return { ...state, memo: { ...state.memo, targetOrder: order } };
+    }
+
+    case 'SHIFT_TARGET_ORDER': {
+      const order = [...state.memo.targetOrder];
+      while (order.length < 25) order.push('-');
+      if (action.payload === 'down') { order.pop(); order.unshift('-'); }
+      else { order.shift(); order.push('-'); }
+      return { ...state, memo: { ...state.memo, targetOrder: order } };
+    }
 
     case 'SET_SNATCHERS':
       return { ...state, memo: { ...state.memo, snatchers: action.payload } };
 
-    case 'SET_DISPLAY_MODE':
-      return { ...state, displayMode: action.payload };
+    case 'SET_FREE_NOTE':
+      return { ...state, memo: { ...state.memo, freeNote: action.payload } };
+
+    case 'SET_DIRECTION_PRESET': {
+      const presets = [...state.directionPresets] as [string, string, string];
+      presets[action.payload.index] = action.payload.name;
+      return { ...state, directionPresets: presets };
+    }
 
     case 'LOAD_SCENARIO':
-      return action.payload;
+      return {
+        ...action.payload,
+        directionPresets: action.payload.directionPresets ?? ['左', '正面', '右'],
+      };
 
     case 'RESET_SCENARIO':
       return createInitialScenario();
@@ -366,9 +403,10 @@ export function scenarioReducer(
 ```typescript
 // hooks/ScenarioContext.tsx
 
-import { createContext, useContext, useReducer, type Dispatch } from 'react';
-import type { ScenarioData } from '@/types';
-import { scenarioReducer, type ScenarioAction } from './scenarioReducer';
+import { createContext, useContext, useReducer, useMemo,
+         type Dispatch, type ReactNode } from 'react';
+import type { HazardConfigData, ScenarioData } from '@/types';
+import { createInitialScenario, scenarioReducer, type ScenarioAction } from './scenarioReducer';
 
 interface ScenarioContextValue {
   state: ScenarioData;
@@ -377,13 +415,21 @@ interface ScenarioContextValue {
 
 const ScenarioContext = createContext<ScenarioContextValue | null>(null);
 
-export function ScenarioProvider({ children }: { children: React.ReactNode }) {
-  const [state, dispatch] = useReducer(scenarioReducer, createInitialScenario());
-  return (
-    <ScenarioContext.Provider value={{ state, dispatch }}>
-      {children}
-    </ScenarioContext.Provider>
+interface ScenarioProviderProps {
+  children: ReactNode;
+  hazardConfigData: HazardConfigData;
+}
+
+export function ScenarioProvider({ children, hazardConfigData }: ScenarioProviderProps) {
+  // 初期方面はキケン度設定から導出するため、lazy initializer に configData を渡す
+  const [state, dispatch] = useReducer(scenarioReducer, hazardConfigData, (configData) =>
+    createInitialScenario(configData),
   );
+
+  // value をメモ化し、不要な再レンダリングを防止
+  const value = useMemo(() => ({ state, dispatch }), [state]);
+
+  return <ScenarioContext.Provider value={value}>{children}</ScenarioContext.Provider>;
 }
 
 export function useScenario(): ScenarioContextValue {
@@ -392,6 +438,8 @@ export function useScenario(): ScenarioContextValue {
   return ctx;
 }
 ```
+
+`createInitialScenario(hazardConfigData?)` は、キケン度設定が渡された場合は `getHazardConfig(DEFAULT_HAZARD_LEVEL, ...)` から `directionInterval` を求め、`generateDefaultDirections` で初期方面区間を生成する。`ScenarioProvider` は `App` から `hazardConfigData` を受け取る（マスターデータのロード完了後にマウントされる）。
 
 ### 3.5 計算結果フック
 
@@ -420,7 +468,7 @@ export function useGrillCalculation(
     const hazardConfig = getHazardConfig(scenario.hazardLevel, hazardConfigData);
     const spawns = calculateSpawns(hazardConfig, scenario.directions, scenario.defeats);
     const stats = calculateDirectionStats(spawns, scenario.defeats, scenario.directions);
-    const totalGrillCount = stats.reduce((sum, s) => sum + s.count, 0);
+    const totalGrillCount = stats.reduce((sum, s) => sum + s.spawnCount, 0);
 
     return { hazardConfig, spawns, directionStats: stats, totalGrillCount };
   }, [scenario.hazardLevel, scenario.directions, scenario.defeats, hazardConfigData]);
@@ -434,23 +482,51 @@ export function useGrillCalculation(
 ```typescript
 // hooks/useDataLoader.ts
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { WeaponMaster, SpecialMaster, HazardConfigData } from '@/types';
 import { DATA_PATHS } from '@/constants';
 
-interface MasterData {
-  weapons: readonly WeaponMaster[];
-  specials: readonly SpecialMaster[];
-  hazardConfigData: HazardConfigData;
-  isLoading: boolean;
-  error: string | null;
+export interface MasterData {
+  readonly weapons: readonly WeaponMaster[];
+  readonly specials: readonly SpecialMaster[];
+  readonly hazardConfigData: HazardConfigData;
 }
 
-export function useDataLoader(): MasterData {
-  // fetch → state の標準パターンで実装
-  // BASE_URL を付与してフェッチ
+interface DataLoaderResult {
+  data: MasterData | null;
+  isLoading: boolean;
+  error: string | null;
+  retry: () => void;
+}
+
+export function useDataLoader(): DataLoaderResult {
+  // 3ファイル（weapon / special / CoopLevelsConfig）を Promise.all で並行 fetch。
+  // BASE_URL を付与してフェッチ（DATA_PATHS は先頭スラッシュなし）。
+  // raw JSON（PascalCase: Id/Label/RowId）を WeaponMaster/SpecialMaster にマップ。
+  // retry はリトライカウンタを増やして再フェッチを誘発する。
 }
 ```
+
+返り値はマスターデータそのものではなく `{ data, isLoading, error, retry }` でラップされる。`data` はロード完了まで `null`。`App` は `isLoading` / `error` / `data` を見てローディング・エラー（`retry` ボタン付き）・本体を出し分ける。
+
+### 3.7 UI 状態フック（localStorage 永続化）
+
+`displayMode` / ズーム / カラーテーマは計算に無関係な UI 設定であり、`ScenarioData`（＝保存ファイル）には含めず、専用フックで管理する。いずれも `localStorage` に永続化される。これらは `hooks/useZoom.ts` に同居している。
+
+| フック | 役割 | 永続化キー / 値域 |
+|--------|------|------------------|
+| `useZoom()` | タイムラインの横/縦ズーム倍率（`zoomX` / `zoomY` と `scaleX` / `scaleY` を返す） | `grill-planner-zoom-x` / `-y`、`ZOOM_OPTIONS = [50,75,100,150,200]`、既定 100 |
+| `useColorTheme()` | 方面区間の配色テーマ（`flower` / `pastel` / `kasumi`）。`themeKey` / `setThemeKey` / `theme` を返す | `grill-planner-color-theme`、既定 `flower` |
+| `useDisplayMode()` | ブキ表示モード（`icon` / `text` / `both`）。`displayMode` / `setDisplayMode` を返す | `grill-planner-display-mode`、既定 `both` |
+
+カラーテーマの3色は `ScenarioView` で CSS 変数 `--color-dir-0/1/2` に流し込まれ、`DirectionId` ベースの配色（`coordinates.ts` の `getDirectionColor`）が参照する。
+
+### 3.8 バリデーション・ドラッグフック
+
+| フック | 役割 |
+|--------|------|
+| `useValidation(defeats, hazardConfig, directions)` | `validateAddDefeat` / `validateMoveDefeat` を `useCallback` でラップし、`canAddDefeat` / `canMoveDefeat` を返す |
+| `useTimelineDrag(...)` | 撃破点のドラッグ移動を管理（§7 参照）。個別移動と Shift 押下による連動移動（リンクモード）に対応し、移動の都度バリデーションして妥当性を返す |
 
 ---
 
@@ -479,8 +555,8 @@ export function calculateSpawnerDecisionTime(defeatFrame: FrameTime): FrameTime;
 export function calculateSpawnTime(defeatFrame: FrameTime): FrameTime;
 export function getHazardConfig(hazardLevel: number, data: HazardConfigData): InterpolatedHazardConfig;
 export function getDirectionSwitchTimes(directionInterval: number): FrameTime[];
-export function getDirectionAtTime(spawnerDecisionFrame: FrameTime, sortedDirections: readonly DirectionSetting[]): DirectionName;
-export function sortDirectionSettings(directions: readonly DirectionSetting[]): DirectionSetting[];
+export function generateDefaultDirections(directionInterval: number): readonly DirectionSetting[];
+export function getDirectionAtTime(spawnerDecisionFrame: FrameTime, sortedDirections: readonly DirectionSetting[]): DirectionId;
 export function calculateSpawns(config: InterpolatedHazardConfig, directions: readonly DirectionSetting[], defeats: readonly DefeatPoint[]): SpawnPoint[];
 ```
 
@@ -546,7 +622,24 @@ function validateSlotChain(
 }
 ```
 
-**重要**: `canDefeatAt` のような「現在の spawns で判定」する関数は作らない。バリデーションは常にシミュレーション方式で行う。
+公開 API（`validateAllDefeats` / `validateSlotChain` / `findInvalidDefeatsInChain` は内部ヘルパー）:
+
+```typescript
+export interface ValidationResult { readonly valid: boolean; readonly reason?: string; }
+
+/** 撃破追加の検証（仮追加 → 再計算 → チェーン検証） */
+export function validateAddDefeat(newDefeat, existingDefeats, hazardConfig, directions): ValidationResult;
+/** 撃破移動の検証（仮移動 → 再計算 → チェーン検証） */
+export function validateMoveDefeat(defeatId, newFrameTime, existingDefeats, hazardConfig, directions): ValidationResult;
+/** 撃破削除後に不整合となる撃破IDをカスケードで返す（削除対象 + 連鎖不整合） */
+export function findCascadeRemovals(removedId, allDefeats, hazardConfig, directions): readonly string[];
+/** 撃破集合から不整合な撃破IDを安定するまで反復除去して返す（インポート時に使用） */
+export function findAllInvalidDefeats(defeats, hazardConfig, directions): readonly string[];
+/** 撃破の時刻変更で不正領域に入る同枠の撃破点を返す（移動時の影響判定） */
+export function getAffectedDefeats(changedDefeatId, newFrameTime, allDefeats): readonly DefeatPoint[];
+```
+
+**重要**: `canDefeatAt` のような「現在の spawns で判定」する関数は作らない。バリデーションは常にシミュレーション方式（仮変更 → `calculateSpawns` 再計算 → 枠単位チェーン検証）で行う。
 
 ### 4.4 statistics.ts
 
@@ -579,16 +672,38 @@ export function findDirectionIndex(
 ### 4.5 fileIO.ts
 
 ```typescript
-/** シナリオをJSONファイルとしてダウンロード */
-export function exportScenario(scenario: ScenarioData): void;
+/** シナリオをJSONファイルとしてダウンロード（SaveData でラップ、ファイル名は日時から自動生成） */
+export function exportScenario(scenario: ScenarioData, filename?: string): void;
 
-/** JSONファイルを読み込んでシナリオデータに変換 */
-export function importScenario(file: File): Promise<ImportResult>;
+/** ファイル選択ダイアログを開いてインポート */
+export function importScenarioFromFile(
+  hazardConfigData: HazardConfigData,
+  weapons: readonly WeaponMaster[],
+  specials: readonly SpecialMaster[],
+): Promise<ImportResult>;
 
-export type ImportResult =
-  | { success: true; data: ScenarioData }
-  | { success: false; error: string };
+/** File オブジェクトから直接インポート（ドラッグ&ドロップ用） */
+export function importScenarioFromFileObject(
+  file: File,
+  hazardConfigData: HazardConfigData,
+  weapons: readonly WeaponMaster[],
+  specials: readonly SpecialMaster[],
+): Promise<ImportResult>;
+
+export interface ImportResult {
+  success: boolean;
+  scenario?: ScenarioData;
+  error?: string;
+  warnings?: string[];   // 不整合な撃破点を除外した等の警告
+}
 ```
+
+インポートは2系統に分かれる: `importScenarioFromFile`（`<input type=file>` を生成してダイアログを開く）と `importScenarioFromFileObject`（D&D で受け取った `File` を直接処理）。前者は内部で後者を呼ぶ。いずれも `hazardConfigData` / `weapons` / `specials` を要求するのは、**後方互換変換**のため:
+
+- `directions[].direction`: 旧形式の文字列 → `directionPresets` のインデックス（`DirectionId`）に変換。
+- `memo.weapons` / `memo.specials`: 旧形式の `number`（id）→ マスターを引いて `rowId`（string）に変換。
+- `memo.targetOrder`: 旧形式 `{ mode, order }` → フラットな `string[]` に変換。
+- スキーマ検証通過後、`findAllInvalidDefeats` でチェーン不整合な撃破点を除外し、件数を `warnings` に記録する。
 
 ---
 
@@ -596,54 +711,59 @@ export type ImportResult =
 
 ### 5.1 ツリー図
 
+`App` はデータローダー起動と Provider 設置のみの薄いシェルで、画面本体は `ScenarioView` に集約されている。
+
 ```
-App
-├── ScenarioProvider              // Context提供
-│   ├── Header                    // タイトル、保存/読込ボタン
-│   ├── SettingsPanel             // 折りたたみ可能な設定パネル
-│   │   ├── HazardLevelInput      // キケン度スライダー + 数値入力
-│   │   ├── MemoSection           // メモ情報（折りたたみ可能）
-│   │   │   ├── ScenarioCodeInput
-│   │   │   ├── WeaponSelector    // ×4
-│   │   │   ├── SpecialSelector   // ×4
-│   │   │   ├── TargetOrderEditor
-│   │   │   └── SnatchersInput
-│   │   └── DisplayModeToggle
-│   ├── MainArea                  // タイムライン + 統計の横並び
-│   │   ├── Timeline              // メインのタイムライン表示
-│   │   │   ├── TimeAxis          // 時間軸の目盛り
-│   │   │   ├── DirectionLabels   // 方面区間ラベル（編集可能）
-│   │   │   ├── DirectionBands    // 方面区間の背景帯
-│   │   │   ├── GrillSlotLane     // A枠 or B枠のレーン（×2）
-│   │   │   │   ├── SpawnMarker   // 湧き点マーカー
-│   │   │   │   ├── DefeatMarker  // 撃破点マーカー（ドラッグ可能）
-│   │   │   │   └── ActivePeriod  // グリル活動期間バー
-│   │   │   └── RespawnConnector  // 撃破→湧きの接続線
-│   │   └── StatisticsPanel       // 方面別統計
-│   │       └── DirectionStatsTable
-│   └── FileIOControls            // 保存/読込（Headerに統合も可）
+App                               // useDataLoader → ローディング/エラー/本体の出し分け
+└── ScenarioProvider              // Context提供（hazardConfigData を受け取る）
+    └── ScenarioView              // 画面本体（レイアウト・dispatchハンドラ・ファイルI/O）
+        ├── Header                // タイトル、エクスポート/インポートボタン
+        ├── （設定パネル: ScenarioView 内にインライン）
+        │   ├── HazardLevelInput  // キケン度スライダー + 数値入力
+        │   ├── DisplayModeToggle // アイコン/テキスト/両方（ButtonGroup 利用）
+        │   ├── （方面カラー select / ズーム横・縦 select もインライン）
+        │   └── MemoSection       // シナリオコード/ブキ×N/スペ×N/自由メモ/方面プリセット名
+        ├── Timeline              // 左ペイン: メインのタイムライン表示
+        │   ├── TimeAxis          // 時間軸の目盛り
+        │   ├── DirectionLabels   // 方面区間ラベル（プリセットから選択）
+        │   ├── DirectionBands    // 方面区間の背景帯（DirectionId 色）
+        │   └── GrillSlotLane     // A枠 or B枠のレーン（B枠は bSlotOpenFrame≥0 のとき）
+        │       ├── SpawnMarker       // 湧き点マーカー
+        │       ├── DefeatMarker      // 撃破点マーカー（ドラッグ可能）
+        │       ├── ActivePeriod      // グリル活動期間バー
+        │       ├── RespawnConnector  // 撃破→湧きの接続線
+        │       └── ElapsedTimeLabel  // 経過時間ラベル
+        └── （右ペイン: 統計サイドバー）
+            ├── DirectionStatsTable // 方面別の湧き数/撃破数
+            └── TargetOrderTable    // ターゲット順テーブル（編集・行シフト）
 ```
+
+注: 設定パネル・左右ペインのレイアウト・カラーテーマ select・ズーム select は独立コンポーネントではなく `ScenarioView.tsx` にインライン記述されている。汎用 UI コンポーネントは `ButtonGroup`（トグル選択）のみで、`Button`/`Input`/`Select` のような `components/shared/` は存在しない。
 
 ### 5.2 コンポーネント責務
 
 | コンポーネント | 責務 | props の主要データ |
 |--------------|------|------------------|
-| `App` | データローダー起動、Provider 設置、レイアウト最上位 | — |
-| `ScenarioProvider` | `useReducer` + Context の提供 | children |
-| `Header` | タイトル、ファイル操作ボタン | — |
-| `SettingsPanel` | 設定UI群のコンテナ、折りたたみ | — |
-| `HazardLevelInput` | キケン度の入力（スライダー + テキスト） | — (Context経由) |
-| `Timeline` | タイムラインのコンテナ、クリックイベント処理 | spawns, hazardConfig |
+| `App` | データローダー起動、ローディング/エラー出し分け、Provider 設置 | — |
+| `ScenarioProvider` | `useReducer` + Context の提供 | children, hazardConfigData |
+| `ScenarioView` | 画面本体。レイアウト、dispatch ハンドラ群、ファイル I/O、UI状態フックの統合 | hazardConfigData, weapons, specials |
+| `Header` | タイトル、エクスポート/インポートボタン | onExport, onImport |
+| `HazardLevelInput` | キケン度の入力（スライダー + テキスト） | value, onChange |
+| `DisplayModeToggle` | アイコン/テキスト/両方の切替（`ButtonGroup`） | value, onChange |
+| `MemoSection` | シナリオコード/ブキ/スペ/自由メモ/方面プリセット名の編集 | memo, weapons, specials, directionPresets, on* |
+| `Timeline` | タイムラインのコンテナ、撃破点の追加/移動/削除 dispatch、D&D 受付 | spawns, defeats, directions, hazardConfig, directionPresets, targetOrder, weapons, weaponMaster, displayMode, scaleX/Y, onFileDrop |
 | `GrillSlotLane` | 1つの枠のレーン描画 | slot, spawns, defeats |
 | `SpawnMarker` | 湧き点の視覚表示 | spawn |
-| `DefeatMarker` | 撃破点の表示 + ドラッグ操作 | defeat, onMove, onRemove |
+| `DefeatMarker` | 撃破点の表示 + ドラッグ操作 | defeat |
 | `ActivePeriod` | 湧き→撃破の期間バー | spawnFrame, defeatFrame |
-| `DirectionLabels` | 方面名のインライン編集UI | directions |
-| `DirectionBands` | 方面区間の背景色帯 | directions |
+| `ElapsedTimeLabel` | 経過時間ラベル | frameTime |
+| `DirectionLabels` | 方面名（プリセットから選択）の編集 UI | directions, directionPresets |
+| `DirectionBands` | 方面区間の背景色帯（DirectionId 色） | directions |
 | `TimeAxis` | 秒目盛りの描画 | — |
 | `RespawnConnector` | 撃破→スポナー決定→湧きの接続線 | defeatFrame, spawnFrame |
-| `StatisticsPanel` | 統計テーブルのコンテナ | stats |
-| `DirectionStatsTable` | 方面別の行表示 | stats |
+| `DirectionStatsTable` | 方面別の湧き数/撃破数の行表示 | stats, totalGrillCount, presetNames |
+| `TargetOrderTable` | ターゲット順テーブル（編集・行シフト） | order, weapons, weaponMaster, onSetEntry, onShift |
+| `ButtonGroup` | 汎用トグル選択（ジェネリック） | options, selected, onChange |
 
 ### 5.3 データフロー
 
@@ -653,29 +773,27 @@ App
                     │  state + dispatch        │
                     └───────────┬──────────────┘
                                 │
-              ┌─────────────────┼─────────────────┐
-              │                 │                   │
-     SettingsPanel          MainArea             Header
-              │                 │                   │
-         dispatch          reads state          fileIO
-              │                 │
-              │     ┌───────────┴────────────┐
-              │     │                        │
-              │  Timeline              StatisticsPanel
-              │     │                        │
-              │  reads spawns +          reads stats
-              │  dispatches defeats     (useMemo derived)
-              │     │
-              │  ┌──┴──────────┐
-              │  │             │
-              │  GrillSlotLane GrillSlotLane
-              │  (A枠)         (B枠)
-              │
-              └── dispatches SET_HAZARD_LEVEL,
-                  UPDATE_DIRECTION_NAME, etc.
+                    ┌───────────┴──────────────┐
+                    │       ScenarioView        │
+                    │ useGrillCalculation(state)│  ← useMemo で spawns/stats 導出
+                    │ useZoom/useColorTheme/    │  ← UI状態（localStorage）
+                    │ useDisplayMode            │
+                    │ ファイル I/O (fileIO)      │
+                    └───┬──────────┬─────────┬──┘
+                        │          │         │
+                  設定パネル     Timeline   右ペイン
+                  (インライン)      │      (統計サイドバー)
+                        │       reads spawns      │
+                   dispatch     dispatches    DirectionStatsTable
+                  (SET_HAZARD_  defeats        + TargetOrderTable
+                   LEVEL 等)        │           (reads stats)
+                                ┌───┴────────┐
+                                │            │
+                          GrillSlotLane GrillSlotLane
+                            (A枠)         (B枠)
 ```
 
-計算結果（spawns, stats）は `useGrillCalculation` フック内の `useMemo` で導出される。状態変更 → 再計算 → 再描画 の単方向フロー。
+計算結果（spawns, stats）は `useGrillCalculation` フック内の `useMemo` で導出される。状態変更 → 再計算 → 再描画 の単方向フロー。`displayMode` / ズーム / カラーテーマは `ScenarioData` ではなく専用フック（localStorage 永続化）で持つ別系統の状態。
 
 ---
 
@@ -684,20 +802,15 @@ App
 ```
 src/
 ├── components/
-│   ├── Header/
-│   │   └── index.tsx
+│   ├── ButtonGroup.tsx           // 汎用トグル選択（唯一の共通UI）
+│   ├── Header.tsx                // ファイル単体（Header/ ディレクトリではない）
 │   ├── Settings/
-│   │   ├── index.tsx              // SettingsPanel
 │   │   ├── HazardLevelInput.tsx
 │   │   ├── MemoSection.tsx
-│   │   ├── WeaponSelector.tsx
-│   │   ├── SpecialSelector.tsx
-│   │   ├── TargetOrderEditor.tsx
-│   │   ├── SnatchersInput.tsx
-│   │   ├── ScenarioCodeInput.tsx
 │   │   └── DisplayModeToggle.tsx
 │   ├── Timeline/
 │   │   ├── index.tsx              // Timeline
+│   │   ├── coordinates.ts         // 座標系・色（frameToPixelY 等）
 │   │   ├── TimeAxis.tsx
 │   │   ├── DirectionLabels.tsx
 │   │   ├── DirectionBands.tsx
@@ -705,14 +818,11 @@ src/
 │   │   ├── SpawnMarker.tsx
 │   │   ├── DefeatMarker.tsx
 │   │   ├── ActivePeriod.tsx
+│   │   ├── ElapsedTimeLabel.tsx
 │   │   └── RespawnConnector.tsx
-│   ├── Statistics/
-│   │   ├── index.tsx              // StatisticsPanel
-│   │   └── DirectionStatsTable.tsx
-│   └── shared/
-│       ├── Button.tsx
-│       ├── Input.tsx
-│       └── Select.tsx
+│   └── Statistics/
+│       ├── DirectionStatsTable.tsx
+│       └── TargetOrderTable.tsx
 ├── constants/
 │   └── index.ts
 ├── hooks/
@@ -720,6 +830,7 @@ src/
 │   ├── ScenarioContext.tsx
 │   ├── useGrillCalculation.ts
 │   ├── useDataLoader.ts
+│   ├── useZoom.ts                // useZoom / useColorTheme / useDisplayMode を同居
 │   ├── useTimelineDrag.ts        // ドラッグ操作の状態管理
 │   └── useValidation.ts          // バリデーション呼び出しフック
 ├── types/
@@ -735,10 +846,14 @@ src/
 │   ├── validation.ts
 │   ├── statistics.ts
 │   └── fileIO.ts
-├── App.tsx
+├── __tests__/                    // calculations.test.ts / validation.test.ts
+├── App.tsx                       // 薄いシェル（DataLoader + Provider）
+├── ScenarioView.tsx              // 画面本体
 ├── main.tsx
 └── index.css
 ```
+
+注: `Header` と `ButtonGroup` は `index.tsx` ではなく単一ファイル。`Settings/index.tsx`（SettingsPanel）・`Statistics/index.tsx`（StatisticsPanel）・`components/shared/`（Button/Input/Select）は存在しない。`WeaponSelector` / `SpecialSelector` / `TargetOrderEditor` / `SnatchersInput` / `ScenarioCodeInput` は独立ファイルではなく `MemoSection.tsx` 内に統合されている。
 
 ---
 
@@ -746,36 +861,49 @@ src/
 
 ### 7.1 useTimelineDrag フック
 
-撃破点のドラッグ移動は専用フックで管理する。App.tsx にロジックを直接書かない。
+撃破点のドラッグ移動は専用フックで管理する。コンポーネント側にロジックを直接書かない。フックは window レベルの `mousemove` / `mouseup` / `keydown` をリッスンし、ドラッグ候補（`candidateRef`）の登録から確定までを内部の `ref` で完結させる（依存配列を `laneRef` のみに保つため）。
 
 ```typescript
 // hooks/useTimelineDrag.ts
+
+interface LinkedDefeatPreview {
+  defeatId: string;
+  originalFrameTime: FrameTime;
+  newFrameTime: FrameTime;
+}
 
 interface DragState {
   isDragging: boolean;
   dragDefeatId: string | null;
   dragFrameTime: FrameTime | null;  // ドラッグ中の仮時刻
   isValidPosition: boolean;          // ドラッグ中の位置が妥当か
+  isLinkedMode: boolean;             // Shift 押下による連動移動
+  linkedDefeats: readonly LinkedDefeatPreview[]; // 連動対象のプレビュー
 }
 
 interface UseTimelineDragReturn {
   dragState: DragState;
-  startDrag: (defeatId: string) => void;
-  updateDrag: (frameTime: FrameTime) => void;  // マウス移動ごと
-  endDrag: () => void;                          // 確定 or キャンセル
+  // マウスダウン時に候補を登録。閾値超えで実ドラッグへ昇格。
+  startDragCandidate: (defeatId: string, startY: number, shiftKey: boolean, originalFrameTime: FrameTime) => void;
   cancelDrag: () => void;
+  justFinishedDragRef: React.RefObject<boolean>; // ドラッグ直後の click 抑止用
 }
+
+// フック引数: pixelYToFrame, validatePosition, validateLinkedMove,
+//             onDragEnd, onLinkedDragEnd, getLinkedDefeats, laneRef
 ```
+
+旧設計の `startDrag` / `updateDrag` / `endDrag` という明示 API ではなく、`startDragCandidate` のみを公開し、移動・確定・キャンセルは window イベントリスナー側で自動処理する点が実装との差分。
 
 ### 7.2 ドラッグ中のバリデーション
 
-`updateDrag` の都度 `validateDefeatChange` を呼び出してリアルタイムで妥当性を判定する。不正位置の場合は視覚フィードバック（マーカー色変化等）で示す。
+マウス移動の都度、個別モードでは `validatePosition`（= `useValidation.canMoveDefeat`）、連動モードでは `validateLinkedMove`（全移動を仮適用したチェーン検証）を呼び、`isValidPosition` をリアルタイム更新する。不正位置の場合は視覚フィードバック（マーカー色変化等）で示し、`mouseup` 時に妥当な場合のみ `onDragEnd` / `onLinkedDragEnd` を発火する。
 
-パフォーマンス考慮: `calculateSpawns` は撃破点数 N に対して O(N) であり、通常の使用範囲（N < 30）では 16ms 以内に完了する。`requestAnimationFrame` によるスロットリングは不要と想定するが、必要に応じて導入する。
+パフォーマンス考慮: `calculateSpawns` は撃破点数 N に対して O(N) であり、通常の使用範囲（N < 30）では 16ms 以内に完了する。
 
 ### 7.3 クリックとドラッグの区別
 
-マウスダウンからの移動距離が閾値（5px）未満の場合はクリック（削除操作）、以上の場合はドラッグ（移動操作）として扱う。
+マウスダウンからの移動距離が閾値（`DRAG_THRESHOLD = 5px`）未満の場合はクリック（削除操作）、以上の場合はドラッグ（移動操作）として扱う。ドラッグ確定直後は `justFinishedDragRef` を立てて、続く `click` イベントによる誤削除を抑止する。連動移動は同枠の後続撃破点（`getLinkedDefeats`）を Shift 押下でまとめて平行移動する。
 
 ---
 
@@ -785,23 +913,35 @@ interface UseTimelineDragReturn {
 
 タイムラインの垂直方向（縦軸＝時間、上=100s、下=0s）でフレームをピクセルに変換する。
 
-```typescript
-const PIXELS_PER_SECOND = 16; // 旧実装(8)の2倍。操作性改善のため
+座標変換は `components/Timeline/coordinates.ts` に集約されている。基準は固定の `PIXELS_PER_SECOND = 16`、ズームは別途 `scaleY` を掛ける scaled 版で対応する。
 
-function frameToPixelY(frameTime: FrameTime, pixelsPerSecond: number): number {
+```typescript
+// components/Timeline/coordinates.ts
+
+export const PIXELS_PER_SECOND = 16;
+export const TIMELINE_HEIGHT = GAME_DURATION_SECONDS * PIXELS_PER_SECOND; // 1600px
+
+/** フレーム → ピクセルY（上=100s, 下=0s） */
+export function frameToPixelY(frameTime: FrameTime): number {
   const seconds = GAME_DURATION_SECONDS - framesToSeconds(frameTime);
-  return seconds * pixelsPerSecond;
+  return seconds * PIXELS_PER_SECOND;
 }
 
-function pixelYToFrame(pixelY: number, pixelsPerSecond: number): FrameTime {
-  const seconds = GAME_DURATION_SECONDS - (pixelY / pixelsPerSecond);
+/** ピクセルY → フレーム */
+export function pixelYToFrame(pixelY: number): FrameTime {
+  const seconds = GAME_DURATION_SECONDS - pixelY / PIXELS_PER_SECOND;
   return secondsToFrames(seconds);
 }
+
+/** ズーム対応版（scaleY を適用） */
+export function scaledFrameToPixelY(frameTime: FrameTime, scaleY: number): number;
+export function scaledPixelYToFrame(pixelY: number, scaleY: number): FrameTime;
+
+/** DirectionId → CSS 変数色（--color-dir-0/1/2、カラーテーマで定義） */
+export function getDirectionColor(id: DirectionId): string;
 ```
 
-100秒 × 16px/秒 = 1600px のタイムライン高さ。縦スクロール可能なコンテナ内に配置する。
-
-注: `PIXELS_PER_SECOND` の最終値は 06_UI_DESIGN.md で確定する。ここでは方針のみ定義。
+100秒 × 16px/秒 = 1600px のタイムライン高さ（基準ズーム時）。横方向は `useZoom` の `scaleX`、縦方向は `scaleY` でスケールする。縦スクロール可能なコンテナ内に配置する。
 
 ### 8.2 レーン配置
 
