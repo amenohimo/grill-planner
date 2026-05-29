@@ -29,3 +29,6 @@ Thumbs.db
 
 # Vite local env
 *.local
+
+# Local-only planning tickets (not published)
+tickets/
