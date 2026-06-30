@@ -90,7 +90,7 @@ export function ShareSection({
   const rows = useMemo(
     () => [
       {
-        label: "撃破点",
+        label: "撃破時間",
         code: encodedD,
         decodeFn: decodePartD,
         dispatchFn: onPasteDefeats,
