@@ -12,6 +12,13 @@ import {
   encodePartT,
 } from "@/utils/magicWord";
 
+// ============================================================
+// 共有 — マジックワードのコピー／貼付 UI
+//   T/D/S の 3 パート + 全部入りの計 4 行を accordion で表示
+//   コピー：クリップボードにコードを書き込む
+//   貼付 ：クリップボードからコードを読み取り、親に通知
+// ============================================================
+
 interface ShareSectionProps {
   scenario: ScenarioData;
   onPasteTargetOrder: (order: string[]) => void;
@@ -28,9 +35,12 @@ export function ShareSection({
   onPasteAll,
 }: ShareSectionProps) {
   const [open, setOpen] = useState(false);
+  /** 行ごとの成功／失敗メッセージ（ラベル → 文言）。2～3 秒で自動消去 */
   const [feedback, setFeedback] = useState<Record<string, string>>({});
+  /** 画面右下のエラートースト（全行共通） */
   const [toastError, setToastError] = useState<string | null>(null);
 
+  // エンコード結果を scenario 変更時に再計算
   const encodedT = useMemo(() => encodePartT(scenario.memo.targetOrder), [scenario]);
   const encodedD = useMemo(() => encodePartD(scenario.defeats), [scenario]);
   const encodedS = useMemo(() => encodePartS(scenario), [scenario]);
@@ -76,6 +86,7 @@ export function ShareSection({
     [],
   );
 
+  // 各行のデータ定義（D → S → T → ALL の順）
   const rows = useMemo(
     () => [
       {
@@ -123,6 +134,7 @@ export function ShareSection({
         <div className="space-y-3 px-4 pb-4">
           {rows.map(({ label, code, decodeFn, dispatchFn }) => (
             <div key={label}>
+              {/* コード表示 + コピー／貼付ボタン */}
               <div className="flex items-center gap-2">
                 <span className="text-xs text-text-muted w-28 shrink-0">{label}</span>
                 <input
@@ -130,6 +142,7 @@ export function ShareSection({
                   readOnly
                   value={code}
                   className={`flex-1 truncate rounded-sm border px-2 py-1 text-sm text-text font-mono bg-surface ${
+                    // エラー時のみ枠を赤く
                     feedback[label]?.includes("失敗") ? "border-danger" : "border-border"
                   }`}
                 />
@@ -153,6 +166,7 @@ export function ShareSection({
           ))}
         </div>
       )}
+      {/* エラートースト（画面右下、3 秒で自動消去） */}
       {toastError && (
         <div className="fixed bottom-4 right-4 bg-danger text-white px-4 py-2 rounded-sm text-sm shadow-lg z-50">
           {toastError}

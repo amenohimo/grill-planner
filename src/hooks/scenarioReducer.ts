@@ -198,12 +198,15 @@ export function scenarioReducer(state: ScenarioData, action: ScenarioAction): Sc
       return createInitialScenario();
 
     case "PASTE_TARGET_ORDER":
+      // ターゲット順（25枠）を貼り付け値で丸ごと置換
       return { ...state, memo: { ...state.memo, targetOrder: action.payload } };
 
     case "PASTE_DEFEATS":
+      // 撃破点を貼り付け値で丸ごと置換
       return { ...state, defeats: action.payload };
 
     case "PASTE_SCENARIO":
+      // キケン度・方面・メモ・方面名を部分的に上書き（targetOrder は維持）
       return {
         ...state,
         ...action.payload,
@@ -214,6 +217,7 @@ export function scenarioReducer(state: ScenarioData, action: ScenarioAction): Sc
       };
 
     case "PASTE_ALL":
+      // T/D/S すべてを一括で貼り付け
       return {
         ...state,
         defeats: action.payload.defeats,
