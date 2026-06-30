@@ -36,7 +36,16 @@ export type ScenarioAction =
 
   // 全体
   | { type: "LOAD_SCENARIO"; payload: ScenarioData }
-  | { type: "RESET_SCENARIO" };
+  | { type: "RESET_SCENARIO" }
+
+  // マジックワード
+  | { type: "PASTE_TARGET_ORDER"; payload: string[] }
+  | { type: "PASTE_DEFEATS"; payload: readonly DefeatPoint[] }
+  | { type: "PASTE_SCENARIO"; payload: Partial<ScenarioData> }
+  | {
+      type: "PASTE_ALL";
+      payload: { targetOrder: string[]; defeats: readonly DefeatPoint[]; scenario: Partial<ScenarioData> };
+    };
 
 // ============================================================
 // 初期シナリオ生成
@@ -187,6 +196,35 @@ export function scenarioReducer(state: ScenarioData, action: ScenarioAction): Sc
 
     case "RESET_SCENARIO":
       return createInitialScenario();
+
+    case "PASTE_TARGET_ORDER":
+      return { ...state, memo: { ...state.memo, targetOrder: action.payload } };
+
+    case "PASTE_DEFEATS":
+      return { ...state, defeats: action.payload };
+
+    case "PASTE_SCENARIO":
+      return {
+        ...state,
+        ...action.payload,
+        memo: action.payload.memo
+          ? { ...state.memo, ...action.payload.memo, targetOrder: state.memo.targetOrder }
+          : state.memo,
+        directionPresets: action.payload.directionPresets ?? state.directionPresets,
+      };
+
+    case "PASTE_ALL":
+      return {
+        ...state,
+        defeats: action.payload.defeats,
+        ...action.payload.scenario,
+        memo: {
+          ...state.memo,
+          ...action.payload.scenario.memo,
+          targetOrder: action.payload.targetOrder,
+        },
+        directionPresets: action.payload.scenario.directionPresets ?? state.directionPresets,
+      };
 
     default:
       return state;

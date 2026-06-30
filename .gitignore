@@ -32,3 +32,13 @@ Thumbs.db
 
 # Local-only planning tickets (not published)
 tickets/
+
+
+# Planning artifacts (local only - never published)
+.omo/
+
+# Tutorial materials (not part of upstream)
+docs/tutorial/
+
+# Local test files (not for PR)
+src/utils/__tests__/magicWord.test.ts

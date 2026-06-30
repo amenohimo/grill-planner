@@ -3,6 +3,7 @@ import { Header } from "@/components/Header";
 import { DisplayModeToggle } from "@/components/Settings/DisplayModeToggle";
 import { HazardLevelInput } from "@/components/Settings/HazardLevelInput";
 import { MemoSection } from "@/components/Settings/MemoSection";
+import { ShareSection } from "@/components/ShareSection";
 import { DirectionStatsTable } from "@/components/Statistics/DirectionStatsTable";
 import { TargetOrderTable } from "@/components/Statistics/TargetOrderTable";
 import { Timeline } from "@/components/Timeline";
@@ -16,7 +17,7 @@ import {
   useZoom,
   ZOOM_OPTIONS,
 } from "@/hooks/useZoom";
-import type { HazardConfigData, SpecialMaster, WeaponMaster } from "@/types";
+import type { DefeatPoint, HazardConfigData, ScenarioData, SpecialMaster, WeaponMaster } from "@/types";
 import { calculateSpawns, generateDefaultDirections, getHazardConfig } from "@/utils/calculations";
 import { exportScenario, importScenarioFromFile, importScenarioFromFileObject } from "@/utils/fileIO";
 
@@ -152,6 +153,40 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     [hazardConfigData, weapons, specials, handleImportResult],
   );
 
+  // マジックワード貼付ハンドラ
+  const handlePasteTargetOrder = useCallback(
+    (order: string[]) => {
+      try {
+        dispatch({ type: "PASTE_TARGET_ORDER", payload: order });
+      } catch {}
+    },
+    [dispatch],
+  );
+  const handlePasteDefeats = useCallback(
+    (defeats: DefeatPoint[]) => {
+      try {
+        dispatch({ type: "PASTE_DEFEATS", payload: defeats });
+      } catch {}
+    },
+    [dispatch],
+  );
+  const handlePasteScenario = useCallback(
+    (partial: Partial<ScenarioData>) => {
+      try {
+        dispatch({ type: "PASTE_SCENARIO", payload: partial });
+      } catch {}
+    },
+    [dispatch],
+  );
+  const handlePasteAll = useCallback(
+    (data: { targetOrder: string[]; defeats: DefeatPoint[]; scenario: Partial<ScenarioData> }) => {
+      try {
+        dispatch({ type: "PASTE_ALL", payload: data });
+      } catch {}
+    },
+    [dispatch],
+  );
+
   return (
     <div
       className="flex h-screen flex-col bg-bg"
@@ -245,6 +280,13 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
               onSetSnatchers={handleSetSnatchers}
               onSetFreeNote={handleSetFreeNote}
               onSetDirectionPreset={handleSetDirectionPreset}
+            />
+            <ShareSection
+              scenario={state}
+              onPasteTargetOrder={handlePasteTargetOrder}
+              onPasteDefeats={handlePasteDefeats}
+              onPasteScenario={handlePasteScenario}
+              onPasteAll={handlePasteAll}
             />
           </div>
 
