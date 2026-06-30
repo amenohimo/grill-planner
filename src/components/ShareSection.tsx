@@ -81,25 +81,25 @@ export function ShareSection({
   const rows = useMemo(
     () => [
       {
-        label: "撃破点 (D)",
+        label: "撃破点",
         code: encodedD,
         decodeFn: decodePartD,
         dispatchFn: onPasteDefeats,
       },
       {
-        label: "詳細 (S)",
+        label: "詳細",
         code: encodedS,
         decodeFn: decodePartS,
         dispatchFn: onPasteScenario,
       },
       {
-        label: "ターゲット順 (T)",
+        label: "ターゲット順",
         code: encodedT,
         decodeFn: decodePartT,
         dispatchFn: onPasteTargetOrder,
       },
       {
-        label: "すべて (ALL)",
+        label: "すべて",
         code: encodedAll,
         decodeFn: (code: string) => {
           const d = decodeAll(code);
