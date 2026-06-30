@@ -36,8 +36,6 @@ export function ShareSection({
   const encodedS = useMemo(() => encodePartS(scenario), [scenario]);
   const encodedAll = useMemo(() => encodeAll(scenario), [scenario]);
 
-  const truncate = (code: string) => (code.length > 20 ? code.slice(0, 20) + "..." : code);
-
   const handleCopy = useCallback(async (label: string, code: string) => {
     try {
       await navigator.clipboard.writeText(code);
@@ -130,8 +128,8 @@ export function ShareSection({
                 <input
                   type="text"
                   readOnly
-                  value={truncate(code)}
-                  className={`flex-1 rounded-sm border px-2 py-1 text-sm text-text font-mono bg-surface ${
+                  value={code}
+                  className={`flex-1 truncate rounded-sm border px-2 py-1 text-sm text-text font-mono bg-surface ${
                     feedback[label]?.includes("失敗") ? "border-danger" : "border-border"
                   }`}
                 />
