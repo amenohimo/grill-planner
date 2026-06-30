@@ -86,7 +86,7 @@ export function encodeAll(scenario: ScenarioData): string {
 
 function decodeCore(code: string): unknown {
   const trimmed = code.trim();
-  if (trimmed.length === 0) throw new Error("マジックワードが空です");
+  if (trimmed.length === 0) throw new Error("共有コードが空です");
   if (!trimmed.startsWith("v1")) throw new Error("未知のバージョン形式です");
 
   const payload = trimmed.slice(2);

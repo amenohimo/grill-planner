@@ -38,7 +38,7 @@ export type ScenarioAction =
   | { type: "LOAD_SCENARIO"; payload: ScenarioData }
   | { type: "RESET_SCENARIO" }
 
-  // マジックワード
+  // 共有コード
   | { type: "PASTE_TARGET_ORDER"; payload: string[] }
   | { type: "PASTE_DEFEATS"; payload: readonly DefeatPoint[] }
   | { type: "PASTE_SCENARIO"; payload: Partial<ScenarioData> }

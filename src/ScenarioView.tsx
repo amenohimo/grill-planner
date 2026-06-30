@@ -153,7 +153,7 @@ export function ScenarioView({ hazardConfigData, weapons, specials }: ScenarioVi
     [hazardConfigData, weapons, specials, handleImportResult],
   );
 
-  // マジックワード貼付ハンドラ — ShareSection の「貼付」ボタンから呼ばれる
+  // 共有コード貼付ハンドラ — ShareSection の「貼付」ボタンから呼ばれる
   // try-catch で囲み、dispatch 自体の失敗も沈黙（エラー表示は ShareSection が担当）
   const handlePasteTargetOrder = useCallback(
     (order: string[]) => {
