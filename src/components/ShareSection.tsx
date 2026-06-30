@@ -10,7 +10,7 @@ import {
   encodePartD,
   encodePartS,
   encodePartT,
-} from "@/utils/magicWord";
+} from "@/utils/shareCode";
 
 // ============================================================
 // 共有 — 共有コードのコピー／貼付 UI
