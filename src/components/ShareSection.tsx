@@ -87,7 +87,7 @@ export function ShareSection({
         dispatchFn: onPasteDefeats,
       },
       {
-        label: "シナリオ (S)",
+        label: "詳細 (S)",
         code: encodedS,
         decodeFn: decodePartS,
         dispatchFn: onPasteScenario,
